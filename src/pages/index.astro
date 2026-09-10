@@ -1,20 +1,12 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import Hero from '../components/sections/Hero.astro';
 import Container from '../components/ui/Container.astro';
 ---
 
 <BaseLayout>
   <main id="main-content">
-    <section class="page-placeholder page-placeholder--intro" aria-labelledby="intro-title">
-      <Container>
-        <p class="page-placeholder__eyebrow">Lorem ipsum · Dolor sit</p>
-        <h1 id="intro-title">Lorem ipsum dolor sit amet.</h1>
-        <p class="page-placeholder__lead">
-          Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer vitae lorem at sapien
-          tincidunt luctus eget sed arcu.
-        </p>
-      </Container>
-    </section>
+    <Hero />
 
     <section class="page-placeholder" id="projects" aria-labelledby="projects-title">
       <Container>
@@ -56,18 +48,10 @@ import Container from '../components/ui/Container.astro';
     min-height: 58svh;
     align-items: center;
     padding-block: var(--space-9);
+    border-top: 1px solid var(--color-border);
     scroll-margin-top: 4.5rem;
   }
 
-  .page-placeholder--intro {
-    min-height: calc(100svh - 4.5rem);
-  }
-
-  .page-placeholder:not(:first-child) {
-    border-top: 1px solid var(--color-border);
-  }
-
-  .page-placeholder__eyebrow,
   .page-placeholder__index {
     margin-bottom: var(--space-4);
     color: var(--color-accent);
@@ -77,18 +61,11 @@ import Container from '../components/ui/Container.astro';
     text-transform: uppercase;
   }
 
-  .page-placeholder h1 {
-    max-width: 11ch;
-    font-size: var(--text-display);
-    letter-spacing: -0.055em;
-  }
-
   .page-placeholder h2 {
     font-size: var(--text-2xl);
     letter-spacing: -0.04em;
   }
 
-  .page-placeholder__lead,
   .page-placeholder h2 + p {
     max-width: 40rem;
     margin-top: var(--space-5);

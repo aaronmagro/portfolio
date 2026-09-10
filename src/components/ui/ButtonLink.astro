@@ -1,0 +1,65 @@
+---
+type Variant = 'primary' | 'secondary';
+
+interface Props {
+  href: string;
+  variant?: Variant;
+}
+
+const { href, variant = 'primary' } = Astro.props;
+---
+
+<a class:list={['button-link', `button-link--${variant}`]} href={href}>
+  <slot />
+</a>
+
+<style>
+  .button-link {
+    display: inline-flex;
+    min-height: 3rem;
+    align-items: center;
+    justify-content: center;
+    padding-inline: var(--space-5);
+    border: 1px solid transparent;
+    border-radius: var(--radius-pill);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    line-height: 1;
+    text-decoration: none;
+    transition:
+      background-color var(--transition-fast),
+      border-color var(--transition-fast),
+      color var(--transition-fast),
+      transform var(--transition-fast);
+  }
+
+  .button-link:hover {
+    transform: translateY(-2px);
+  }
+
+  .button-link--primary {
+    background: var(--color-brand);
+    color: #ffffff;
+  }
+
+  .button-link--primary:hover {
+    background: var(--color-brand-strong);
+  }
+
+  .button-link--secondary {
+    border-color: var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-heading);
+  }
+
+  .button-link--secondary:hover {
+    border-color: var(--color-accent);
+    background: var(--color-surface-elevated);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .button-link:hover {
+      transform: none;
+    }
+  }
+</style>
