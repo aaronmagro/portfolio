@@ -19,12 +19,21 @@ export interface Project {
   technologies: readonly string[];
 }
 
-export interface Experience {
+export interface ExperienceRole {
   id: string;
+  startDate: string;
+  endDate: string | null;
   period: LocalizedText;
-  company: LocalizedText;
   role: LocalizedText;
   description: LocalizedText;
   highlights: readonly LocalizedText[];
   technologies: readonly string[];
+}
+
+export interface ExperienceCompany {
+  id: string;
+  company: LocalizedText;
+  period: LocalizedText;
+  location: LocalizedText;
+  roles: readonly ExperienceRole[];
 }

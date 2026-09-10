@@ -1,7 +1,7 @@
 ---
 import Container from '../ui/Container.astro';
 import SectionHeading from '../ui/SectionHeading.astro';
-import { experienceItems } from '../../data/experience';
+import { experienceCompanies } from '../../data/experience';
 import { siteConfig } from '../../config/site';
 
 type SupportedLocale = (typeof siteConfig.locales)[number];
@@ -18,21 +18,25 @@ const copy = {
     title: 'Experiencia',
     description:
       'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer vitae lorem at sapien tincidunt luctus eget sed arcu.',
+    stages: 'Etapas dentro de',
     highlights: 'Aspectos destacados',
     technologies: 'Tecnologías',
+    stage: 'etapas',
   },
   en: {
     eyebrow: 'Professional background',
     title: 'Experience',
     description:
       'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer vitae lorem at sapien tincidunt luctus eget sed arcu.',
+    stages: 'Roles at',
     highlights: 'Highlights',
     technologies: 'Technologies',
+    stage: 'roles',
   },
 } as const;
 ---
 
-<section class="experience" id="experience" aria-labelledby="experience-title">
+<section class="experience" id="experience" aria-labelledby="experience-title" data-experience-section>
   <Container>
     <SectionHeading
       index="02"
@@ -42,29 +46,103 @@ const copy = {
       headingId="experience-title"
     />
 
-    <div class="experience__list">
-      {experienceItems.map((item) => (
-        <article class="experience-item">
-          <div class="experience-item__aside">
-            <p class="experience-item__period">{item.period[lang]}</p>
-            <p class="experience-item__company">{item.company[lang]}</p>
-          </div>
+    <div class="experience__companies">
+      {experienceCompanies.map((company) => (
+        <article class="experience-company" data-experience-group>
+          <header class="experience-company__header">
+            <div>
+              <p class="experience-company__period">{company.period[lang]}</p>
+              <h3>{company.company[lang]}</h3>
+              <p class="experience-company__location">{company.location[lang]}</p>
+            </div>
+            <p class="experience-company__count" aria-hidden="true">
+              {String(company.roles.length).padStart(2, '0')} {copy[lang].stage}
+            </p>
+          </header>
 
-          <div class="experience-item__content">
-            <h3>{item.role[lang]}</h3>
-            <p class="experience-item__description">{item.description[lang]}</p>
+          <div class="experience-company__workspace">
+            <div
+              class="experience-track"
+              role="tablist"
+              aria-label={`${copy[lang].stages} ${company.company[lang]}`}
+            >
+              <span class="experience-track__rail" aria-hidden="true">
+                <span class="experience-track__progress" data-track-progress></span>
+              </span>
 
-            <ul class="experience-item__highlights" aria-label={copy[lang].highlights}>
-              {item.highlights.map((highlight) => (
-                <li>{highlight[lang]}</li>
-              ))}
-            </ul>
+              {company.roles.map((role, index) => {
+                const tabId = `${company.id}-${role.id}-tab`;
+                const panelId = `${company.id}-${role.id}-panel`;
 
-            <ul class="experience-item__technologies" aria-label={copy[lang].technologies}>
-              {item.technologies.map((technology) => (
-                <li>{technology}</li>
-              ))}
-            </ul>
+                return (
+                  <button
+                    class:list={['experience-stage', { 'is-active': index === 0 }]}
+                    type="button"
+                    role="tab"
+                    id={tabId}
+                    aria-selected={index === 0 ? 'true' : 'false'}
+                    aria-controls={panelId}
+                    tabindex={index === 0 ? 0 : -1}
+                    data-stage-tab
+                    data-stage-index={index}
+                  >
+                    <span class="experience-stage__index" aria-hidden="true">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+                    <span class="experience-stage__body">
+                      <span class="experience-stage__period">{role.period[lang]}</span>
+                      <span class="experience-stage__role">{role.role[lang]}</span>
+                    </span>
+                    <span class="experience-stage__signal" aria-hidden="true"></span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div class="experience-details" data-detail-host>
+              {company.roles.map((role, index) => {
+                const tabId = `${company.id}-${role.id}-tab`;
+                const panelId = `${company.id}-${role.id}-panel`;
+
+                return (
+                  <div
+                    class:list={['experience-detail', { 'is-active': index === 0 }]}
+                    role="tabpanel"
+                    id={panelId}
+                    aria-labelledby={tabId}
+                    hidden={index !== 0}
+                    data-stage-panel
+                  >
+                    <span class="experience-detail__watermark" aria-hidden="true">
+                      {role.startDate.slice(0, 4)}
+                    </span>
+
+                    <div class="experience-detail__meta">
+                      <span>{String(index + 1).padStart(2, '0')} / {String(company.roles.length).padStart(2, '0')}</span>
+                      <span>{role.period[lang]}</span>
+                    </div>
+
+                    <h4>{role.role[lang]}</h4>
+                    <p class="experience-detail__company">{company.company[lang]}</p>
+                    <p class="experience-detail__description">{role.description[lang]}</p>
+
+                    <ul class="experience-detail__highlights" aria-label={copy[lang].highlights}>
+                      {role.highlights.map((highlight) => (
+                        <li>{highlight[lang]}</li>
+                      ))}
+                    </ul>
+
+                    {role.technologies.length > 0 && (
+                      <ul class="experience-detail__technologies" aria-label={copy[lang].technologies}>
+                        {role.technologies.map((technology) => (
+                          <li>{technology}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </article>
       ))}
@@ -76,28 +154,30 @@ const copy = {
   .experience {
     padding-block: clamp(var(--space-9), 12vw, var(--space-10));
     border-top: 1px solid var(--color-border);
-    background: var(--color-background-subtle);
     scroll-margin-top: 4.5rem;
   }
 
-  .experience__list {
+  .experience__companies {
     display: grid;
-    gap: clamp(var(--space-8), 8vw, var(--space-10));
+    gap: var(--space-10);
     margin-top: var(--space-9);
   }
 
-  .experience-item {
-    display: grid;
-    gap: var(--space-5);
+  .experience-company + .experience-company {
+    padding-top: var(--space-9);
+    border-top: 1px solid var(--color-border);
   }
 
-  .experience-item__aside {
-    display: grid;
-    align-content: start;
-    gap: var(--space-3);
+  .experience-company__header {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: var(--space-6);
+    margin-bottom: clamp(var(--space-7), 6vw, var(--space-9));
   }
 
-  .experience-item__period {
+  .experience-company__period {
+    margin-bottom: var(--space-3);
     color: var(--color-accent);
     font-size: var(--text-sm);
     font-weight: 700;
@@ -105,32 +185,213 @@ const copy = {
     text-transform: uppercase;
   }
 
-  .experience-item__company {
+  .experience-company h3 {
+    font-size: clamp(1.9rem, 4vw, 3.2rem);
+    letter-spacing: -0.04em;
+  }
+
+  .experience-company__location {
+    margin-top: var(--space-3);
     color: var(--color-text-muted);
+  }
+
+  .experience-company__count {
+    flex: none;
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .experience-company__workspace {
+    display: grid;
+    gap: var(--space-8);
+  }
+
+  .experience-track {
+    position: relative;
+    display: grid;
+    align-content: start;
+  }
+
+  .experience-track__rail {
+    position: absolute;
+    top: 2.15rem;
+    bottom: 2.15rem;
+    left: 1.34rem;
+    width: 1px;
+    overflow: hidden;
+    background: var(--color-border);
+    pointer-events: none;
+  }
+
+  .experience-track__progress {
+    display: block;
+    width: 100%;
+    height: var(--track-progress, 0%);
+    background: var(--color-accent);
+    transition: height 280ms ease;
+  }
+
+  .experience-stage {
+    position: relative;
+    display: grid;
+    grid-template-columns: 2.75rem minmax(0, 1fr) 1rem;
+    align-items: center;
+    gap: var(--space-4);
+    width: 100%;
+    padding: var(--space-4) 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+
+  .experience-stage__index {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    width: 2.75rem;
+    height: 2.75rem;
+    place-items: center;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-background);
+    color: var(--color-text-muted);
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    transition:
+      border-color var(--transition-fast),
+      background-color var(--transition-fast),
+      color var(--transition-fast);
+  }
+
+  .experience-stage__body {
+    display: grid;
+    gap: 0.2rem;
+    min-width: 0;
+  }
+
+  .experience-stage__period {
+    color: var(--color-text-muted);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .experience-stage__role {
+    color: var(--color-text-muted);
+    font-weight: 700;
+    line-height: 1.35;
+    transition: color var(--transition-fast);
+  }
+
+  .experience-stage__signal {
+    width: 0.7rem;
+    height: 0.7rem;
+    border: 1px solid var(--color-border);
+    border-radius: 50%;
+    transition:
+      border-color var(--transition-fast),
+      background-color var(--transition-fast),
+      transform var(--transition-fast);
+  }
+
+  .experience-stage:is(:hover, :focus-visible) .experience-stage__role,
+  .experience-stage.is-active .experience-stage__role {
+    color: var(--color-heading);
+  }
+
+  .experience-stage.is-active .experience-stage__index {
+    border-color: var(--color-accent);
+    background: var(--color-surface-elevated);
+    color: var(--color-accent);
+  }
+
+  .experience-stage.is-active .experience-stage__signal {
+    border-color: var(--color-accent);
+    background: var(--color-accent);
+    transform: scale(1.15);
+  }
+
+  .experience-details {
+    min-width: 0;
+  }
+
+  .experience-detail {
+    position: relative;
+    min-height: 24rem;
+    overflow: hidden;
+    padding-top: var(--space-3);
+  }
+
+  .experience-detail[hidden] {
+    display: none;
+  }
+
+  .experience-detail.is-entering {
+    animation: experience-detail-in 220ms ease both;
+  }
+
+  .experience-detail__watermark {
+    position: absolute;
+    z-index: 0;
+    top: -1.5rem;
+    right: 0;
+    color: var(--color-border);
+    font-size: clamp(5rem, 12vw, 9rem);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.08em;
+    opacity: 0.5;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .experience-detail > :not(.experience-detail__watermark) {
+    position: relative;
+    z-index: 1;
+  }
+
+  .experience-detail__meta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-3);
+    max-width: 46rem;
+    color: var(--color-accent);
     font-size: var(--text-sm);
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
   }
 
-  .experience-item__content {
-    min-width: 0;
+  .experience-detail h4 {
+    max-width: 24ch;
+    margin-top: var(--space-5);
+    font-size: clamp(1.8rem, 4vw, 3rem);
+    letter-spacing: -0.04em;
   }
 
-  .experience-item h3 {
-    max-width: 30ch;
-    font-size: clamp(1.65rem, 3vw, 2.4rem);
-    letter-spacing: -0.035em;
+  .experience-detail__company {
+    margin-top: var(--space-2);
+    color: var(--color-text-muted);
+    font-weight: 700;
   }
 
-  .experience-item__description {
+  .experience-detail__description {
     max-width: 46rem;
-    margin-top: var(--space-4);
+    margin-top: var(--space-5);
     color: var(--color-text-muted);
     font-size: var(--text-lg);
   }
 
-  .experience-item__highlights {
+  .experience-detail__highlights {
     display: grid;
     gap: var(--space-3);
     max-width: 46rem;
@@ -139,61 +400,171 @@ const copy = {
     list-style: none;
   }
 
-  .experience-item__highlights li {
+  .experience-detail__highlights li {
     position: relative;
     padding-left: var(--space-5);
-    color: var(--color-text);
   }
 
-  .experience-item__highlights li::before {
+  .experience-detail__highlights li::before {
     position: absolute;
-    top: 0.72em;
+    top: 0.7em;
     left: 0;
-    width: 0.4rem;
-    height: 0.4rem;
+    width: 0.35rem;
+    height: 0.35rem;
     border-radius: 50%;
     background: var(--color-accent);
     content: '';
   }
 
-  .experience-item__technologies {
+  .experience-detail__technologies {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-2) var(--space-4);
+    gap: var(--space-2);
     margin: var(--space-6) 0 0;
     padding: 0;
-    color: var(--color-text-muted);
-    font-size: var(--text-sm);
-    font-weight: 600;
     list-style: none;
   }
 
-  .experience-item__technologies li:not(:last-child)::after {
-    margin-left: var(--space-4);
-    color: var(--color-border);
-    content: '·';
+  .experience-detail__technologies li {
+    padding: 0.35rem 0.7rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    color: var(--color-text-muted);
+    font-size: 0.78rem;
+    font-weight: 600;
   }
 
-  @media (min-width: 52rem) {
-    .experience-item {
-      grid-template-columns: minmax(11rem, 0.32fr) minmax(0, 1fr);
+  @keyframes experience-detail-in {
+    from {
+      opacity: 0;
+      transform: translateY(0.4rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (min-width: 56rem) {
+    .experience-company__workspace {
+      grid-template-columns: minmax(17rem, 0.42fr) minmax(0, 1fr);
       gap: clamp(var(--space-7), 7vw, var(--space-10));
     }
 
-    .experience-item__aside {
-      padding-top: 0.3rem;
+    .experience-track {
+      padding-right: var(--space-4);
+    }
+
+    .experience-details {
+      position: sticky;
+      top: 7rem;
+      align-self: start;
     }
   }
 
-  @media (max-width: 35rem) {
-    .experience__list {
+  @media (max-width: 40rem) {
+    .experience__companies {
       margin-top: var(--space-8);
-      gap: var(--space-8);
     }
 
-    .experience-item__highlights,
-    .experience-item__technologies {
-      margin-top: var(--space-5);
+    .experience-company__header {
+      align-items: start;
+      flex-direction: column;
+      margin-bottom: var(--space-7);
+    }
+
+    .experience-company__count {
+      display: none;
+    }
+
+    .experience-stage {
+      grid-template-columns: 2.75rem minmax(0, 1fr);
+    }
+
+    .experience-stage__signal {
+      display: none;
+    }
+
+    .experience-detail {
+      min-height: 0;
+      padding-top: var(--space-5);
+      border-top: 1px solid var(--color-border);
+    }
+
+    .experience-detail__watermark {
+      top: 0.75rem;
+      font-size: clamp(4rem, 22vw, 6rem);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .experience-track__progress,
+    .experience-stage__index,
+    .experience-stage__role,
+    .experience-stage__signal {
+      transition: none;
+    }
+
+    .experience-detail.is-entering {
+      animation: none;
     }
   }
 </style>
+
+<script>
+  const groups = document.querySelectorAll<HTMLElement>('[data-experience-group]');
+
+  groups.forEach((group) => {
+    const tabs = Array.from(group.querySelectorAll<HTMLButtonElement>('[data-stage-tab]'));
+    const panels = Array.from(group.querySelectorAll<HTMLElement>('[data-stage-panel]'));
+    const progress = group.querySelector<HTMLElement>('[data-track-progress]');
+
+    const activate = (nextIndex: number, moveFocus = false) => {
+      const index = Math.max(0, Math.min(nextIndex, tabs.length - 1));
+
+      tabs.forEach((tab, tabIndex) => {
+        const active = tabIndex === index;
+        tab.classList.toggle('is-active', active);
+        tab.setAttribute('aria-selected', String(active));
+        tab.tabIndex = active ? 0 : -1;
+      });
+
+      panels.forEach((panel, panelIndex) => {
+        const active = panelIndex === index;
+        panel.hidden = !active;
+        panel.classList.toggle('is-active', active);
+
+        if (active) {
+          panel.classList.remove('is-entering');
+          requestAnimationFrame(() => panel.classList.add('is-entering'));
+        }
+      });
+
+      if (progress) {
+        const percentage = tabs.length <= 1 ? 100 : (index / (tabs.length - 1)) * 100;
+        progress.style.setProperty('--track-progress', `${percentage}%`);
+      }
+
+      if (moveFocus) tabs[index]?.focus();
+    };
+
+    tabs.forEach((tab, index) => {
+      tab.addEventListener('click', () => activate(index));
+      tab.addEventListener('keydown', (event) => {
+        let nextIndex: number | null = null;
+
+        if (event.key === 'ArrowDown' || event.key === 'ArrowRight') nextIndex = (index + 1) % tabs.length;
+        if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') nextIndex = (index - 1 + tabs.length) % tabs.length;
+        if (event.key === 'Home') nextIndex = 0;
+        if (event.key === 'End') nextIndex = tabs.length - 1;
+
+        if (nextIndex !== null) {
+          event.preventDefault();
+          activate(nextIndex, true);
+        }
+      });
+    });
+
+    activate(0);
+  });
+</script>
