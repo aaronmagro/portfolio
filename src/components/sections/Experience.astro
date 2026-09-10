@@ -37,6 +37,11 @@ const copy = {
   },
 } as const;
 
+const monthLabels = {
+  es: ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEPT', 'OCT', 'NOV', 'DIC'],
+  en: ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'],
+} as const;
+
 const toMonthIndex = (value: string) => {
   const [year, month] = value.split('-').map(Number);
   return year * 12 + month - 1;
@@ -67,18 +72,6 @@ const timelineEndYear = Math.floor(timelineEndMonth / 12);
 const yearCount = timelineEndYear - timelineStartYear + 1;
 const yearLabelStep = Math.max(1, Math.ceil(yearCount / 4));
 
-const yearMarkers = Array.from({ length: yearCount }, (_, index) => {
-  const year = timelineStartYear + index;
-  const markerMonth = index === 0 ? timelineStartMonth : year * 12;
-  const offset = markerMonth - timelineStartMonth;
-
-  return {
-    year,
-    position: (offset / timelineMonthCount) * 100,
-    showLabel: index === 0 || index === yearCount - 1 || index % yearLabelStep === 0,
-  };
-});
-
 const overviewRoles = rawOverviewRoles.map((role, index) => {
   const startOffset = toMonthIndex(role.startDate) - timelineStartMonth;
   const endOffset = toMonthIndex(role.endDate) - timelineStartMonth;
@@ -90,11 +83,40 @@ const overviewRoles = rawOverviewRoles.map((role, index) => {
     endOffset,
     left: (startOffset / timelineMonthCount) * 100,
     width: ((endOffset - startOffset + 1) / timelineMonthCount) * 100,
+    markerPosition: ((startOffset + 0.5) / timelineMonthCount) * 100,
+    stageNumber: String(index + 1).padStart(2, '0'),
+  };
+});
+
+const yearMarkers = Array.from({ length: yearCount }, (_, index) => {
+  const year = timelineStartYear + index;
+  const markerMonth = Math.max(year * 12, timelineStartMonth);
+  const offset = markerMonth - timelineStartMonth;
+
+  return {
+    year,
+    position: ((offset + 0.5) / timelineMonthCount) * 100,
+    showLabel: index === 0 || index === yearCount - 1 || index % yearLabelStep === 0,
+  };
+});
+
+const timelineMonths = Array.from({ length: timelineMonthCount }, (_, index) => {
+  const absoluteMonth = timelineStartMonth + index;
+  const year = Math.floor(absoluteMonth / 12);
+  const month = (absoluteMonth % 12) + 1;
+  const stage = overviewRoles.find((role) => role.startOffset === index);
+
+  return {
+    index,
+    year,
+    month,
+    label: monthLabels[lang][month - 1],
+    stageNumber: stage?.stageNumber,
+    hasExperience: overviewRoles.some((role) => index >= role.startOffset && index <= role.endOffset),
   };
 });
 
 const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
-const lensCells = Array.from({ length: 7 });
 ---
 
 <section class="experience" id="experience" aria-labelledby="experience-title" data-experience-section>
@@ -112,15 +134,15 @@ const lensCells = Array.from({ length: 7 });
         data-career-map
         data-timeline-start={rawOverviewRoles[0]?.startDate ?? currentYearMonth}
         data-timeline-months={timelineMonthCount}
-        aria-hidden="true"
+        aria-label={copy[lang].timeline}
       >
         <div class="career-map__header">
           <span>{copy[lang].timeline}</span>
           <span>{copy[lang].explore}</span>
         </div>
 
-        <div class="career-map__axis" data-career-axis>
-          <div class="career-map__years">
+        <div class="career-map__axis" data-career-axis tabindex="0">
+          <div class="career-map__years" aria-hidden="true">
             {yearMarkers.map((marker) => (
               <span
                 class="career-map__year"
@@ -132,12 +154,13 @@ const lensCells = Array.from({ length: 7 });
             ))}
           </div>
 
-          <span class="career-map__baseline"></span>
+          <span class="career-map__baseline" aria-hidden="true"></span>
 
           {yearMarkers.map((marker) => (
             <span
               class="career-map__year-tick"
               style={`--year-position: ${marker.position}%`}
+              aria-hidden="true"
             ></span>
           ))}
 
@@ -148,22 +171,44 @@ const lensCells = Array.from({ length: 7 });
               data-overview-role={role.key}
               data-start-index={role.startOffset}
               data-end-index={role.endOffset}
-              data-stage-number={String(index + 1).padStart(2, '0')}
+              aria-hidden="true"
             ></span>
           ))}
 
-          <span class="career-map__cursor" data-career-cursor hidden></span>
+          {overviewRoles.map((role, index) => (
+            <button
+              class:list={['career-map__stage-marker', { 'is-active': index === overviewInitialIndex }]}
+              type="button"
+              style={`--stage-position: ${role.markerPosition}%`}
+              data-stage-marker={role.key}
+              aria-label={`${role.stageNumber}. ${role.role}, ${role.period}`}
+              title={`${role.stageNumber} · ${role.role}`}
+            >
+              <span>{role.stageNumber}</span>
+            </button>
+          ))}
 
-          <div class="career-map__lens" data-career-lens hidden>
+          <span class="career-map__cursor" data-career-cursor hidden aria-hidden="true"></span>
+
+          <div class="career-map__lens" data-career-lens hidden aria-hidden="true">
             <span class="career-map__lens-date" data-career-month></span>
-            <div class="career-map__lens-months">
-              {lensCells.map(() => (
-                <span class="career-map__lens-month" data-lens-cell>
-                  <span class="career-map__lens-stage" data-lens-stage></span>
-                  <span class="career-map__lens-label" data-lens-label></span>
-                  <span class="career-map__lens-mark"></span>
-                </span>
-              ))}
+            <div class="career-map__lens-window" data-career-lens-window>
+              <div class="career-map__lens-track" data-career-month-track>
+                {timelineMonths.map((month) => (
+                  <span
+                    class:list={[
+                      'career-map__lens-month',
+                      { 'has-experience': month.hasExperience },
+                    ]}
+                    data-lens-month={month.index}
+                  >
+                    <span class="career-map__lens-stage">{month.stageNumber ?? ''}</span>
+                    <span class="career-map__lens-label">{month.label}</span>
+                    <span class="career-map__lens-mark"></span>
+                  </span>
+                ))}
+              </div>
+              <span class="career-map__lens-center"></span>
             </div>
           </div>
         </div>
@@ -312,7 +357,7 @@ const lensCells = Array.from({ length: 7 });
 
   .career-map__axis {
     position: relative;
-    height: 4.8rem;
+    height: 5rem;
     cursor: crosshair;
     isolation: isolate;
   }
@@ -336,29 +381,27 @@ const lensCells = Array.from({ length: 7 });
 
   .career-map__baseline {
     position: absolute;
-    top: 1.95rem;
+    top: 2.25rem;
     right: 0;
     left: 0;
     height: 1px;
     background: var(--color-border);
-    transform-origin: center;
     transition:
       height var(--transition-fast),
-      background-color var(--transition-fast),
-      transform var(--transition-fast);
+      background-color var(--transition-fast);
   }
 
-  .career-map__axis:is(:hover, :focus-within) .career-map__baseline {
+  .career-map__axis:is(:hover, :focus-visible) .career-map__baseline {
     height: 2px;
     background: rgb(255 255 255 / 0.16);
   }
 
   .career-map__year-tick {
     position: absolute;
-    top: 1.62rem;
+    top: 1.88rem;
     left: var(--year-position);
     width: 1px;
-    height: 0.72rem;
+    height: 0.78rem;
     background: var(--color-text-muted);
     opacity: 0.45;
     transform: translateX(-50%);
@@ -368,13 +411,13 @@ const lensCells = Array.from({ length: 7 });
   .career-map__segment {
     position: absolute;
     z-index: 1;
-    top: 1.88rem;
+    top: 2.18rem;
     left: var(--segment-left);
     width: max(var(--segment-width), 0.35rem);
-    height: 0.2rem;
+    height: 0.22rem;
     border-radius: var(--radius-pill);
     background: var(--color-accent);
-    opacity: 0.34;
+    opacity: 0.32;
     pointer-events: none;
     transition:
       height var(--transition-fast),
@@ -382,31 +425,68 @@ const lensCells = Array.from({ length: 7 });
       transform var(--transition-fast);
   }
 
-  .career-map__segment::before {
-    position: absolute;
-    top: 50%;
-    left: 0;
-    width: 1px;
-    height: 0.7rem;
-    background: var(--color-accent);
-    content: '';
-    opacity: 0.75;
-    transform: translateY(-50%);
-  }
-
   .career-map__segment.is-active {
-    height: 0.28rem;
+    height: 0.3rem;
     opacity: 0.95;
     transform: translateY(-0.04rem);
+  }
+
+  .career-map__stage-marker {
+    position: absolute;
+    z-index: 3;
+    top: 2.82rem;
+    left: var(--stage-position);
+    display: grid;
+    min-width: 1.75rem;
+    padding: 0.16rem 0.3rem 0.2rem;
+    border: 0;
+    background: transparent;
+    color: var(--color-text-muted);
+    font: inherit;
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    line-height: 1;
+    transform: translateX(-50%);
+    cursor: pointer;
+    transition: color var(--transition-fast);
+  }
+
+  .career-map__stage-marker::before {
+    position: absolute;
+    top: -0.58rem;
+    left: 50%;
+    width: 0.34rem;
+    height: 0.34rem;
+    border: 1px solid var(--color-border);
+    border-radius: 50%;
+    background: var(--color-background);
+    content: '';
+    transform: translate(-50%, -50%);
+    transition:
+      border-color var(--transition-fast),
+      background-color var(--transition-fast),
+      transform var(--transition-fast);
+  }
+
+  .career-map__stage-marker:is(:hover, :focus-visible),
+  .career-map__stage-marker.is-active {
+    color: var(--color-accent);
+  }
+
+  .career-map__stage-marker.is-active::before {
+    border-color: var(--color-accent);
+    background: var(--color-accent);
+    transform: translate(-50%, -50%) scale(1.18);
   }
 
   .career-map__cursor {
     position: absolute;
     z-index: 4;
-    top: 1.35rem;
+    top: 1.6rem;
     left: var(--cursor-position, 0%);
     width: 1px;
-    height: 1.2rem;
+    height: 1.35rem;
     background: var(--color-accent);
     transform: translateX(-50%);
     pointer-events: none;
@@ -419,7 +499,7 @@ const lensCells = Array.from({ length: 7 });
 
   .career-map__cursor::after {
     position: absolute;
-    top: 0.58rem;
+    top: 0.68rem;
     left: 50%;
     width: 0.4rem;
     height: 0.4rem;
@@ -430,43 +510,56 @@ const lensCells = Array.from({ length: 7 });
   }
 
   .career-map__lens {
+    --lens-cell-width: 3rem;
+
     position: absolute;
-    z-index: 5;
-    top: 0.25rem;
+    z-index: 6;
+    top: -0.15rem;
     left: var(--lens-left, 0px);
-    width: min(18rem, calc(100% - 0.5rem));
-    padding: 0.5rem 0.65rem 0.6rem;
+    width: min(19rem, calc(100% - 0.5rem));
+    padding: 0.55rem 0.7rem 0.65rem;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
     background: var(--color-surface-elevated);
     box-shadow: var(--shadow-elevated);
     pointer-events: none;
+    will-change: left;
   }
 
   .career-map__lens-date {
     display: block;
-    margin-bottom: 0.38rem;
+    margin-bottom: 0.45rem;
     color: var(--color-heading);
-    font-size: 0.66rem;
+    font-size: 0.68rem;
     font-weight: 800;
     letter-spacing: 0.08em;
     text-align: center;
     text-transform: uppercase;
   }
 
-  .career-map__lens-months {
-    display: grid;
-    grid-template-columns: repeat(7, minmax(0, 1fr));
-    gap: 0.15rem;
+  .career-map__lens-window {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    padding-block: 0.15rem;
+    mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+  }
+
+  .career-map__lens-track {
+    display: flex;
+    width: max-content;
+    padding-inline: calc(50% - (var(--lens-cell-width) / 2));
+    transform: translate3d(var(--lens-track-x, 0px), 0, 0);
+    will-change: transform;
   }
 
   .career-map__lens-month {
     position: relative;
     display: grid;
-    grid-template-rows: 0.8rem auto 0.7rem;
+    flex: 0 0 var(--lens-cell-width);
+    grid-template-rows: 0.72rem auto 0.65rem;
     gap: 0.16rem;
     justify-items: center;
-    min-width: 0;
     color: var(--color-text-muted);
     font-size: 0.56rem;
     font-weight: 700;
@@ -474,19 +567,11 @@ const lensCells = Array.from({ length: 7 });
     text-transform: uppercase;
   }
 
-  .career-map__lens-month.is-outside {
-    visibility: hidden;
-  }
-
   .career-map__lens-stage {
     color: var(--color-accent);
-    font-size: 0.52rem;
+    font-size: 0.5rem;
+    font-weight: 800;
     line-height: 1;
-    opacity: 0;
-  }
-
-  .career-map__lens-month.is-role-start .career-map__lens-stage {
-    opacity: 1;
   }
 
   .career-map__lens-label {
@@ -494,10 +579,9 @@ const lensCells = Array.from({ length: 7 });
   }
 
   .career-map__lens-mark {
-    position: relative;
-    width: 100%;
+    width: 70%;
     height: 1px;
-    margin-top: 0.15rem;
+    margin-top: 0.14rem;
     background: var(--color-border);
   }
 
@@ -507,26 +591,28 @@ const lensCells = Array.from({ length: 7 });
     opacity: 0.55;
   }
 
-  .career-map__lens-month.is-current {
-    color: var(--color-heading);
-  }
-
-  .career-map__lens-month.is-current .career-map__lens-mark {
-    height: 3px;
-    background: var(--color-accent);
-    opacity: 1;
-  }
-
-  .career-map__lens-month.is-current .career-map__lens-mark::after {
+  .career-map__lens-center {
     position: absolute;
-    top: 50%;
+    top: 0.1rem;
+    bottom: 0.1rem;
     left: 50%;
-    width: 0.42rem;
-    height: 0.42rem;
+    width: 1px;
+    background: var(--color-accent);
+    opacity: 0.65;
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+
+  .career-map__lens-center::after {
+    position: absolute;
+    bottom: 0.05rem;
+    left: 50%;
+    width: 0.36rem;
+    height: 0.36rem;
     border-radius: 50%;
     background: var(--color-accent);
     content: '';
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, 50%);
   }
 
   .experience__companies {
@@ -875,6 +961,8 @@ const lensCells = Array.from({ length: 7 });
   @media (prefers-reduced-motion: reduce) {
     .career-map__baseline,
     .career-map__segment,
+    .career-map__stage-marker,
+    .career-map__stage-marker::before,
     .experience-track__progress,
     .experience-stage__index,
     .experience-stage__role,
@@ -894,11 +982,13 @@ const lensCells = Array.from({ length: 7 });
   const careerCursor = careerMap?.querySelector<HTMLElement>('[data-career-cursor]');
   const careerLens = careerMap?.querySelector<HTMLElement>('[data-career-lens]');
   const careerMonth = careerMap?.querySelector<HTMLElement>('[data-career-month]');
-  const lensCells = careerMap
-    ? Array.from(careerMap.querySelectorAll<HTMLElement>('[data-lens-cell]'))
-    : [];
+  const careerLensWindow = careerMap?.querySelector<HTMLElement>('[data-career-lens-window]');
+  const careerMonthTrack = careerMap?.querySelector<HTMLElement>('[data-career-month-track]');
   const overviewSegments = careerMap
     ? Array.from(careerMap.querySelectorAll<HTMLElement>('[data-overview-role]'))
+    : [];
+  const stageMarkers = careerMap
+    ? Array.from(careerMap.querySelectorAll<HTMLButtonElement>('[data-stage-marker]'))
     : [];
   const roleActivators = new Map<string, () => void>();
 
@@ -907,6 +997,10 @@ const lensCells = Array.from({ length: 7 });
 
     overviewSegments.forEach((segment) => {
       segment.classList.toggle('is-active', segment.dataset.overviewRole === roleKey);
+    });
+
+    stageMarkers.forEach((marker) => {
+      marker.classList.toggle('is-active', marker.dataset.stageMarker === roleKey);
     });
   };
 
@@ -971,7 +1065,23 @@ const lensCells = Array.from({ length: 7 });
     activate(tabs.length - 1);
   });
 
-  if (careerMap && careerAxis && careerCursor && careerLens && careerMonth && lensCells.length > 0) {
+  stageMarkers.forEach((marker) => {
+    marker.addEventListener('click', (event) => {
+      event.stopPropagation();
+      const roleKey = marker.dataset.stageMarker;
+      if (roleKey) roleActivators.get(roleKey)?.();
+    });
+  });
+
+  if (
+    careerMap &&
+    careerAxis &&
+    careerCursor &&
+    careerLens &&
+    careerMonth &&
+    careerLensWindow &&
+    careerMonthTrack
+  ) {
     const startDate = careerMap.dataset.timelineStart;
     const monthCount = Number(careerMap.dataset.timelineMonths ?? 0);
 
@@ -979,16 +1089,18 @@ const lensCells = Array.from({ length: 7 });
       const [startYear, startMonth] = startDate.split('-').map(Number);
       const startAbsoluteMonth = startYear * 12 + startMonth - 1;
       const locale = document.documentElement.lang || 'es';
-      const monthFormatter = new Intl.DateTimeFormat(locale, {
-        month: 'short',
-        timeZone: 'UTC',
-      });
       const dateFormatter = new Intl.DateTimeFormat(locale, {
         month: 'short',
         year: 'numeric',
         timeZone: 'UTC',
       });
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       let hoveredRoleKey: string | undefined;
+      let targetRatio = 0;
+      let renderedRatio = 0;
+      let targetLensLeft = 0;
+      let renderedLensLeft = 0;
+      let frameId: number | null = null;
 
       const getRoleForMonth = (monthIndex: number) =>
         overviewSegments.find((segment) => {
@@ -997,69 +1109,72 @@ const lensCells = Array.from({ length: 7 });
           return monthIndex >= start && monthIndex <= end;
         });
 
-      const renderLens = (monthIndex: number) => {
-        lensCells.forEach((cell, index) => {
-          const relativeMonth = monthIndex + index - Math.floor(lensCells.length / 2);
-          const label = cell.querySelector<HTMLElement>('[data-lens-label]');
-          const stage = cell.querySelector<HTMLElement>('[data-lens-stage]');
-          const outside = relativeMonth < 0 || relativeMonth >= monthCount;
+      const render = () => {
+        const smoothing = reducedMotion ? 1 : 0.2;
+        renderedRatio += (targetRatio - renderedRatio) * smoothing;
+        renderedLensLeft += (targetLensLeft - renderedLensLeft) * smoothing;
 
-          cell.classList.toggle('is-outside', outside);
-          cell.classList.remove('has-experience', 'is-current', 'is-role-start');
-
-          if (outside) {
-            if (label) label.textContent = '';
-            if (stage) stage.textContent = '';
-            return;
-          }
-
-          const absoluteMonth = startAbsoluteMonth + relativeMonth;
-          const year = Math.floor(absoluteMonth / 12);
-          const month = (absoluteMonth % 12) + 1;
-          const date = new Date(Date.UTC(year, month - 1, 1));
-          const role = getRoleForMonth(relativeMonth);
-          const isRoleStart = role && Number(role.dataset.startIndex) === relativeMonth;
-
-          if (label) label.textContent = monthFormatter.format(date).replace('.', '').toUpperCase();
-          if (stage) stage.textContent = isRoleStart ? role.dataset.stageNumber ?? '' : '';
-
-          cell.classList.toggle('has-experience', Boolean(role));
-          cell.classList.toggle('is-current', relativeMonth === monthIndex);
-          cell.classList.toggle('is-role-start', Boolean(isRoleStart));
-        });
-      };
-
-      const updateTimeline = (event: PointerEvent) => {
-        const bounds = careerAxis.getBoundingClientRect();
-        const ratio = Math.max(0, Math.min((event.clientX - bounds.left) / bounds.width, 0.999999));
-        const monthIndex = Math.min(Math.floor(ratio * monthCount), monthCount - 1);
-        const position = ((monthIndex + 0.5) / monthCount) * 100;
+        const monthFloat = Math.max(0, Math.min(renderedRatio * (monthCount - 1), monthCount - 1));
+        const monthIndex = Math.max(0, Math.min(Math.round(monthFloat), monthCount - 1));
         const absoluteMonth = startAbsoluteMonth + monthIndex;
         const year = Math.floor(absoluteMonth / 12);
         const month = (absoluteMonth % 12) + 1;
         const date = new Date(Date.UTC(year, month - 1, 1));
         const role = getRoleForMonth(monthIndex);
+        const cellWidth = parseFloat(getComputedStyle(careerLens).getPropertyValue('--lens-cell-width')) *
+          parseFloat(getComputedStyle(document.documentElement).fontSize);
+        const trackOffset = -(monthFloat * cellWidth);
+
+        careerCursor.style.setProperty('--cursor-position', `${renderedRatio * 100}%`);
+        careerLens.style.setProperty('--lens-left', `${renderedLensLeft}px`);
+        careerMonthTrack.style.setProperty('--lens-track-x', `${trackOffset}px`);
+        careerMonth.textContent = dateFormatter.format(date).replace('.', '').toUpperCase();
+        hoveredRoleKey = role?.dataset.overviewRole;
+
+        const settled =
+          Math.abs(targetRatio - renderedRatio) < 0.0005 &&
+          Math.abs(targetLensLeft - renderedLensLeft) < 0.15;
+
+        if (!settled) {
+          frameId = requestAnimationFrame(render);
+        } else {
+          frameId = null;
+        }
+      };
+
+      const requestRender = () => {
+        if (frameId === null) frameId = requestAnimationFrame(render);
+      };
+
+      const updateTarget = (event: PointerEvent) => {
+        const bounds = careerAxis.getBoundingClientRect();
+        targetRatio = Math.max(0, Math.min((event.clientX - bounds.left) / bounds.width, 1));
 
         careerCursor.hidden = false;
         careerLens.hidden = false;
-        careerCursor.style.setProperty('--cursor-position', `${position}%`);
-        careerMonth.textContent = dateFormatter.format(date).replace('.', '').toUpperCase();
-        hoveredRoleKey = role?.dataset.overviewRole;
-        renderLens(monthIndex);
 
         const lensWidth = careerLens.offsetWidth;
-        const cursorX = ratio * bounds.width;
-        const lensLeft = Math.max(0, Math.min(cursorX - lensWidth / 2, bounds.width - lensWidth));
-        careerLens.style.setProperty('--lens-left', `${lensLeft}px`);
+        const cursorX = targetRatio * bounds.width;
+        targetLensLeft = Math.max(0, Math.min(cursorX - lensWidth / 2, bounds.width - lensWidth));
+
+        if (frameId === null) {
+          renderedRatio = targetRatio;
+          renderedLensLeft = targetLensLeft;
+          render();
+        } else {
+          requestRender();
+        }
       };
 
-      careerAxis.addEventListener('pointermove', updateTimeline);
+      careerAxis.addEventListener('pointerenter', updateTarget);
+      careerAxis.addEventListener('pointermove', updateTarget);
       careerAxis.addEventListener('pointerleave', () => {
         careerCursor.hidden = true;
         careerLens.hidden = true;
         hoveredRoleKey = undefined;
       });
-      careerAxis.addEventListener('click', () => {
+      careerAxis.addEventListener('click', (event) => {
+        if ((event.target as HTMLElement).closest('[data-stage-marker]')) return;
         if (hoveredRoleKey) roleActivators.get(hoveredRoleKey)?.();
       });
     }
