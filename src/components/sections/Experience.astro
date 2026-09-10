@@ -1,0 +1,198 @@
+---
+import Container from '../ui/Container.astro';
+import SectionHeading from '../ui/SectionHeading.astro';
+import { experienceItems } from '../../data/experience';
+import { siteConfig } from '../../config/site';
+
+type SupportedLocale = (typeof siteConfig.locales)[number];
+
+interface Props {
+  lang?: SupportedLocale;
+}
+
+const { lang = siteConfig.defaultLocale } = Astro.props;
+
+const copy = {
+  es: {
+    eyebrow: 'Trayectoria profesional',
+    title: 'Experiencia',
+    description:
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer vitae lorem at sapien tincidunt luctus eget sed arcu.',
+    highlights: 'Aspectos destacados',
+    technologies: 'Tecnologías',
+  },
+  en: {
+    eyebrow: 'Professional background',
+    title: 'Experience',
+    description:
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer vitae lorem at sapien tincidunt luctus eget sed arcu.',
+    highlights: 'Highlights',
+    technologies: 'Technologies',
+  },
+} as const;
+---
+
+<section class="experience" id="experience" aria-labelledby="experience-title">
+  <Container>
+    <SectionHeading
+      index="02"
+      eyebrow={copy[lang].eyebrow}
+      title={copy[lang].title}
+      description={copy[lang].description}
+      headingId="experience-title"
+    />
+
+    <div class="experience__list">
+      {experienceItems.map((item) => (
+        <article class="experience-item">
+          <div class="experience-item__period">
+            <span>{item.period[lang]}</span>
+          </div>
+
+          <div class="experience-item__content">
+            <p class="experience-item__company">{item.company[lang]}</p>
+            <h3>{item.role[lang]}</h3>
+            <p class="experience-item__description">{item.description[lang]}</p>
+
+            <ul class="experience-item__highlights" aria-label={copy[lang].highlights}>
+              {item.highlights.map((highlight) => (
+                <li>{highlight[lang]}</li>
+              ))}
+            </ul>
+
+            <ul class="experience-item__technologies" aria-label={copy[lang].technologies}>
+              {item.technologies.map((technology) => (
+                <li>{technology}</li>
+              ))}
+            </ul>
+          </div>
+        </article>
+      ))}
+    </div>
+  </Container>
+</section>
+
+<style>
+  .experience {
+    padding-block: clamp(var(--space-9), 12vw, var(--space-10));
+    border-top: 1px solid var(--color-border);
+    scroll-margin-top: 4.5rem;
+  }
+
+  .experience__list {
+    margin-top: var(--space-9);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .experience-item {
+    display: grid;
+    gap: var(--space-5);
+    padding-block: var(--space-7);
+    border-top: 1px solid var(--color-border);
+  }
+
+  .experience-item__period {
+    color: var(--color-accent);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .experience-item__content {
+    min-width: 0;
+  }
+
+  .experience-item__company {
+    margin-bottom: var(--space-2);
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .experience-item h3 {
+    max-width: 28ch;
+    font-size: clamp(1.6rem, 3vw, 2.35rem);
+    letter-spacing: -0.035em;
+  }
+
+  .experience-item__description {
+    max-width: 46rem;
+    margin-top: var(--space-4);
+    color: var(--color-text-muted);
+    font-size: var(--text-lg);
+  }
+
+  .experience-item__highlights {
+    display: grid;
+    gap: var(--space-3);
+    max-width: 46rem;
+    margin: var(--space-6) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .experience-item__highlights li {
+    position: relative;
+    padding-left: var(--space-5);
+    color: var(--color-text);
+  }
+
+  .experience-item__highlights li::before {
+    position: absolute;
+    top: 0.72em;
+    left: 0;
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: 50%;
+    background: var(--color-accent);
+    content: '';
+  }
+
+  .experience-item__technologies {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    margin: var(--space-6) 0 0;
+    padding: 0;
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    list-style: none;
+  }
+
+  .experience-item__technologies li:not(:last-child)::after {
+    margin-left: var(--space-4);
+    color: var(--color-border);
+    content: '·';
+  }
+
+  @media (min-width: 52rem) {
+    .experience-item {
+      grid-template-columns: minmax(10rem, 0.35fr) minmax(0, 1fr);
+      gap: clamp(var(--space-6), 6vw, var(--space-9));
+      padding-block: var(--space-8);
+    }
+
+    .experience-item__period {
+      padding-top: 0.35rem;
+    }
+  }
+
+  @media (max-width: 35rem) {
+    .experience__list {
+      margin-top: var(--space-8);
+    }
+
+    .experience-item {
+      padding-block: var(--space-6);
+    }
+
+    .experience-item__highlights,
+    .experience-item__technologies {
+      margin-top: var(--space-5);
+    }
+  }
+</style>

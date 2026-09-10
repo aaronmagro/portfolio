@@ -18,3 +18,13 @@ export interface Project {
   description: LocalizedText;
   technologies: readonly string[];
 }
+
+export interface Experience {
+  id: string;
+  period: LocalizedText;
+  company: LocalizedText;
+  role: LocalizedText;
+  description: LocalizedText;
+  highlights: readonly LocalizedText[];
+  technologies: readonly string[];
+}
