@@ -133,7 +133,9 @@ import ButtonLink from '../ui/ButtonLink.astro';
 
   .hero__visual {
     position: relative;
+    width: min(100%, 42rem);
     min-height: clamp(22rem, 58vw, 34rem);
+    margin-inline: auto;
     isolation: isolate;
   }
 
@@ -249,13 +251,25 @@ import ButtonLink from '../ui/ButtonLink.astro';
     left: 9%;
   }
 
-  @media (min-width: 56rem) {
+  @media (min-width: 68rem) {
     .hero__layout {
-      grid-template-columns: minmax(0, 1.08fr) minmax(20rem, 0.92fr);
+      grid-template-columns: minmax(0, 1.08fr) minmax(22rem, 0.92fr);
     }
 
     .hero__visual {
+      width: 100%;
       min-height: 34rem;
+      margin-inline: 0;
+    }
+  }
+
+  @media (max-width: 67.9375rem) {
+    .hero__content {
+      max-width: 52rem;
+    }
+
+    .hero__visual-frame {
+      inset-inline: 4%;
     }
   }
 
@@ -277,7 +291,7 @@ import ButtonLink from '../ui/ButtonLink.astro';
     }
 
     .hero__visual-frame {
-      inset: 4% 0 0 0;
+      inset: 4% 0 0;
     }
   }
 </style>
