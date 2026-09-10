@@ -141,54 +141,56 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
           <span>{copy[lang].explore}</span>
         </div>
 
-        <div class="career-map__axis" data-career-axis tabindex="0">
-          <div class="career-map__years" aria-hidden="true">
+        <div class="career-map__axis">
+          <div class="career-map__plot" data-career-axis>
+            <div class="career-map__years" aria-hidden="true">
+              {yearMarkers.map((marker) => (
+                <span
+                  class="career-map__year"
+                  style={`--year-position: ${marker.position}%`}
+                  hidden={!marker.showLabel}
+                >
+                  {marker.year}
+                </span>
+              ))}
+            </div>
+
+            <span class="career-map__baseline" aria-hidden="true"></span>
+
             {yearMarkers.map((marker) => (
               <span
-                class="career-map__year"
+                class="career-map__year-tick"
                 style={`--year-position: ${marker.position}%`}
-                hidden={!marker.showLabel}
-              >
-                {marker.year}
-              </span>
+                aria-hidden="true"
+              ></span>
             ))}
+
+            {overviewRoles.map((role, index) => (
+              <span
+                class:list={['career-map__segment', { 'is-active': index === overviewInitialIndex }]}
+                style={`--segment-left: ${role.left}%; --segment-width: ${role.width}%`}
+                data-overview-role={role.key}
+                data-start-index={role.startOffset}
+                data-end-index={role.endOffset}
+                aria-hidden="true"
+              ></span>
+            ))}
+
+            {overviewRoles.map((role, index) => (
+              <button
+                class:list={['career-map__stage-marker', { 'is-active': index === overviewInitialIndex }]}
+                type="button"
+                style={`--stage-position: ${role.markerPosition}%`}
+                data-stage-marker={role.key}
+                aria-label={`${role.stageNumber}. ${role.role}, ${role.period}`}
+                title={`${role.stageNumber} · ${role.role}`}
+              >
+                <span>{role.stageNumber}</span>
+              </button>
+            ))}
+
+            <span class="career-map__cursor" data-career-cursor hidden aria-hidden="true"></span>
           </div>
-
-          <span class="career-map__baseline" aria-hidden="true"></span>
-
-          {yearMarkers.map((marker) => (
-            <span
-              class="career-map__year-tick"
-              style={`--year-position: ${marker.position}%`}
-              aria-hidden="true"
-            ></span>
-          ))}
-
-          {overviewRoles.map((role, index) => (
-            <span
-              class:list={['career-map__segment', { 'is-active': index === overviewInitialIndex }]}
-              style={`--segment-left: ${role.left}%; --segment-width: ${role.width}%`}
-              data-overview-role={role.key}
-              data-start-index={role.startOffset}
-              data-end-index={role.endOffset}
-              aria-hidden="true"
-            ></span>
-          ))}
-
-          {overviewRoles.map((role, index) => (
-            <button
-              class:list={['career-map__stage-marker', { 'is-active': index === overviewInitialIndex }]}
-              type="button"
-              style={`--stage-position: ${role.markerPosition}%`}
-              data-stage-marker={role.key}
-              aria-label={`${role.stageNumber}. ${role.role}, ${role.period}`}
-              title={`${role.stageNumber} · ${role.role}`}
-            >
-              <span>{role.stageNumber}</span>
-            </button>
-          ))}
-
-          <span class="career-map__cursor" data-career-cursor hidden aria-hidden="true"></span>
 
           <div class="career-map__lens" data-career-lens hidden aria-hidden="true">
             <span class="career-map__lens-date" data-career-month></span>
@@ -352,14 +354,19 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
   }
 
   .career-map__header span:last-child {
-    opacity: 0.65;
+    opacity: 0.62;
   }
 
   .career-map__axis {
     position: relative;
-    height: 5rem;
-    cursor: crosshair;
+    height: 5.25rem;
     isolation: isolate;
+  }
+
+  .career-map__plot {
+    position: absolute;
+    inset: 0 1.4rem;
+    cursor: ew-resize;
   }
 
   .career-map__years {
@@ -384,26 +391,20 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
     top: 2.25rem;
     right: 0;
     left: 0;
-    height: 1px;
-    background: var(--color-border);
-    transition:
-      height var(--transition-fast),
-      background-color var(--transition-fast);
-  }
-
-  .career-map__axis:is(:hover, :focus-visible) .career-map__baseline {
     height: 2px;
-    background: rgb(255 255 255 / 0.16);
+    border-radius: var(--radius-pill);
+    background: var(--color-border);
   }
 
   .career-map__year-tick {
     position: absolute;
-    top: 1.88rem;
+    z-index: 2;
+    top: 1.98rem;
     left: var(--year-position);
     width: 1px;
-    height: 0.78rem;
+    height: 0.56rem;
     background: var(--color-text-muted);
-    opacity: 0.45;
+    opacity: 0.42;
     transform: translateX(-50%);
     pointer-events: none;
   }
@@ -411,34 +412,29 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
   .career-map__segment {
     position: absolute;
     z-index: 1;
-    top: 2.18rem;
+    top: 2.2rem;
     left: var(--segment-left);
     width: max(var(--segment-width), 0.35rem);
-    height: 0.22rem;
+    height: 0.28rem;
     border-radius: var(--radius-pill);
     background: var(--color-accent);
-    opacity: 0.32;
+    opacity: 0.44;
     pointer-events: none;
-    transition:
-      height var(--transition-fast),
-      opacity var(--transition-fast),
-      transform var(--transition-fast);
+    transition: opacity var(--transition-fast);
   }
 
   .career-map__segment.is-active {
-    height: 0.3rem;
-    opacity: 0.95;
-    transform: translateY(-0.04rem);
+    opacity: 0.7;
   }
 
   .career-map__stage-marker {
     position: absolute;
     z-index: 3;
-    top: 2.82rem;
+    top: 2.86rem;
     left: var(--stage-position);
     display: grid;
-    min-width: 1.75rem;
-    padding: 0.16rem 0.3rem 0.2rem;
+    min-width: 1.85rem;
+    padding: 0.14rem 0.3rem 0.2rem;
     border: 0;
     background: transparent;
     color: var(--color-text-muted);
@@ -454,18 +450,20 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
 
   .career-map__stage-marker::before {
     position: absolute;
-    top: -0.58rem;
+    top: -0.62rem;
     left: 50%;
-    width: 0.34rem;
-    height: 0.34rem;
-    border: 1px solid var(--color-border);
+    width: 0.42rem;
+    height: 0.42rem;
+    border: 2px solid var(--color-background);
     border-radius: 50%;
-    background: var(--color-background);
+    background: var(--color-text-muted);
     content: '';
+    opacity: 0.68;
     transform: translate(-50%, -50%);
     transition:
-      border-color var(--transition-fast),
       background-color var(--transition-fast),
+      box-shadow var(--transition-fast),
+      opacity var(--transition-fast),
       transform var(--transition-fast);
   }
 
@@ -474,20 +472,26 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
     color: var(--color-accent);
   }
 
+  .career-map__stage-marker:is(:hover, :focus-visible)::before,
   .career-map__stage-marker.is-active::before {
-    border-color: var(--color-accent);
     background: var(--color-accent);
-    transform: translate(-50%, -50%) scale(1.18);
+    opacity: 1;
+  }
+
+  .career-map__stage-marker.is-active::before {
+    box-shadow: 0 0 0 0.2rem rgb(75 180 230 / 0.14);
+    transform: translate(-50%, -50%) scale(1.12);
   }
 
   .career-map__cursor {
     position: absolute;
     z-index: 4;
-    top: 1.6rem;
+    top: 1.66rem;
     left: var(--cursor-position, 0%);
     width: 1px;
-    height: 1.35rem;
+    height: 1.2rem;
     background: var(--color-accent);
+    opacity: 0.85;
     transform: translateX(-50%);
     pointer-events: none;
   }
@@ -499,10 +503,10 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
 
   .career-map__cursor::after {
     position: absolute;
-    top: 0.68rem;
+    top: 0.62rem;
     left: 50%;
-    width: 0.4rem;
-    height: 0.4rem;
+    width: 0.38rem;
+    height: 0.38rem;
     border-radius: 50%;
     background: var(--color-accent);
     content: '';
@@ -510,13 +514,13 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
   }
 
   .career-map__lens {
-    --lens-cell-width: 3rem;
+    --lens-cell-width: 2.45rem;
 
     position: absolute;
     z-index: 6;
     top: -0.15rem;
     left: var(--lens-left, 0px);
-    width: min(19rem, calc(100% - 0.5rem));
+    width: min(19rem, calc(100% - 0.8rem));
     padding: 0.55rem 0.7rem 0.65rem;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
@@ -542,13 +546,11 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
     overflow: hidden;
     width: 100%;
     padding-block: 0.15rem;
-    mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
   }
 
   .career-map__lens-track {
     display: flex;
     width: max-content;
-    padding-inline: calc(50% - (var(--lens-cell-width) / 2));
     transform: translate3d(var(--lens-track-x, 0px), 0, 0);
     will-change: transform;
   }
@@ -579,7 +581,7 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
   }
 
   .career-map__lens-mark {
-    width: 70%;
+    width: 68%;
     height: 1px;
     margin-top: 0.14rem;
     background: var(--color-border);
@@ -588,17 +590,17 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
   .career-map__lens-month.has-experience .career-map__lens-mark {
     height: 2px;
     background: var(--color-accent);
-    opacity: 0.55;
+    opacity: 0.5;
   }
 
   .career-map__lens-center {
     position: absolute;
     top: 0.1rem;
     bottom: 0.1rem;
-    left: 50%;
+    left: var(--lens-focus-x, 50%);
     width: 1px;
     background: var(--color-accent);
-    opacity: 0.65;
+    opacity: 0.7;
     transform: translateX(-50%);
     pointer-events: none;
   }
@@ -959,7 +961,6 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .career-map__baseline,
     .career-map__segment,
     .career-map__stage-marker,
     .career-map__stage-marker::before,
@@ -978,6 +979,7 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
 
 <script>
   const careerMap = document.querySelector<HTMLElement>('[data-career-map]');
+  const careerAxisContainer = careerMap?.querySelector<HTMLElement>('.career-map__axis');
   const careerAxis = careerMap?.querySelector<HTMLElement>('[data-career-axis]');
   const careerCursor = careerMap?.querySelector<HTMLElement>('[data-career-cursor]');
   const careerLens = careerMap?.querySelector<HTMLElement>('[data-career-lens]');
@@ -1075,6 +1077,7 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
 
   if (
     careerMap &&
+    careerAxisContainer &&
     careerAxis &&
     careerCursor &&
     careerLens &&
@@ -1110,7 +1113,7 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
         });
 
       const render = () => {
-        const smoothing = reducedMotion ? 1 : 0.2;
+        const smoothing = reducedMotion ? 1 : 0.16;
         renderedRatio += (targetRatio - renderedRatio) * smoothing;
         renderedLensLeft += (targetLensLeft - renderedLensLeft) * smoothing;
 
@@ -1121,13 +1124,19 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
         const month = (absoluteMonth % 12) + 1;
         const date = new Date(Date.UTC(year, month - 1, 1));
         const role = getRoleForMonth(monthIndex);
-        const cellWidth = parseFloat(getComputedStyle(careerLens).getPropertyValue('--lens-cell-width')) *
-          parseFloat(getComputedStyle(document.documentElement).fontSize);
-        const trackOffset = -(monthFloat * cellWidth);
+        const firstMonth = careerMonthTrack.querySelector<HTMLElement>('[data-lens-month]');
+        const cellWidth = firstMonth?.getBoundingClientRect().width ?? 39.2;
+        const windowWidth = careerLensWindow.clientWidth;
+        const trackWidth = monthCount * cellWidth;
+        const idealTrackOffset = windowWidth / 2 - (monthFloat + 0.5) * cellWidth;
+        const minTrackOffset = Math.min(0, windowWidth - trackWidth);
+        const trackOffset = Math.max(minTrackOffset, Math.min(idealTrackOffset, 0));
+        const focusX = (monthFloat + 0.5) * cellWidth + trackOffset;
 
         careerCursor.style.setProperty('--cursor-position', `${renderedRatio * 100}%`);
         careerLens.style.setProperty('--lens-left', `${renderedLensLeft}px`);
         careerMonthTrack.style.setProperty('--lens-track-x', `${trackOffset}px`);
+        careerLensWindow.style.setProperty('--lens-focus-x', `${focusX}px`);
         careerMonth.textContent = dateFormatter.format(date).replace('.', '').toUpperCase();
         hoveredRoleKey = role?.dataset.overviewRole;
 
@@ -1147,15 +1156,20 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
       };
 
       const updateTarget = (event: PointerEvent) => {
-        const bounds = careerAxis.getBoundingClientRect();
-        targetRatio = Math.max(0, Math.min((event.clientX - bounds.left) / bounds.width, 1));
+        const plotBounds = careerAxis.getBoundingClientRect();
+        const axisBounds = careerAxisContainer.getBoundingClientRect();
+        targetRatio = Math.max(0, Math.min((event.clientX - plotBounds.left) / plotBounds.width, 1));
 
         careerCursor.hidden = false;
         careerLens.hidden = false;
 
         const lensWidth = careerLens.offsetWidth;
-        const cursorX = targetRatio * bounds.width;
-        targetLensLeft = Math.max(0, Math.min(cursorX - lensWidth / 2, bounds.width - lensWidth));
+        const cursorX = plotBounds.left - axisBounds.left + targetRatio * plotBounds.width;
+        const lensMargin = 6;
+        targetLensLeft = Math.max(
+          lensMargin,
+          Math.min(cursorX - lensWidth / 2, axisBounds.width - lensWidth - lensMargin),
+        );
 
         if (frameId === null) {
           renderedRatio = targetRatio;
