@@ -17,20 +17,20 @@ export const experienceCompanies = [
     },
     roles: [
       {
-        id: 'support-maintenance-developer',
-        startDate: '2025-10',
-        endDate: '2026-07',
+        id: 'intern',
+        startDate: '2024-04',
+        endDate: '2024-06',
         period: {
-          es: '2025 — 2026',
-          en: '2025 — 2026',
+          es: '2024',
+          en: '2024',
         },
         role: {
-          es: 'Desarrollador / Soporte y Mantenimiento',
-          en: 'Developer / Support and Maintenance',
+          es: 'Becario',
+          en: 'Intern',
         },
         description: {
-          es: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer vitae lorem at sapien tincidunt luctus eget sed arcu.',
-          en: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer vitae lorem at sapien tincidunt luctus eget sed arcu.',
+          es: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec aliquet sem at neque luctus, vitae posuere lorem luctus.',
+          en: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec aliquet sem at neque luctus, vitae posuere lorem luctus.',
         },
         highlights: [
           {
@@ -42,7 +42,7 @@ export const experienceCompanies = [
             en: 'Integer vitae lorem at sapien tincidunt luctus eget sed arcu.',
           },
         ],
-        technologies: ['SQL', 'JavaScript'],
+        technologies: ['JavaScript', 'CSS'],
       },
       {
         id: 'web-developer',
@@ -73,20 +73,20 @@ export const experienceCompanies = [
         technologies: ['.NET', 'ASP.NET', 'Web API', 'SQL', 'Postman'],
       },
       {
-        id: 'intern',
-        startDate: '2024-04',
-        endDate: '2024-06',
+        id: 'support-maintenance-developer',
+        startDate: '2025-10',
+        endDate: '2026-07',
         period: {
-          es: '2024',
-          en: '2024',
+          es: '2025 — 2026',
+          en: '2025 — 2026',
         },
         role: {
-          es: 'Becario',
-          en: 'Intern',
+          es: 'Desarrollador / Soporte y Mantenimiento',
+          en: 'Developer / Support and Maintenance',
         },
         description: {
-          es: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec aliquet sem at neque luctus, vitae posuere lorem luctus.',
-          en: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec aliquet sem at neque luctus, vitae posuere lorem luctus.',
+          es: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer vitae lorem at sapien tincidunt luctus eget sed arcu.',
+          en: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer vitae lorem at sapien tincidunt luctus eget sed arcu.',
         },
         highlights: [
           {
@@ -98,7 +98,7 @@ export const experienceCompanies = [
             en: 'Integer vitae lorem at sapien tincidunt luctus eget sed arcu.',
           },
         ],
-        technologies: ['JavaScript', 'CSS'],
+        technologies: ['SQL', 'JavaScript'],
       },
     ],
   },

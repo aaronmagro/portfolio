@@ -21,7 +21,6 @@ const copy = {
     stages: 'Etapas dentro de',
     highlights: 'Aspectos destacados',
     technologies: 'Tecnologías',
-    stage: 'etapas',
   },
   en: {
     eyebrow: 'Professional background',
@@ -31,7 +30,6 @@ const copy = {
     stages: 'Roles at',
     highlights: 'Highlights',
     technologies: 'Technologies',
-    stage: 'roles',
   },
 } as const;
 ---
@@ -47,105 +45,106 @@ const copy = {
     />
 
     <div class="experience__companies">
-      {experienceCompanies.map((company) => (
-        <article class="experience-company" data-experience-group>
-          <header class="experience-company__header">
-            <div>
+      {experienceCompanies.map((company) => {
+        const initialIndex = company.roles.length - 1;
+
+        return (
+          <article class="experience-company" data-experience-group>
+            <header class="experience-company__header">
               <p class="experience-company__period">{company.period[lang]}</p>
               <h3>{company.company[lang]}</h3>
               <p class="experience-company__location">{company.location[lang]}</p>
-            </div>
-            <p class="experience-company__count" aria-hidden="true">
-              {String(company.roles.length).padStart(2, '0')} {copy[lang].stage}
-            </p>
-          </header>
+            </header>
 
-          <div class="experience-company__workspace">
-            <div
-              class="experience-track"
-              role="tablist"
-              aria-label={`${copy[lang].stages} ${company.company[lang]}`}
-            >
-              <span class="experience-track__rail" aria-hidden="true">
-                <span class="experience-track__progress" data-track-progress></span>
-              </span>
+            <div class="experience-company__workspace">
+              <div
+                class="experience-track"
+                role="tablist"
+                aria-label={`${copy[lang].stages} ${company.company[lang]}`}
+              >
+                <span class="experience-track__rail" aria-hidden="true">
+                  <span class="experience-track__progress" data-track-progress></span>
+                </span>
 
-              {company.roles.map((role, index) => {
-                const tabId = `${company.id}-${role.id}-tab`;
-                const panelId = `${company.id}-${role.id}-panel`;
+                {company.roles.map((role, index) => {
+                  const tabId = `${company.id}-${role.id}-tab`;
+                  const panelId = `${company.id}-${role.id}-panel`;
+                  const isInitial = index === initialIndex;
 
-                return (
-                  <button
-                    class:list={['experience-stage', { 'is-active': index === 0 }]}
-                    type="button"
-                    role="tab"
-                    id={tabId}
-                    aria-selected={index === 0 ? 'true' : 'false'}
-                    aria-controls={panelId}
-                    tabindex={index === 0 ? 0 : -1}
-                    data-stage-tab
-                    data-stage-index={index}
-                  >
-                    <span class="experience-stage__index" aria-hidden="true">
-                      {String(index + 1).padStart(2, '0')}
-                    </span>
-                    <span class="experience-stage__body">
-                      <span class="experience-stage__period">{role.period[lang]}</span>
-                      <span class="experience-stage__role">{role.role[lang]}</span>
-                    </span>
-                    <span class="experience-stage__signal" aria-hidden="true"></span>
-                  </button>
-                );
-              })}
-            </div>
+                  return (
+                    <button
+                      class:list={['experience-stage', { 'is-active': isInitial }]}
+                      type="button"
+                      role="tab"
+                      id={tabId}
+                      aria-selected={isInitial ? 'true' : 'false'}
+                      aria-controls={panelId}
+                      tabindex={isInitial ? 0 : -1}
+                      data-stage-tab
+                      data-stage-index={index}
+                    >
+                      <span class="experience-stage__index" aria-hidden="true">
+                        {String(index + 1).padStart(2, '0')}
+                      </span>
+                      <span class="experience-stage__body">
+                        <span class="experience-stage__period">{role.period[lang]}</span>
+                        <span class="experience-stage__role">{role.role[lang]}</span>
+                      </span>
+                      <span class="experience-stage__signal" aria-hidden="true"></span>
+                    </button>
+                  );
+                })}
+              </div>
 
-            <div class="experience-details" data-detail-host>
-              {company.roles.map((role, index) => {
-                const tabId = `${company.id}-${role.id}-tab`;
-                const panelId = `${company.id}-${role.id}-panel`;
+              <div class="experience-details" data-detail-host>
+                {company.roles.map((role, index) => {
+                  const tabId = `${company.id}-${role.id}-tab`;
+                  const panelId = `${company.id}-${role.id}-panel`;
+                  const isInitial = index === initialIndex;
 
-                return (
-                  <div
-                    class:list={['experience-detail', { 'is-active': index === 0 }]}
-                    role="tabpanel"
-                    id={panelId}
-                    aria-labelledby={tabId}
-                    hidden={index !== 0}
-                    data-stage-panel
-                  >
-                    <span class="experience-detail__watermark" aria-hidden="true">
-                      {role.startDate.slice(0, 4)}
-                    </span>
+                  return (
+                    <div
+                      class:list={['experience-detail', { 'is-active': isInitial }]}
+                      role="tabpanel"
+                      id={panelId}
+                      aria-labelledby={tabId}
+                      hidden={!isInitial}
+                      data-stage-panel
+                    >
+                      <span class="experience-detail__watermark" aria-hidden="true">
+                        {String(index + 1).padStart(2, '0')}
+                      </span>
 
-                    <div class="experience-detail__meta">
-                      <span>{String(index + 1).padStart(2, '0')} / {String(company.roles.length).padStart(2, '0')}</span>
-                      <span>{role.period[lang]}</span>
-                    </div>
+                      <div class="experience-detail__meta">
+                        <span>{String(index + 1).padStart(2, '0')} / {String(company.roles.length).padStart(2, '0')}</span>
+                        <span>{role.period[lang]}</span>
+                      </div>
 
-                    <h4>{role.role[lang]}</h4>
-                    <p class="experience-detail__company">{company.company[lang]}</p>
-                    <p class="experience-detail__description">{role.description[lang]}</p>
+                      <h4>{role.role[lang]}</h4>
+                      <p class="experience-detail__company">{company.company[lang]}</p>
+                      <p class="experience-detail__description">{role.description[lang]}</p>
 
-                    <ul class="experience-detail__highlights" aria-label={copy[lang].highlights}>
-                      {role.highlights.map((highlight) => (
-                        <li>{highlight[lang]}</li>
-                      ))}
-                    </ul>
-
-                    {role.technologies.length > 0 && (
-                      <ul class="experience-detail__technologies" aria-label={copy[lang].technologies}>
-                        {role.technologies.map((technology) => (
-                          <li>{technology}</li>
+                      <ul class="experience-detail__highlights" aria-label={copy[lang].highlights}>
+                        {role.highlights.map((highlight) => (
+                          <li>{highlight[lang]}</li>
                         ))}
                       </ul>
-                    )}
-                  </div>
-                );
-              })}
+
+                      {role.technologies.length > 0 && (
+                        <ul class="experience-detail__technologies" aria-label={copy[lang].technologies}>
+                          {role.technologies.map((technology) => (
+                            <li>{technology}</li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        </article>
-      ))}
+          </article>
+        );
+      })}
     </div>
   </Container>
 </section>
@@ -169,10 +168,6 @@ const copy = {
   }
 
   .experience-company__header {
-    display: flex;
-    align-items: end;
-    justify-content: space-between;
-    gap: var(--space-6);
     margin-bottom: clamp(var(--space-7), 6vw, var(--space-9));
   }
 
@@ -193,15 +188,6 @@ const copy = {
   .experience-company__location {
     margin-top: var(--space-3);
     color: var(--color-text-muted);
-  }
-
-  .experience-company__count {
-    flex: none;
-    color: var(--color-text-muted);
-    font-size: var(--text-sm);
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
   }
 
   .experience-company__workspace {
@@ -468,13 +454,7 @@ const copy = {
     }
 
     .experience-company__header {
-      align-items: start;
-      flex-direction: column;
       margin-bottom: var(--space-7);
-    }
-
-    .experience-company__count {
-      display: none;
     }
 
     .experience-stage {
@@ -565,6 +545,6 @@ const copy = {
       });
     });
 
-    activate(0);
+    activate(tabs.length - 1);
   });
 </script>
