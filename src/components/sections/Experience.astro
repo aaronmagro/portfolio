@@ -32,6 +32,17 @@ const copy = {
     technologies: 'Technologies',
   },
 } as const;
+
+const overviewRoles = experienceCompanies.flatMap((company) =>
+  company.roles.map((role) => ({
+    key: `${company.id}-${role.id}`,
+    startDate: role.startDate,
+    endDate: role.endDate,
+  })),
+);
+const overviewStartYear = overviewRoles[0]?.startDate.slice(0, 4) ?? '';
+const overviewEndYear = overviewRoles[overviewRoles.length - 1]?.endDate.slice(0, 4) ?? '';
+const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
 ---
 
 <section class="experience" id="experience" aria-labelledby="experience-title" data-experience-section>
@@ -42,7 +53,38 @@ const copy = {
       title={copy[lang].title}
       description={copy[lang].description}
       headingId="experience-title"
-    />
+    >
+      <div slot="aside" class="experience-overview" aria-hidden="true" data-experience-overview>
+        <div class="experience-overview__years">
+          <span>{overviewStartYear}</span>
+          <span>{overviewEndYear}</span>
+        </div>
+        <div class="experience-overview__track">
+          <span class="experience-overview__rail">
+            <span
+              class="experience-overview__progress"
+              data-overview-progress
+              style={`--overview-progress: ${overviewRoles.length <= 1 ? 100 : (overviewInitialIndex / (overviewRoles.length - 1)) * 100}%`}
+            ></span>
+          </span>
+          {overviewRoles.map((role, index) => (
+            <span
+              class:list={[
+                'experience-overview__stage',
+                {
+                  'is-active': index === overviewInitialIndex,
+                  'is-complete': index <= overviewInitialIndex,
+                },
+              ]}
+              data-overview-role={role.key}
+            >
+              <span>{String(index + 1).padStart(2, '0')}</span>
+              <span class="experience-overview__dot"></span>
+            </span>
+          ))}
+        </div>
+      </div>
+    </SectionHeading>
 
     <div class="experience__companies">
       {experienceCompanies.map((company) => {
@@ -51,9 +93,11 @@ const copy = {
         return (
           <article class="experience-company" data-experience-group>
             <header class="experience-company__header">
+              <div class="experience-company__identity">
+                <h3>{company.company[lang]}</h3>
+                <p class="experience-company__location">{company.location[lang]}</p>
+              </div>
               <p class="experience-company__period">{company.period[lang]}</p>
-              <h3>{company.company[lang]}</h3>
-              <p class="experience-company__location">{company.location[lang]}</p>
             </header>
 
             <div class="experience-company__workspace">
@@ -82,6 +126,7 @@ const copy = {
                       tabindex={isInitial ? 0 : -1}
                       data-stage-tab
                       data-stage-index={index}
+                      data-role-key={`${company.id}-${role.id}`}
                     >
                       <span class="experience-stage__index" aria-hidden="true">
                         {String(index + 1).padStart(2, '0')}
@@ -159,6 +204,86 @@ const copy = {
     scroll-margin-top: 4.5rem;
   }
 
+  .experience-overview {
+    display: grid;
+    gap: var(--space-3);
+    width: min(100%, 25rem);
+    margin-left: auto;
+  }
+
+  .experience-overview__years {
+    display: flex;
+    justify-content: space-between;
+    color: var(--color-text-muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+  }
+
+  .experience-overview__track {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-4);
+  }
+
+  .experience-overview__rail {
+    position: absolute;
+    top: 1.72rem;
+    right: 0.55rem;
+    left: 0.55rem;
+    height: 1px;
+    overflow: hidden;
+    background: var(--color-border);
+  }
+
+  .experience-overview__progress {
+    display: block;
+    width: var(--overview-progress, 100%);
+    height: 100%;
+    background: var(--color-accent);
+    transition: width 280ms ease;
+  }
+
+  .experience-overview__stage {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: var(--space-2);
+    justify-items: center;
+    min-width: 2.75rem;
+    color: var(--color-text-muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    transition: color var(--transition-fast);
+  }
+
+  .experience-overview__dot {
+    width: 0.68rem;
+    height: 0.68rem;
+    border: 1px solid var(--color-border);
+    border-radius: 50%;
+    background: var(--color-background);
+    transition:
+      border-color var(--transition-fast),
+      background-color var(--transition-fast),
+      transform var(--transition-fast);
+  }
+
+  .experience-overview__stage.is-complete {
+    color: var(--color-accent);
+  }
+
+  .experience-overview__stage.is-complete .experience-overview__dot {
+    border-color: var(--color-accent);
+    background: var(--color-accent);
+  }
+
+  .experience-overview__stage.is-active .experience-overview__dot {
+    transform: scale(1.3);
+  }
+
   .experience__companies {
     display: grid;
     gap: var(--space-10);
@@ -171,26 +296,35 @@ const copy = {
   }
 
   .experience-company__header {
-    display: grid;
-    gap: var(--space-3);
-    margin-bottom: clamp(var(--space-7), 6vw, var(--space-9));
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: var(--space-6);
+    margin-bottom: clamp(var(--space-7), 5vw, var(--space-8));
+  }
+
+  .experience-company__identity {
+    min-width: 0;
+  }
+
+  .experience-company h3 {
+    font-size: clamp(1.6rem, 2.8vw, 2.2rem);
+    letter-spacing: -0.035em;
+  }
+
+  .experience-company__location {
+    margin-top: var(--space-2);
+    color: var(--color-text-muted);
   }
 
   .experience-company__period {
+    flex: none;
+    padding-bottom: 0.2rem;
     color: var(--color-accent);
     font-size: var(--text-sm);
     font-weight: 700;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-  }
-
-  .experience-company h3 {
-    font-size: clamp(1.9rem, 4vw, 3.2rem);
-    letter-spacing: -0.04em;
-  }
-
-  .experience-company__location {
-    color: var(--color-text-muted);
   }
 
   .experience-company__workspace {
@@ -435,31 +569,9 @@ const copy = {
   }
 
   @media (min-width: 68rem) {
-    .experience-company__header,
     .experience-company__workspace {
       grid-template-columns: var(--section-layout-columns);
       column-gap: var(--section-layout-gap);
-    }
-
-    .experience-company__header {
-      align-items: start;
-      row-gap: var(--space-2);
-    }
-
-    .experience-company__period {
-      grid-column: 1;
-      grid-row: 1;
-      padding-top: 0.35rem;
-    }
-
-    .experience-company h3 {
-      grid-column: 2;
-      grid-row: 1 / span 2;
-    }
-
-    .experience-company__location {
-      grid-column: 1;
-      grid-row: 2;
     }
 
     .experience-track {
@@ -473,13 +585,26 @@ const copy = {
     }
   }
 
+  @media (max-width: 47.99rem) {
+    .experience-overview {
+      display: none;
+    }
+  }
+
   @media (max-width: 40rem) {
     .experience__companies {
       margin-top: var(--space-8);
     }
 
     .experience-company__header {
+      align-items: start;
+      flex-direction: column;
       margin-bottom: var(--space-7);
+    }
+
+    .experience-company__period {
+      order: -1;
+      padding-bottom: 0;
     }
 
     .experience-stage {
@@ -503,6 +628,9 @@ const copy = {
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .experience-overview__progress,
+    .experience-overview__stage,
+    .experience-overview__dot,
     .experience-track__progress,
     .experience-stage__index,
     .experience-stage__role,
@@ -517,6 +645,31 @@ const copy = {
 </style>
 
 <script>
+  const overview = document.querySelector<HTMLElement>('[data-experience-overview]');
+  const overviewStages = overview
+    ? Array.from(overview.querySelectorAll<HTMLElement>('[data-overview-role]'))
+    : [];
+  const overviewProgress = overview?.querySelector<HTMLElement>('[data-overview-progress]');
+
+  const updateOverview = (roleKey: string | undefined) => {
+    if (!roleKey || overviewStages.length === 0) return;
+
+    const overviewIndex = overviewStages.findIndex((stage) => stage.dataset.overviewRole === roleKey);
+    if (overviewIndex < 0) return;
+
+    overviewStages.forEach((stage, index) => {
+      stage.classList.toggle('is-active', index === overviewIndex);
+      stage.classList.toggle('is-complete', index <= overviewIndex);
+    });
+
+    if (overviewProgress) {
+      const percentage = overviewStages.length <= 1
+        ? 100
+        : (overviewIndex / (overviewStages.length - 1)) * 100;
+      overviewProgress.style.setProperty('--overview-progress', `${percentage}%`);
+    }
+  };
+
   const groups = document.querySelectorAll<HTMLElement>('[data-experience-group]');
 
   groups.forEach((group) => {
@@ -549,6 +702,8 @@ const copy = {
         const percentage = tabs.length <= 1 ? 100 : (index / (tabs.length - 1)) * 100;
         progress.style.setProperty('--track-progress', `${percentage}%`);
       }
+
+      updateOverview(tabs[index]?.dataset.roleKey);
 
       if (moveFocus) tabs[index]?.focus();
     };

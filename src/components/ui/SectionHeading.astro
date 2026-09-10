@@ -8,24 +8,33 @@ interface Props {
 }
 
 const { index, eyebrow, title, description, headingId } = Astro.props;
+const hasAside = Astro.slots.has('aside');
 ---
 
-<div class="section-heading">
+<div class:list={['section-heading', { 'section-heading--with-aside': hasAside }]}>
   <div class="section-heading__meta" aria-hidden="true">
     <span>{index}</span>
     <span>{eyebrow}</span>
   </div>
 
-  <div class="section-heading__copy">
-    <h2 id={headingId}>{title}</h2>
-    {description && <p>{description}</p>}
+  <div class="section-heading__body">
+    <div class="section-heading__copy">
+      <h2 id={headingId}>{title}</h2>
+      {description && <p>{description}</p>}
+    </div>
+
+    {hasAside && (
+      <div class="section-heading__aside">
+        <slot name="aside" />
+      </div>
+    )}
   </div>
 </div>
 
 <style>
   .section-heading {
     display: grid;
-    gap: var(--space-5);
+    gap: var(--space-6);
   }
 
   .section-heading__meta {
@@ -43,8 +52,13 @@ const { index, eyebrow, title, description, headingId } = Astro.props;
     min-width: 2ch;
   }
 
+  .section-heading__body {
+    display: grid;
+    gap: var(--space-7);
+  }
+
   .section-heading__copy {
-    max-width: 50rem;
+    max-width: 48rem;
   }
 
   .section-heading h2 {
@@ -53,24 +67,26 @@ const { index, eyebrow, title, description, headingId } = Astro.props;
   }
 
   .section-heading p {
-    max-width: 40rem;
+    max-width: 38rem;
     margin-top: var(--space-5);
     color: var(--color-text-muted);
     font-size: var(--text-lg);
   }
 
+  .section-heading__aside {
+    min-width: 0;
+  }
+
   @media (min-width: 68rem) {
-    .section-heading {
-      grid-template-columns: var(
-        --section-layout-columns,
-        minmax(17rem, 0.42fr) minmax(0, 1fr)
-      );
-      align-items: start;
-      gap: var(--section-layout-gap, clamp(var(--space-7), 7vw, var(--space-10)));
+    .section-heading--with-aside .section-heading__body {
+      grid-template-columns: minmax(0, 1fr) minmax(19rem, 0.62fr);
+      align-items: end;
+      gap: clamp(var(--space-8), 8vw, var(--space-10));
     }
 
-    .section-heading__meta {
-      padding-top: 0.45rem;
+    .section-heading__aside {
+      justify-self: stretch;
+      padding-bottom: 0.35rem;
     }
   }
 </style>

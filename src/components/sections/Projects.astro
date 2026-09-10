@@ -18,12 +18,14 @@ const copy = {
     title: 'Proyectos',
     description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer vitae lorem at sapien tincidunt luctus eget sed arcu.',
     technologies: 'Tecnologías',
+    projectNavigation: 'Ir a proyecto',
   },
   en: {
     eyebrow: 'Selected work',
     title: 'Projects',
     description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer vitae lorem at sapien tincidunt luctus eget sed arcu.',
     technologies: 'Technologies',
+    projectNavigation: 'Go to project',
   },
 } as const;
 ---
@@ -36,11 +38,33 @@ const copy = {
       title={copy[lang].title}
       description={copy[lang].description}
       headingId="projects-title"
-    />
+    >
+      <nav slot="aside" class="projects-index" aria-label={copy[lang].projectNavigation}>
+        <div class="projects-index__scale" aria-hidden="true">
+          <span>01</span>
+          <span>{String(featuredProjects.length).padStart(2, '0')}</span>
+        </div>
+        <div class="projects-index__track">
+          {featuredProjects.map((project, index) => (
+            <a
+              href={`#project-${project.id}`}
+              class:list={['projects-index__item', { 'is-featured': index === 0 }]}
+              aria-label={`${copy[lang].projectNavigation}: ${project.title[lang]}`}
+            >
+              <span>{String(index + 1).padStart(2, '0')}</span>
+              <span class="projects-index__marker" aria-hidden="true"></span>
+            </a>
+          ))}
+        </div>
+      </nav>
+    </SectionHeading>
 
     <div class="projects__list">
       {featuredProjects.map((project, index) => (
-        <article class:list={['project-card', { 'project-card--featured': index === 0 }]}>
+        <article
+          id={`project-${project.id}`}
+          class:list={['project-card', { 'project-card--featured': index === 0 }]}
+        >
           <div class="project-card__media" aria-hidden="true">
             <div class="project-card__window">
               <div class="project-card__window-bar">
@@ -87,6 +111,77 @@ const copy = {
     scroll-margin-top: 4.5rem;
   }
 
+  .projects-index {
+    display: grid;
+    gap: var(--space-3);
+    width: min(100%, 24rem);
+    margin-left: auto;
+  }
+
+  .projects-index__scale {
+    display: flex;
+    justify-content: space-between;
+    color: var(--color-text-muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+  }
+
+  .projects-index__track {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+
+  .projects-index__track::before {
+    position: absolute;
+    top: 1.7rem;
+    right: 0.55rem;
+    left: 0.55rem;
+    height: 1px;
+    background: var(--color-border);
+    content: '';
+  }
+
+  .projects-index__item {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: var(--space-2);
+    justify-items: center;
+    min-width: 2.75rem;
+    padding: 0.2rem 0.35rem;
+    color: var(--color-text-muted);
+    font-size: 0.76rem;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .projects-index__marker {
+    width: 0.68rem;
+    height: 0.68rem;
+    border: 1px solid var(--color-border);
+    border-radius: 50%;
+    background: var(--color-background);
+    transition:
+      border-color var(--transition-fast),
+      background-color var(--transition-fast),
+      transform var(--transition-fast);
+  }
+
+  .projects-index__item:is(:hover, :focus-visible),
+  .projects-index__item.is-featured {
+    color: var(--color-accent);
+  }
+
+  .projects-index__item:is(:hover, :focus-visible) .projects-index__marker,
+  .projects-index__item.is-featured .projects-index__marker {
+    border-color: var(--color-accent);
+    background: var(--color-accent);
+    transform: scale(1.12);
+  }
+
   .projects__list {
     display: grid;
     gap: var(--space-8);
@@ -95,6 +190,7 @@ const copy = {
 
   .project-card {
     min-width: 0;
+    scroll-margin-top: 6rem;
   }
 
   .project-card__media {
@@ -230,6 +326,13 @@ const copy = {
     }
   }
 
+  @media (max-width: 47.99rem) {
+    .projects-index {
+      width: 100%;
+      margin-left: 0;
+    }
+  }
+
   @media (max-width: 35rem) {
     .projects__list {
       margin-top: var(--space-8);
@@ -251,6 +354,12 @@ const copy = {
 
     .project-card__window-body .project-card__panel:last-child {
       display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .projects-index__marker {
+      transition: none;
     }
   }
 </style>
