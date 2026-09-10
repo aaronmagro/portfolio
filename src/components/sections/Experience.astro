@@ -21,6 +21,9 @@ const copy = {
     stages: 'Etapas dentro de',
     highlights: 'Aspectos destacados',
     technologies: 'Tecnologías',
+    timeAxis: 'Tiempo',
+    stageAxis: 'Etapas',
+    timeline: 'Cronología profesional',
   },
   en: {
     eyebrow: 'Professional background',
@@ -30,18 +33,68 @@ const copy = {
     stages: 'Roles at',
     highlights: 'Highlights',
     technologies: 'Technologies',
+    timeAxis: 'Time',
+    stageAxis: 'Stages',
+    timeline: 'Professional timeline',
   },
 } as const;
 
-const overviewRoles = experienceCompanies.flatMap((company) =>
+const toMonthIndex = (value: string) => {
+  const [year, month] = value.split('-').map(Number);
+  return year * 12 + month - 1;
+};
+
+const currentDate = new Date();
+const currentYearMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+
+const rawOverviewRoles = experienceCompanies.flatMap((company) =>
   company.roles.map((role) => ({
     key: `${company.id}-${role.id}`,
+    role: role.role[lang],
+    period: role.period[lang],
     startDate: role.startDate,
-    endDate: role.endDate,
+    endDate: role.endDate ?? currentYearMonth,
   })),
 );
-const overviewStartYear = overviewRoles[0]?.startDate.slice(0, 4) ?? '';
-const overviewEndYear = overviewRoles[overviewRoles.length - 1]?.endDate.slice(0, 4) ?? '';
+
+const timelineStartMonth = rawOverviewRoles.length
+  ? Math.min(...rawOverviewRoles.map((role) => toMonthIndex(role.startDate)))
+  : toMonthIndex(currentYearMonth);
+const timelineEndMonth = rawOverviewRoles.length
+  ? Math.max(...rawOverviewRoles.map((role) => toMonthIndex(role.endDate)))
+  : timelineStartMonth;
+const timelineMonthCount = Math.max(timelineEndMonth - timelineStartMonth + 1, 1);
+
+const timelineMonths = Array.from({ length: timelineMonthCount }, (_, index) => {
+  const absoluteMonth = timelineStartMonth + index;
+  const year = Math.floor(absoluteMonth / 12);
+  const month = (absoluteMonth % 12) + 1;
+
+  return {
+    index,
+    year,
+    month,
+    position: ((index + 0.5) / timelineMonthCount) * 100,
+    isYearBoundary: index === 0 || month === 1,
+  };
+});
+
+const yearMarkers = timelineMonths.filter((month) => month.isYearBoundary);
+
+const overviewRoles = rawOverviewRoles.map((role, index) => {
+  const startOffset = toMonthIndex(role.startDate) - timelineStartMonth;
+  const endOffset = toMonthIndex(role.endDate) - timelineStartMonth;
+
+  return {
+    ...role,
+    index,
+    startOffset,
+    endOffset,
+    left: (startOffset / timelineMonthCount) * 100,
+    width: ((endOffset - startOffset + 1) / timelineMonthCount) * 100,
+  };
+});
+
 const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
 ---
 
@@ -54,33 +107,61 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
       description={copy[lang].description}
       headingId="experience-title"
     >
-      <div slot="aside" class="experience-overview" aria-hidden="true" data-experience-overview>
-        <div class="experience-overview__years">
-          <span>{overviewStartYear}</span>
-          <span>{overviewEndYear}</span>
+      <div
+        slot="aside"
+        class="experience-overview"
+        data-experience-overview
+        data-timeline-start={rawOverviewRoles[0]?.startDate ?? currentYearMonth}
+        data-timeline-months={timelineMonthCount}
+        aria-label={copy[lang].timeline}
+      >
+        <span class="experience-overview__label">{copy[lang].timeAxis}</span>
+        <div class="experience-overview__time">
+          <div class="experience-overview__years" aria-hidden="true">
+            {yearMarkers.map((marker, index) => (
+              <span
+                class:list={['experience-overview__year', { 'is-first': index === 0 }]}
+                style={`--marker-position: ${marker.position}%`}
+              >
+                {marker.year}
+              </span>
+            ))}
+          </div>
+
+          <div class="experience-overview__axis" data-career-axis aria-hidden="true">
+            <span class="experience-overview__baseline"></span>
+
+            {timelineMonths.map((month) => (
+              <span
+                class:list={['experience-overview__tick', { 'is-year': month.month === 1 }]}
+                style={`--tick-position: ${month.position}%`}
+              ></span>
+            ))}
+
+            <span class="experience-overview__cursor" data-career-cursor hidden>
+              <span class="experience-overview__cursor-label" data-career-month></span>
+            </span>
+          </div>
         </div>
-        <div class="experience-overview__track">
-          <span class="experience-overview__rail">
-            <span
-              class="experience-overview__progress"
-              data-overview-progress
-              style={`--overview-progress: ${overviewRoles.length <= 1 ? 100 : (overviewInitialIndex / (overviewRoles.length - 1)) * 100}%`}
-            ></span>
-          </span>
+
+        <span class="experience-overview__label">{copy[lang].stageAxis}</span>
+        <div class="experience-overview__stages">
           {overviewRoles.map((role, index) => (
-            <span
+            <button
               class:list={[
                 'experience-overview__stage',
-                {
-                  'is-active': index === overviewInitialIndex,
-                  'is-complete': index <= overviewInitialIndex,
-                },
+                { 'is-active': index === overviewInitialIndex },
               ]}
+              type="button"
+              style={`--stage-left: ${role.left}%; --stage-width: ${role.width}%`}
               data-overview-role={role.key}
+              data-start-index={role.startOffset}
+              data-end-index={role.endOffset}
+              aria-label={`${role.role}, ${role.period}`}
+              title={`${role.role} · ${role.period}`}
             >
               <span>{String(index + 1).padStart(2, '0')}</span>
-              <span class="experience-overview__dot"></span>
-            </span>
+            </button>
           ))}
         </div>
       </div>
@@ -206,82 +287,167 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
 
   .experience-overview {
     display: grid;
-    gap: var(--space-3);
-    width: min(100%, 25rem);
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-3) var(--space-4);
+    width: min(100%, 30rem);
     margin-left: auto;
   }
 
-  .experience-overview__years {
-    display: flex;
-    justify-content: space-between;
+  .experience-overview__label {
+    align-self: center;
     color: var(--color-text-muted);
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
   }
 
-  .experience-overview__track {
+  .experience-overview__time {
     position: relative;
-    display: flex;
-    justify-content: space-between;
-    gap: var(--space-4);
+    min-width: 0;
+    padding-top: 1.15rem;
   }
 
-  .experience-overview__rail {
+  .experience-overview__years {
     position: absolute;
-    top: 1.72rem;
-    right: 0.55rem;
-    left: 0.55rem;
+    top: 0;
+    right: 0;
+    left: 0;
+    height: 1rem;
+    color: var(--color-text-muted);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    pointer-events: none;
+  }
+
+  .experience-overview__year {
+    position: absolute;
+    left: var(--marker-position);
+    transform: translateX(-50%);
+  }
+
+  .experience-overview__year.is-first {
+    transform: translateX(-35%);
+  }
+
+  .experience-overview__axis {
+    position: relative;
+    height: 2.25rem;
+    cursor: crosshair;
+  }
+
+  .experience-overview__baseline {
+    position: absolute;
+    top: 0.62rem;
+    right: 0;
+    left: 0;
     height: 1px;
-    overflow: hidden;
     background: var(--color-border);
   }
 
-  .experience-overview__progress {
-    display: block;
-    width: var(--overview-progress, 100%);
-    height: 100%;
+  .experience-overview__tick {
+    position: absolute;
+    top: 0.39rem;
+    left: var(--tick-position);
+    width: 1px;
+    height: 0.48rem;
+    background: var(--color-border);
+    transform: translateX(-50%);
+  }
+
+  .experience-overview__tick.is-year {
+    top: 0.25rem;
+    height: 0.76rem;
+    background: var(--color-text-muted);
+    opacity: 0.7;
+  }
+
+  .experience-overview__cursor {
+    position: absolute;
+    z-index: 3;
+    top: 0.05rem;
+    left: var(--cursor-position, 0%);
+    width: 1px;
+    height: 1.15rem;
     background: var(--color-accent);
-    transition: width 280ms ease;
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+
+  .experience-overview__cursor[hidden] {
+    display: none;
+  }
+
+  .experience-overview__cursor::after {
+    position: absolute;
+    top: 0.46rem;
+    left: 50%;
+    width: 0.42rem;
+    height: 0.42rem;
+    border-radius: 50%;
+    background: var(--color-accent);
+    content: '';
+    transform: translate(-50%, -50%);
+  }
+
+  .experience-overview__cursor-label {
+    position: absolute;
+    top: 1.3rem;
+    left: 50%;
+    padding: 0.16rem 0.38rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-elevated);
+    color: var(--color-text);
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    line-height: 1.25;
+    white-space: nowrap;
+    transform: translateX(-50%);
+  }
+
+  .experience-overview__stages {
+    position: relative;
+    min-width: 0;
+    height: 2rem;
   }
 
   .experience-overview__stage {
-    position: relative;
-    z-index: 1;
-    display: grid;
-    gap: var(--space-2);
-    justify-items: center;
-    min-width: 2.75rem;
-    color: var(--color-text-muted);
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    transition: color var(--transition-fast);
-  }
-
-  .experience-overview__dot {
-    width: 0.68rem;
-    height: 0.68rem;
+    position: absolute;
+    top: 0.12rem;
+    left: var(--stage-left);
+    width: max(var(--stage-width), 2rem);
+    height: 1.65rem;
+    padding: 0;
     border: 1px solid var(--color-border);
-    border-radius: 50%;
-    background: var(--color-background);
+    border-radius: var(--radius-pill);
+    background: var(--color-background-subtle);
+    color: var(--color-text-muted);
+    font: inherit;
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    cursor: pointer;
     transition:
       border-color var(--transition-fast),
       background-color var(--transition-fast),
+      color var(--transition-fast),
       transform var(--transition-fast);
   }
 
-  .experience-overview__stage.is-complete {
-    color: var(--color-accent);
+  .experience-overview__stage:is(:hover, :focus-visible),
+  .experience-overview__stage.is-previewed {
+    border-color: var(--color-text-muted);
+    color: var(--color-heading);
+    transform: translateY(-0.08rem);
   }
 
-  .experience-overview__stage.is-complete .experience-overview__dot {
+  .experience-overview__stage.is-active {
     border-color: var(--color-accent);
-    background: var(--color-accent);
-  }
-
-  .experience-overview__stage.is-active .experience-overview__dot {
-    transform: scale(1.3);
+    background: var(--color-surface-elevated);
+    color: var(--color-accent);
   }
 
   .experience__companies {
@@ -628,9 +794,7 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .experience-overview__progress,
     .experience-overview__stage,
-    .experience-overview__dot,
     .experience-track__progress,
     .experience-stage__index,
     .experience-stage__role,
@@ -647,27 +811,19 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
 <script>
   const overview = document.querySelector<HTMLElement>('[data-experience-overview]');
   const overviewStages = overview
-    ? Array.from(overview.querySelectorAll<HTMLElement>('[data-overview-role]'))
+    ? Array.from(overview.querySelectorAll<HTMLButtonElement>('[data-overview-role]'))
     : [];
-  const overviewProgress = overview?.querySelector<HTMLElement>('[data-overview-progress]');
+  const careerAxis = overview?.querySelector<HTMLElement>('[data-career-axis]');
+  const careerCursor = overview?.querySelector<HTMLElement>('[data-career-cursor]');
+  const careerMonth = overview?.querySelector<HTMLElement>('[data-career-month]');
+  const roleActivators = new Map<string, () => void>();
 
   const updateOverview = (roleKey: string | undefined) => {
-    if (!roleKey || overviewStages.length === 0) return;
+    if (!roleKey) return;
 
-    const overviewIndex = overviewStages.findIndex((stage) => stage.dataset.overviewRole === roleKey);
-    if (overviewIndex < 0) return;
-
-    overviewStages.forEach((stage, index) => {
-      stage.classList.toggle('is-active', index === overviewIndex);
-      stage.classList.toggle('is-complete', index <= overviewIndex);
+    overviewStages.forEach((stage) => {
+      stage.classList.toggle('is-active', stage.dataset.overviewRole === roleKey);
     });
-
-    if (overviewProgress) {
-      const percentage = overviewStages.length <= 1
-        ? 100
-        : (overviewIndex / (overviewStages.length - 1)) * 100;
-      overviewProgress.style.setProperty('--overview-progress', `${percentage}%`);
-    }
   };
 
   const groups = document.querySelectorAll<HTMLElement>('[data-experience-group]');
@@ -709,6 +865,9 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
     };
 
     tabs.forEach((tab, index) => {
+      const roleKey = tab.dataset.roleKey;
+      if (roleKey) roleActivators.set(roleKey, () => activate(index));
+
       tab.addEventListener('click', () => activate(index));
       tab.addEventListener('keydown', (event) => {
         let nextIndex: number | null = null;
@@ -727,4 +886,84 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
 
     activate(tabs.length - 1);
   });
+
+  overviewStages.forEach((stage, index) => {
+    const activateStage = () => {
+      const roleKey = stage.dataset.overviewRole;
+      if (roleKey) roleActivators.get(roleKey)?.();
+    };
+
+    stage.addEventListener('mouseenter', activateStage);
+    stage.addEventListener('focus', activateStage);
+    stage.addEventListener('click', activateStage);
+    stage.addEventListener('keydown', (event) => {
+      let nextIndex: number | null = null;
+
+      if (event.key === 'ArrowRight' || event.key === 'ArrowDown') nextIndex = (index + 1) % overviewStages.length;
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') nextIndex = (index - 1 + overviewStages.length) % overviewStages.length;
+      if (event.key === 'Home') nextIndex = 0;
+      if (event.key === 'End') nextIndex = overviewStages.length - 1;
+
+      if (nextIndex !== null) {
+        event.preventDefault();
+        overviewStages[nextIndex]?.focus();
+      }
+    });
+  });
+
+  if (overview && careerAxis && careerCursor && careerMonth) {
+    const startDate = overview.dataset.timelineStart;
+    const monthCount = Number(overview.dataset.timelineMonths ?? 0);
+
+    if (startDate && monthCount > 0) {
+      const [startYear, startMonth] = startDate.split('-').map(Number);
+      const locale = document.documentElement.lang || 'es';
+      const monthFormatter = new Intl.DateTimeFormat(locale, {
+        month: 'short',
+        year: 'numeric',
+        timeZone: 'UTC',
+      });
+
+      let previewedStage: HTMLButtonElement | null = null;
+
+      const clearPreview = () => {
+        previewedStage?.classList.remove('is-previewed');
+        previewedStage = null;
+      };
+
+      const updateCursor = (event: PointerEvent) => {
+        const bounds = careerAxis.getBoundingClientRect();
+        const ratio = Math.max(0, Math.min((event.clientX - bounds.left) / bounds.width, 0.999999));
+        const monthIndex = Math.min(Math.floor(ratio * monthCount), monthCount - 1);
+        const position = ((monthIndex + 0.5) / monthCount) * 100;
+        const date = new Date(Date.UTC(startYear, startMonth - 1 + monthIndex, 1));
+
+        careerCursor.hidden = false;
+        careerCursor.style.setProperty('--cursor-position', `${position}%`);
+        careerMonth.textContent = monthFormatter.format(date).replace('.', '').toUpperCase();
+
+        const matchingStage = overviewStages.find((stage) => {
+          const start = Number(stage.dataset.startIndex);
+          const end = Number(stage.dataset.endIndex);
+          return monthIndex >= start && monthIndex <= end;
+        }) ?? null;
+
+        if (matchingStage !== previewedStage) {
+          clearPreview();
+          previewedStage = matchingStage;
+          previewedStage?.classList.add('is-previewed');
+        }
+      };
+
+      careerAxis.addEventListener('pointermove', updateCursor);
+      careerAxis.addEventListener('pointerleave', () => {
+        careerCursor.hidden = true;
+        clearPreview();
+      });
+      careerAxis.addEventListener('click', () => {
+        const roleKey = previewedStage?.dataset.overviewRole;
+        if (roleKey) roleActivators.get(roleKey)?.();
+      });
+    }
+  }
 </script>

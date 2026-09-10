@@ -1,5 +1,21 @@
 export type Locale = 'es' | 'en';
 
+export type MonthNumber =
+  | '01'
+  | '02'
+  | '03'
+  | '04'
+  | '05'
+  | '06'
+  | '07'
+  | '08'
+  | '09'
+  | '10'
+  | '11'
+  | '12';
+
+export type YearMonth = `${number}-${MonthNumber}`;
+
 export interface LocalizedText {
   es: string;
   en: string;
@@ -21,8 +37,8 @@ export interface Project {
 
 export interface ExperienceRole {
   id: string;
-  startDate: string;
-  endDate: string | null;
+  startDate: YearMonth;
+  endDate: YearMonth | null;
   period: LocalizedText;
   role: LocalizedText;
   description: LocalizedText;
