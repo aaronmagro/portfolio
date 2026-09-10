@@ -148,6 +148,14 @@ const getCompanyPeriod = (roles: (typeof orderedExperienceCompanies)[number]['ro
 };
 
 const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
+const initialExploreMonthIndex = Math.max(
+  0,
+  Math.min(latestExperienceMonth - timelineStartMonth, timelineMonthCount - 1),
+);
+const initialExploreAbsoluteMonth = timelineStartMonth + initialExploreMonthIndex;
+const initialExploreYear = Math.floor(initialExploreAbsoluteMonth / 12);
+const initialExploreMonth = (initialExploreAbsoluteMonth % 12) + 1;
+const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${initialExploreYear}`;
 ---
 
 <section class="experience" id="experience" aria-labelledby="experience-title" data-experience-section>
@@ -173,7 +181,7 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
         </div>
 
         <div class="career-map__axis">
-          <div class="career-map__plot" data-career-axis>
+          <div class="career-map__plot">
             <div class="career-map__years" aria-hidden="true">
               {yearMarkers.map((marker) => (
                 <span class="career-map__year" style={`--year-position: ${marker.labelPosition}%`}>
@@ -203,17 +211,28 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
               ></span>
             ))}
 
+            <div
+              class="career-map__scrubber"
+              data-career-scrubber
+              role="slider"
+              tabindex="0"
+              aria-label={`${copy[lang].timeline}. ${copy[lang].explore}`}
+              aria-orientation="horizontal"
+              aria-valuemin="1"
+              aria-valuemax={timelineMonthCount}
+              aria-valuenow={initialExploreMonthIndex + 1}
+              aria-valuetext={initialExploreLabel}
+            ></div>
+
             {overviewRoles.map((role, index) => (
-              <button
+              <span
                 class:list={['career-map__stage-marker', { 'is-active': index === overviewInitialIndex }]}
-                type="button"
                 style={`--stage-position: ${role.markerPosition}%`}
                 data-stage-marker={role.key}
-                aria-label={`${role.stageNumber}. ${role.role}, ${role.period}`}
-                title={`${role.stageNumber} · ${role.role}`}
+                aria-hidden="true"
               >
                 <span>{role.stageNumber}</span>
-              </button>
+              </span>
             ))}
 
             <span class="career-map__cursor" data-career-cursor hidden aria-hidden="true"></span>
@@ -389,7 +408,7 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
 
   .career-map__header span:last-child { opacity: 0.62; }
   .career-map__axis { position: relative; height: 5.4rem; isolation: isolate; }
-  .career-map__plot { position: absolute; inset: 0 1.6rem; cursor: pointer; }
+  .career-map__plot { position: absolute; inset: 0 1.6rem; }
 
   .career-map__years {
     position: absolute;
@@ -416,6 +435,7 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
     left: 0;
     height: 1px;
     background: var(--color-border);
+    pointer-events: none;
   }
 
   .career-map__year-tick {
@@ -447,6 +467,45 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
 
   .career-map__segment.is-active { opacity: 0.48; }
 
+  .career-map__scrubber {
+    position: absolute;
+    z-index: 4;
+    top: 1.35rem;
+    right: 0;
+    left: 0;
+    height: 1.9rem;
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    touch-action: none;
+    user-select: none;
+  }
+
+  .career-map__scrubber::before {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    left: 0;
+    height: 0.18rem;
+    border-radius: var(--radius-pill);
+    background: var(--color-accent);
+    content: '';
+    opacity: 0;
+    transform: translateY(-50%);
+    transition: opacity var(--transition-fast);
+  }
+
+  .career-map__scrubber:is(:hover, :focus-visible)::before,
+  .career-map__scrubber.is-dragging::before { opacity: 0.12; }
+
+  .career-map__scrubber:focus-visible { outline: none; }
+
+  .career-map__scrubber:focus-visible::before {
+    box-shadow:
+      0 0 0 2px var(--color-background),
+      0 0 0 4px var(--color-focus);
+    opacity: 0.2;
+  }
+
   .career-map__stage-marker {
     position: absolute;
     z-index: 3;
@@ -454,17 +513,13 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
     left: var(--stage-position);
     width: 2rem;
     height: 2.9rem;
-    padding: 0;
-    border: 0;
-    background: transparent;
     color: var(--color-text-muted);
-    font: inherit;
     font-size: 0.6rem;
     font-weight: 800;
     letter-spacing: 0.08em;
     line-height: 1;
     transform: translateX(-50%);
-    cursor: pointer;
+    pointer-events: none;
     transition: color var(--transition-fast);
   }
 
@@ -489,10 +544,7 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
     transform: translateX(-50%);
   }
 
-  .career-map__stage-marker:is(:hover, :focus-visible),
   .career-map__stage-marker.is-active { color: var(--color-accent); }
-
-  .career-map__stage-marker:is(:hover, :focus-visible)::before,
   .career-map__stage-marker.is-active::before {
     width: 2px;
     background: var(--color-accent);
@@ -501,13 +553,13 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
 
   .career-map__cursor {
     position: absolute;
-    z-index: 4;
-    top: 1.69rem;
+    z-index: 5;
+    top: 1.58rem;
     left: var(--cursor-position, 0%);
     width: 1px;
-    height: 1.22rem;
+    height: 1.45rem;
     background: var(--color-accent);
-    opacity: 0.7;
+    opacity: 0.85;
     transform: translateX(-50%);
     pointer-events: none;
   }
@@ -670,8 +722,13 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .career-map__segment, .career-map__stage-marker, .career-map__stage-marker::before,
-    .experience-track__progress, .experience-stage__index, .experience-stage__role,
+    .career-map__segment,
+    .career-map__scrubber::before,
+    .career-map__stage-marker,
+    .career-map__stage-marker::before,
+    .experience-track__progress,
+    .experience-stage__index,
+    .experience-stage__role,
     .experience-stage__signal { transition: none; }
     .experience-detail.is-entering { animation: none; }
   }
@@ -680,20 +737,28 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
 <script>
   const careerMap = document.querySelector<HTMLElement>('[data-career-map]');
   const careerAxisContainer = careerMap?.querySelector<HTMLElement>('.career-map__axis');
-  const careerAxis = careerMap?.querySelector<HTMLElement>('[data-career-axis]');
+  const careerScrubber = careerMap?.querySelector<HTMLElement>('[data-career-scrubber]');
   const careerCursor = careerMap?.querySelector<HTMLElement>('[data-career-cursor]');
   const careerLens = careerMap?.querySelector<HTMLElement>('[data-career-lens]');
   const careerMonth = careerMap?.querySelector<HTMLElement>('[data-career-month]');
   const careerLensWindow = careerMap?.querySelector<HTMLElement>('[data-career-lens-window]');
   const careerMonthTrack = careerMap?.querySelector<HTMLElement>('[data-career-month-track]');
-  const overviewSegments = careerMap ? Array.from(careerMap.querySelectorAll<HTMLElement>('[data-overview-role]')) : [];
-  const stageMarkers = careerMap ? Array.from(careerMap.querySelectorAll<HTMLButtonElement>('[data-stage-marker]')) : [];
+  const overviewSegments = careerMap
+    ? Array.from(careerMap.querySelectorAll<HTMLElement>('[data-overview-role]'))
+    : [];
+  const stageMarkers = careerMap
+    ? Array.from(careerMap.querySelectorAll<HTMLElement>('[data-stage-marker]'))
+    : [];
   const roleActivators = new Map<string, () => void>();
 
   const updateOverview = (roleKey: string | undefined) => {
     if (!roleKey) return;
-    overviewSegments.forEach((segment) => segment.classList.toggle('is-active', segment.dataset.overviewRole === roleKey));
-    stageMarkers.forEach((marker) => marker.classList.toggle('is-active', marker.dataset.stageMarker === roleKey));
+    overviewSegments.forEach((segment) => {
+      segment.classList.toggle('is-active', segment.dataset.overviewRole === roleKey);
+    });
+    stageMarkers.forEach((marker) => {
+      marker.classList.toggle('is-active', marker.dataset.stageMarker === roleKey);
+    });
   };
 
   const groups = document.querySelectorAll<HTMLElement>('[data-experience-group]');
@@ -747,15 +812,16 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
     activate(tabs.length - 1);
   });
 
-  stageMarkers.forEach((marker) => {
-    marker.addEventListener('click', (event) => {
-      event.stopPropagation();
-      const roleKey = marker.dataset.stageMarker;
-      if (roleKey) roleActivators.get(roleKey)?.();
-    });
-  });
-
-  if (careerMap && careerAxisContainer && careerAxis && careerCursor && careerLens && careerMonth && careerLensWindow && careerMonthTrack) {
+  if (
+    careerMap &&
+    careerAxisContainer &&
+    careerScrubber &&
+    careerCursor &&
+    careerLens &&
+    careerMonth &&
+    careerLensWindow &&
+    careerMonthTrack
+  ) {
     const startDate = careerMap.dataset.timelineStart;
     const monthCount = Number(careerMap.dataset.timelineMonths ?? 0);
 
@@ -763,32 +829,62 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
       const [startYear, startMonth] = startDate.split('-').map(Number);
       const startAbsoluteMonth = startYear * 12 + startMonth - 1;
       const locale = document.documentElement.lang || 'es';
-      const dateFormatter = new Intl.DateTimeFormat(locale, { month: 'short', year: 'numeric', timeZone: 'UTC' });
+      const dateFormatter = new Intl.DateTimeFormat(locale, {
+        month: 'short',
+        year: 'numeric',
+        timeZone: 'UTC',
+      });
       const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const initialMonthIndex = Math.max(
+        0,
+        Math.min(
+          overviewSegments.reduce((latest, segment) => {
+            const end = Number(segment.dataset.endIndex);
+            return Number.isFinite(end) ? Math.max(latest, end) : latest;
+          }, 0),
+          monthCount - 1,
+        ),
+      );
+
       let hoveredRoleKey: string | undefined;
-      let targetRatio = 0;
-      let renderedRatio = 0;
+      let keyboardMonthIndex = initialMonthIndex;
+      let targetRatio = (initialMonthIndex + 0.5) / monthCount;
+      let renderedRatio = targetRatio;
       let targetLensLeft = 0;
       let renderedLensLeft = 0;
       let frameId: number | null = null;
+      let isDragging = false;
+      let dragStartX = 0;
+      let dragMoved = false;
 
-      const getRoleForMonth = (monthIndex: number) => overviewSegments.find((segment) => {
-        const start = Number(segment.dataset.startIndex);
-        const end = Number(segment.dataset.endIndex);
-        return monthIndex >= start && monthIndex <= end;
-      });
+      const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(value, max));
 
-      const render = () => {
-        const smoothing = reducedMotion ? 1 : 0.16;
-        renderedRatio += (targetRatio - renderedRatio) * smoothing;
-        renderedLensLeft += (targetLensLeft - renderedLensLeft) * smoothing;
+      const getRoleForMonth = (monthIndex: number) =>
+        overviewSegments.find((segment) => {
+          const start = Number(segment.dataset.startIndex);
+          const end = Number(segment.dataset.endIndex);
+          return monthIndex >= start && monthIndex <= end;
+        });
 
-        const monthFloat = Math.max(0, Math.min(renderedRatio * monthCount, monthCount - 0.001));
-        const monthIndex = Math.max(0, Math.min(Math.floor(monthFloat), monthCount - 1));
+      const getDateForMonth = (monthIndex: number) => {
         const absoluteMonth = startAbsoluteMonth + monthIndex;
         const year = Math.floor(absoluteMonth / 12);
         const month = (absoluteMonth % 12) + 1;
-        const date = new Date(Date.UTC(year, month - 1, 1));
+        return new Date(Date.UTC(year, month - 1, 1));
+      };
+
+      const requestRender = () => {
+        if (frameId === null) frameId = requestAnimationFrame(render);
+      };
+
+      const render = () => {
+        const smoothing = reducedMotion ? 1 : 0.18;
+        renderedRatio += (targetRatio - renderedRatio) * smoothing;
+        renderedLensLeft += (targetLensLeft - renderedLensLeft) * smoothing;
+
+        const monthFloat = clamp(renderedRatio * monthCount, 0, monthCount - 0.001);
+        const monthIndex = clamp(Math.floor(monthFloat), 0, monthCount - 1);
+        const date = getDateForMonth(monthIndex);
         const role = getRoleForMonth(monthIndex);
         const firstMonth = careerMonthTrack.querySelector<HTMLElement>('[data-lens-month]');
         const cellWidth = firstMonth?.getBoundingClientRect().width ?? 39.2;
@@ -796,50 +892,175 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
         const trackWidth = monthCount * cellWidth;
         const idealTrackOffset = windowWidth / 2 - (monthFloat + 0.5) * cellWidth;
         const minTrackOffset = Math.min(0, windowWidth - trackWidth);
-        const trackOffset = Math.max(minTrackOffset, Math.min(idealTrackOffset, 0));
+        const trackOffset = clamp(idealTrackOffset, minTrackOffset, 0);
         const focusX = (monthFloat + 0.5) * cellWidth + trackOffset;
+        const formattedDate = dateFormatter.format(date).replace('.', '').toUpperCase();
 
         careerCursor.style.setProperty('--cursor-position', `${renderedRatio * 100}%`);
         careerLens.style.setProperty('--lens-left', `${renderedLensLeft}px`);
         careerMonthTrack.style.setProperty('--lens-track-x', `${trackOffset}px`);
         careerLensWindow.style.setProperty('--lens-focus-x', `${focusX}px`);
-        careerMonth.textContent = dateFormatter.format(date).replace('.', '').toUpperCase();
+        careerMonth.textContent = formattedDate;
+        careerScrubber.setAttribute('aria-valuenow', String(monthIndex + 1));
+        careerScrubber.setAttribute('aria-valuetext', formattedDate);
         hoveredRoleKey = role?.dataset.overviewRole;
+        keyboardMonthIndex = monthIndex;
 
-        const settled = Math.abs(targetRatio - renderedRatio) < 0.0005 && Math.abs(targetLensLeft - renderedLensLeft) < 0.15;
+        const settled =
+          Math.abs(targetRatio - renderedRatio) < 0.0005 &&
+          Math.abs(targetLensLeft - renderedLensLeft) < 0.15;
+
         if (!settled) frameId = requestAnimationFrame(render);
         else frameId = null;
       };
 
-      const updateTarget = (event: PointerEvent) => {
-        const plotBounds = careerAxis.getBoundingClientRect();
+      const setTargetRatio = (ratio: number, snap = false) => {
+        const scrubberBounds = careerScrubber.getBoundingClientRect();
         const axisBounds = careerAxisContainer.getBoundingClientRect();
-        targetRatio = Math.max(0, Math.min((event.clientX - plotBounds.left) / plotBounds.width, 1));
+        const wasHidden = careerLens.hidden;
+
+        targetRatio = clamp(ratio, 0, 1);
         careerCursor.hidden = false;
         careerLens.hidden = false;
 
         const lensWidth = careerLens.offsetWidth;
-        const cursorX = plotBounds.left - axisBounds.left + targetRatio * plotBounds.width;
+        const cursorX =
+          scrubberBounds.left - axisBounds.left + targetRatio * scrubberBounds.width;
         const lensMargin = 18;
-        targetLensLeft = Math.max(lensMargin, Math.min(cursorX - lensWidth / 2, axisBounds.width - lensWidth - lensMargin));
+        targetLensLeft = clamp(
+          cursorX - lensWidth / 2,
+          lensMargin,
+          Math.max(lensMargin, axisBounds.width - lensWidth - lensMargin),
+        );
 
-        if (frameId === null) {
+        if (wasHidden || snap || reducedMotion) {
           renderedRatio = targetRatio;
           renderedLensLeft = targetLensLeft;
-          render();
         }
+
+        requestRender();
       };
 
-      careerAxis.addEventListener('pointerenter', updateTarget);
-      careerAxis.addEventListener('pointermove', updateTarget);
-      careerAxis.addEventListener('pointerleave', () => {
+      const setTargetFromClientX = (clientX: number, snap = false) => {
+        const bounds = careerScrubber.getBoundingClientRect();
+        const ratio = clamp((clientX - bounds.left) / bounds.width, 0, 1);
+        setTargetRatio(ratio, snap);
+      };
+
+      const setTargetFromMonth = (monthIndex: number, snap = false) => {
+        const nextMonthIndex = clamp(monthIndex, 0, monthCount - 1);
+        keyboardMonthIndex = nextMonthIndex;
+        setTargetRatio((nextMonthIndex + 0.5) / monthCount, snap);
+      };
+
+      const hideExplorer = () => {
+        if (frameId !== null) cancelAnimationFrame(frameId);
+        frameId = null;
         careerCursor.hidden = true;
         careerLens.hidden = true;
         hoveredRoleKey = undefined;
+      };
+
+      careerScrubber.addEventListener('pointerenter', (event) => {
+        if (event.pointerType === 'mouse' && !isDragging) {
+          setTargetFromClientX(event.clientX, true);
+        }
       });
-      careerAxis.addEventListener('click', (event) => {
-        if ((event.target as HTMLElement).closest('[data-stage-marker]')) return;
-        if (hoveredRoleKey) roleActivators.get(hoveredRoleKey)?.();
+
+      careerScrubber.addEventListener('pointermove', (event) => {
+        if (event.pointerType !== 'mouse' && !isDragging) return;
+        if (isDragging && Math.abs(event.clientX - dragStartX) > 5) dragMoved = true;
+        setTargetFromClientX(event.clientX);
+      });
+
+      careerScrubber.addEventListener('pointerdown', (event) => {
+        if (event.pointerType === 'mouse' && event.button !== 0) return;
+        event.preventDefault();
+        isDragging = true;
+        dragStartX = event.clientX;
+        dragMoved = false;
+        careerScrubber.classList.add('is-dragging');
+        careerScrubber.setPointerCapture(event.pointerId);
+        setTargetFromClientX(event.clientX, true);
+      });
+
+      careerScrubber.addEventListener('pointerup', (event) => {
+        if (!isDragging) return;
+        setTargetFromClientX(event.clientX);
+        const shouldSelect = !dragMoved && Math.abs(event.clientX - dragStartX) <= 5;
+        const clickedRatio = clamp(
+          (event.clientX - careerScrubber.getBoundingClientRect().left) /
+            careerScrubber.getBoundingClientRect().width,
+          0,
+          1,
+        );
+        const clickedMonthIndex = clamp(
+          Math.floor(clickedRatio * monthCount),
+          0,
+          monthCount - 1,
+        );
+        const clickedRoleKey = getRoleForMonth(clickedMonthIndex)?.dataset.overviewRole;
+
+        isDragging = false;
+        careerScrubber.classList.remove('is-dragging');
+        if (careerScrubber.hasPointerCapture(event.pointerId)) {
+          careerScrubber.releasePointerCapture(event.pointerId);
+        }
+        if (shouldSelect && clickedRoleKey) roleActivators.get(clickedRoleKey)?.();
+      });
+
+      careerScrubber.addEventListener('pointercancel', (event) => {
+        isDragging = false;
+        dragMoved = false;
+        careerScrubber.classList.remove('is-dragging');
+        if (careerScrubber.hasPointerCapture(event.pointerId)) {
+          careerScrubber.releasePointerCapture(event.pointerId);
+        }
+        hideExplorer();
+      });
+
+      careerScrubber.addEventListener('pointerleave', (event) => {
+        if (event.pointerType === 'mouse' && !isDragging) hideExplorer();
+      });
+
+      careerScrubber.addEventListener('focus', () => {
+        setTargetFromMonth(keyboardMonthIndex, true);
+      });
+
+      careerScrubber.addEventListener('blur', () => {
+        if (!isDragging) hideExplorer();
+      });
+
+      careerScrubber.addEventListener('keydown', (event) => {
+        let nextMonthIndex: number | null = null;
+
+        if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+          nextMonthIndex = keyboardMonthIndex + 1;
+        }
+        if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+          nextMonthIndex = keyboardMonthIndex - 1;
+        }
+        if (event.key === 'PageDown') nextMonthIndex = keyboardMonthIndex + 6;
+        if (event.key === 'PageUp') nextMonthIndex = keyboardMonthIndex - 6;
+        if (event.key === 'Home') nextMonthIndex = 0;
+        if (event.key === 'End') nextMonthIndex = monthCount - 1;
+
+        if (nextMonthIndex !== null) {
+          event.preventDefault();
+          setTargetFromMonth(nextMonthIndex);
+          return;
+        }
+
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          const roleKey = getRoleForMonth(keyboardMonthIndex)?.dataset.overviewRole;
+          if (roleKey) roleActivators.get(roleKey)?.();
+        }
+
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          hideExplorer();
+        }
       });
     }
   }
