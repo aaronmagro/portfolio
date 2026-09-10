@@ -1,0 +1,253 @@
+---
+import Container from '../ui/Container.astro';
+import SectionHeading from '../ui/SectionHeading.astro';
+import { featuredProjects } from '../../data/projects';
+import { siteConfig } from '../../config/site';
+
+type SupportedLocale = (typeof siteConfig.locales)[number];
+
+interface Props {
+  lang?: SupportedLocale;
+}
+
+const { lang = siteConfig.defaultLocale } = Astro.props;
+
+const copy = {
+  es: {
+    eyebrow: 'Trabajo seleccionado',
+    title: 'Proyectos',
+    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer vitae lorem at sapien tincidunt luctus eget sed arcu.',
+    technologies: 'Tecnologías',
+  },
+  en: {
+    eyebrow: 'Selected work',
+    title: 'Projects',
+    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer vitae lorem at sapien tincidunt luctus eget sed arcu.',
+    technologies: 'Technologies',
+  },
+} as const;
+---
+
+<section class="projects" id="projects" aria-labelledby="projects-title">
+  <Container>
+    <SectionHeading
+      index="01"
+      eyebrow={copy[lang].eyebrow}
+      title={copy[lang].title}
+      description={copy[lang].description}
+      headingId="projects-title"
+    />
+
+    <div class="projects__list">
+      {featuredProjects.map((project, index) => (
+        <article class:list={['project-card', { 'project-card--featured': index === 0 }]}>
+          <div class="project-card__media" aria-hidden="true">
+            <div class="project-card__window">
+              <div class="project-card__window-bar">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <div class="project-card__window-body">
+                <div class="project-card__panel project-card__panel--primary"></div>
+                <div class="project-card__panel"></div>
+                <div class="project-card__panel"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="project-card__content">
+            <div class="project-card__meta">
+              <span>{String(index + 1).padStart(2, '0')}</span>
+              <span>{project.label[lang]}</span>
+            </div>
+
+            <h3>{project.title[lang]}</h3>
+            <p>{project.description[lang]}</p>
+
+            <ul class="project-card__technologies" aria-label={copy[lang].technologies}>
+              {project.technologies.map((technology) => (
+                <li>{technology}</li>
+              ))}
+            </ul>
+          </div>
+        </article>
+      ))}
+    </div>
+  </Container>
+</section>
+
+<style>
+  .projects {
+    padding-block: clamp(var(--space-9), 12vw, var(--space-10));
+    border-top: 1px solid var(--color-border);
+    scroll-margin-top: 4.5rem;
+  }
+
+  .projects__list {
+    display: grid;
+    gap: var(--space-8);
+    margin-top: var(--space-9);
+  }
+
+  .project-card {
+    min-width: 0;
+  }
+
+  .project-card__media {
+    width: 100%;
+    overflow: hidden;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background:
+      radial-gradient(circle at 78% 18%, rgb(75 180 230 / 0.13), transparent 24rem),
+      var(--color-surface);
+    box-shadow: var(--shadow-elevated);
+  }
+
+  .project-card__media img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .project-card__window {
+    display: grid;
+    aspect-ratio: 16 / 10;
+    grid-template-rows: auto 1fr;
+    padding: clamp(var(--space-4), 4vw, var(--space-7));
+  }
+
+  .project-card__window-bar {
+    display: flex;
+    gap: var(--space-2);
+    padding-bottom: var(--space-4);
+  }
+
+  .project-card__window-bar span {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--color-border);
+  }
+
+  .project-card__window-body {
+    display: grid;
+    grid-template-columns: 1.55fr 0.8fr;
+    grid-template-rows: 1fr 1fr;
+    gap: clamp(var(--space-3), 2.5vw, var(--space-5));
+    min-height: 0;
+  }
+
+  .project-card__panel {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background:
+      linear-gradient(145deg, rgb(255 255 255 / 0.025), transparent),
+      var(--color-background-subtle);
+  }
+
+  .project-card__panel--primary {
+    grid-row: 1 / -1;
+    background:
+      linear-gradient(135deg, transparent 18%, rgb(75 180 230 / 0.08) 18% 19%, transparent 19% 42%, rgb(75 180 230 / 0.08) 42% 43%, transparent 43%),
+      var(--color-background-subtle);
+  }
+
+  .project-card__content {
+    padding-top: var(--space-5);
+  }
+
+  .project-card__meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-bottom: var(--space-4);
+    color: var(--color-accent);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .project-card h3 {
+    max-width: 18ch;
+    font-size: clamp(1.75rem, 3vw, 2.75rem);
+    letter-spacing: -0.04em;
+  }
+
+  .project-card p {
+    max-width: 42rem;
+    margin-top: var(--space-4);
+    color: var(--color-text-muted);
+    font-size: var(--text-lg);
+  }
+
+  .project-card__technologies {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    margin: var(--space-5) 0 0;
+    padding: 0;
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    list-style: none;
+  }
+
+  .project-card__technologies li:not(:last-child)::after {
+    margin-left: var(--space-4);
+    color: var(--color-border);
+    content: '·';
+  }
+
+  @media (min-width: 48rem) {
+    .projects__list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-9) var(--space-6);
+    }
+
+    .project-card--featured {
+      grid-column: 1 / -1;
+    }
+  }
+
+  @media (min-width: 68rem) {
+    .project-card--featured {
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(18rem, 0.55fr);
+      align-items: end;
+      gap: var(--space-7);
+    }
+
+    .project-card--featured .project-card__content {
+      padding-top: 0;
+      padding-bottom: var(--space-3);
+    }
+  }
+
+  @media (max-width: 35rem) {
+    .projects__list {
+      margin-top: var(--space-8);
+      gap: var(--space-7);
+    }
+
+    .project-card__window {
+      aspect-ratio: 4 / 3;
+    }
+
+    .project-card__window-body {
+      grid-template-columns: 1fr;
+      grid-template-rows: 1.35fr 0.65fr;
+    }
+
+    .project-card__panel--primary {
+      grid-row: auto;
+    }
+
+    .project-card__window-body .project-card__panel:last-child {
+      display: none;
+    }
+  }
+</style>

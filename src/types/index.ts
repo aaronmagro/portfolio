@@ -10,3 +10,11 @@ export interface NavigationItem {
   href: `#${string}`;
   label: LocalizedText;
 }
+
+export interface Project {
+  id: string;
+  label: LocalizedText;
+  title: LocalizedText;
+  description: LocalizedText;
+  technologies: readonly string[];
+}

@@ -1,0 +1,73 @@
+---
+interface Props {
+  index: string;
+  eyebrow: string;
+  title: string;
+  description?: string;
+  headingId: string;
+}
+
+const { index, eyebrow, title, description, headingId } = Astro.props;
+---
+
+<div class="section-heading">
+  <div class="section-heading__meta" aria-hidden="true">
+    <span>{index}</span>
+    <span>{eyebrow}</span>
+  </div>
+
+  <div class="section-heading__copy">
+    <h2 id={headingId}>{title}</h2>
+    {description && <p>{description}</p>}
+  </div>
+</div>
+
+<style>
+  .section-heading {
+    display: grid;
+    gap: var(--space-5);
+  }
+
+  .section-heading__meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    color: var(--color-accent);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .section-heading__meta span:first-child {
+    min-width: 2ch;
+  }
+
+  .section-heading__copy {
+    max-width: 50rem;
+  }
+
+  .section-heading h2 {
+    font-size: var(--text-2xl);
+    letter-spacing: -0.04em;
+  }
+
+  .section-heading p {
+    max-width: 40rem;
+    margin-top: var(--space-5);
+    color: var(--color-text-muted);
+    font-size: var(--text-lg);
+  }
+
+  @media (min-width: 48rem) {
+    .section-heading {
+      grid-template-columns: minmax(10rem, 0.35fr) minmax(0, 1fr);
+      align-items: start;
+      gap: var(--space-7);
+    }
+
+    .section-heading__meta {
+      padding-top: 0.45rem;
+    }
+  }
+</style>

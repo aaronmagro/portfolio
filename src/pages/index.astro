@@ -1,20 +1,14 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Hero from '../components/sections/Hero.astro';
+import Projects from '../components/sections/Projects.astro';
 import Container from '../components/ui/Container.astro';
 ---
 
 <BaseLayout>
   <main id="main-content">
     <Hero />
-
-    <section class="page-placeholder" id="projects" aria-labelledby="projects-title">
-      <Container>
-        <p class="page-placeholder__index">01</p>
-        <h2 id="projects-title">Proyectos</h2>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-      </Container>
-    </section>
+    <Projects />
 
     <section class="page-placeholder" id="experience" aria-labelledby="experience-title">
       <Container>
