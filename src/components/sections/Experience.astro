@@ -21,9 +21,8 @@ const copy = {
     stages: 'Etapas dentro de',
     highlights: 'Aspectos destacados',
     technologies: 'Tecnologías',
-    timeAxis: 'Tiempo',
-    stageAxis: 'Etapas',
     timeline: 'Cronología profesional',
+    explore: 'Explora por meses',
   },
   en: {
     eyebrow: 'Professional background',
@@ -33,9 +32,8 @@ const copy = {
     stages: 'Roles at',
     highlights: 'Highlights',
     technologies: 'Technologies',
-    timeAxis: 'Time',
-    stageAxis: 'Stages',
     timeline: 'Professional timeline',
+    explore: 'Explore by month',
   },
 } as const;
 
@@ -64,22 +62,22 @@ const timelineEndMonth = rawOverviewRoles.length
   ? Math.max(...rawOverviewRoles.map((role) => toMonthIndex(role.endDate)))
   : timelineStartMonth;
 const timelineMonthCount = Math.max(timelineEndMonth - timelineStartMonth + 1, 1);
+const timelineStartYear = Math.floor(timelineStartMonth / 12);
+const timelineEndYear = Math.floor(timelineEndMonth / 12);
+const yearCount = timelineEndYear - timelineStartYear + 1;
+const yearLabelStep = Math.max(1, Math.ceil(yearCount / 4));
 
-const timelineMonths = Array.from({ length: timelineMonthCount }, (_, index) => {
-  const absoluteMonth = timelineStartMonth + index;
-  const year = Math.floor(absoluteMonth / 12);
-  const month = (absoluteMonth % 12) + 1;
+const yearMarkers = Array.from({ length: yearCount }, (_, index) => {
+  const year = timelineStartYear + index;
+  const markerMonth = index === 0 ? timelineStartMonth : year * 12;
+  const offset = markerMonth - timelineStartMonth;
 
   return {
-    index,
     year,
-    month,
-    position: ((index + 0.5) / timelineMonthCount) * 100,
-    isYearBoundary: index === 0 || month === 1,
+    position: (offset / timelineMonthCount) * 100,
+    showLabel: index === 0 || index === yearCount - 1 || index % yearLabelStep === 0,
   };
 });
-
-const yearMarkers = timelineMonths.filter((month) => month.isYearBoundary);
 
 const overviewRoles = rawOverviewRoles.map((role, index) => {
   const startOffset = toMonthIndex(role.startDate) - timelineStartMonth;
@@ -96,6 +94,7 @@ const overviewRoles = rawOverviewRoles.map((role, index) => {
 });
 
 const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
+const lensCells = Array.from({ length: 7 });
 ---
 
 <section class="experience" id="experience" aria-labelledby="experience-title" data-experience-section>
@@ -109,60 +108,64 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
     >
       <div
         slot="aside"
-        class="experience-overview"
-        data-experience-overview
+        class="career-map"
+        data-career-map
         data-timeline-start={rawOverviewRoles[0]?.startDate ?? currentYearMonth}
         data-timeline-months={timelineMonthCount}
-        aria-label={copy[lang].timeline}
+        aria-hidden="true"
       >
-        <span class="experience-overview__label">{copy[lang].timeAxis}</span>
-        <div class="experience-overview__time">
-          <div class="experience-overview__years" aria-hidden="true">
-            {yearMarkers.map((marker, index) => (
+        <div class="career-map__header">
+          <span>{copy[lang].timeline}</span>
+          <span>{copy[lang].explore}</span>
+        </div>
+
+        <div class="career-map__axis" data-career-axis>
+          <div class="career-map__years">
+            {yearMarkers.map((marker) => (
               <span
-                class:list={['experience-overview__year', { 'is-first': index === 0 }]}
-                style={`--marker-position: ${marker.position}%`}
+                class="career-map__year"
+                style={`--year-position: ${marker.position}%`}
+                hidden={!marker.showLabel}
               >
                 {marker.year}
               </span>
             ))}
           </div>
 
-          <div class="experience-overview__axis" data-career-axis aria-hidden="true">
-            <span class="experience-overview__baseline"></span>
+          <span class="career-map__baseline"></span>
 
-            {timelineMonths.map((month) => (
-              <span
-                class:list={['experience-overview__tick', { 'is-year': month.month === 1 }]}
-                style={`--tick-position: ${month.position}%`}
-              ></span>
-            ))}
+          {yearMarkers.map((marker) => (
+            <span
+              class="career-map__year-tick"
+              style={`--year-position: ${marker.position}%`}
+            ></span>
+          ))}
 
-            <span class="experience-overview__cursor" data-career-cursor hidden>
-              <span class="experience-overview__cursor-label" data-career-month></span>
-            </span>
-          </div>
-        </div>
-
-        <span class="experience-overview__label">{copy[lang].stageAxis}</span>
-        <div class="experience-overview__stages">
           {overviewRoles.map((role, index) => (
-            <button
-              class:list={[
-                'experience-overview__stage',
-                { 'is-active': index === overviewInitialIndex },
-              ]}
-              type="button"
-              style={`--stage-left: ${role.left}%; --stage-width: ${role.width}%`}
+            <span
+              class:list={['career-map__segment', { 'is-active': index === overviewInitialIndex }]}
+              style={`--segment-left: ${role.left}%; --segment-width: ${role.width}%`}
               data-overview-role={role.key}
               data-start-index={role.startOffset}
               data-end-index={role.endOffset}
-              aria-label={`${role.role}, ${role.period}`}
-              title={`${role.role} · ${role.period}`}
-            >
-              <span>{String(index + 1).padStart(2, '0')}</span>
-            </button>
+              data-stage-number={String(index + 1).padStart(2, '0')}
+            ></span>
           ))}
+
+          <span class="career-map__cursor" data-career-cursor hidden></span>
+
+          <div class="career-map__lens" data-career-lens hidden>
+            <span class="career-map__lens-date" data-career-month></span>
+            <div class="career-map__lens-months">
+              {lensCells.map(() => (
+                <span class="career-map__lens-month" data-lens-cell>
+                  <span class="career-map__lens-stage" data-lens-stage></span>
+                  <span class="career-map__lens-label" data-lens-label></span>
+                  <span class="career-map__lens-mark"></span>
+                </span>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </SectionHeading>
@@ -285,34 +288,38 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
     scroll-margin-top: 4.5rem;
   }
 
-  .experience-overview {
+  .career-map {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
-    gap: var(--space-3) var(--space-4);
+    gap: var(--space-3);
     width: min(100%, 30rem);
     margin-left: auto;
   }
 
-  .experience-overview__label {
-    align-self: center;
+  .career-map__header {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-4);
     color: var(--color-text-muted);
     font-size: 0.65rem;
     font-weight: 800;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.11em;
     text-transform: uppercase;
   }
 
-  .experience-overview__time {
-    position: relative;
-    min-width: 0;
-    padding-top: 1.15rem;
+  .career-map__header span:last-child {
+    opacity: 0.65;
   }
 
-  .experience-overview__years {
+  .career-map__axis {
+    position: relative;
+    height: 4.8rem;
+    cursor: crosshair;
+    isolation: isolate;
+  }
+
+  .career-map__years {
     position: absolute;
-    top: 0;
-    right: 0;
-    left: 0;
+    inset: 0 0 auto;
     height: 1rem;
     color: var(--color-text-muted);
     font-size: 0.68rem;
@@ -321,67 +328,198 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
     pointer-events: none;
   }
 
-  .experience-overview__year {
+  .career-map__year {
     position: absolute;
-    left: var(--marker-position);
+    left: var(--year-position);
     transform: translateX(-50%);
   }
 
-  .experience-overview__year.is-first {
-    transform: translateX(-35%);
-  }
-
-  .experience-overview__axis {
-    position: relative;
-    height: 2.25rem;
-    cursor: crosshair;
-  }
-
-  .experience-overview__baseline {
+  .career-map__baseline {
     position: absolute;
-    top: 0.62rem;
+    top: 1.95rem;
     right: 0;
     left: 0;
     height: 1px;
     background: var(--color-border);
+    transform-origin: center;
+    transition:
+      height var(--transition-fast),
+      background-color var(--transition-fast),
+      transform var(--transition-fast);
   }
 
-  .experience-overview__tick {
+  .career-map__axis:is(:hover, :focus-within) .career-map__baseline {
+    height: 2px;
+    background: rgb(255 255 255 / 0.16);
+  }
+
+  .career-map__year-tick {
     position: absolute;
-    top: 0.39rem;
-    left: var(--tick-position);
+    top: 1.62rem;
+    left: var(--year-position);
     width: 1px;
-    height: 0.48rem;
-    background: var(--color-border);
-    transform: translateX(-50%);
-  }
-
-  .experience-overview__tick.is-year {
-    top: 0.25rem;
-    height: 0.76rem;
+    height: 0.72rem;
     background: var(--color-text-muted);
-    opacity: 0.7;
+    opacity: 0.45;
+    transform: translateX(-50%);
+    pointer-events: none;
   }
 
-  .experience-overview__cursor {
+  .career-map__segment {
     position: absolute;
-    z-index: 3;
-    top: 0.05rem;
+    z-index: 1;
+    top: 1.88rem;
+    left: var(--segment-left);
+    width: max(var(--segment-width), 0.35rem);
+    height: 0.2rem;
+    border-radius: var(--radius-pill);
+    background: var(--color-accent);
+    opacity: 0.34;
+    pointer-events: none;
+    transition:
+      height var(--transition-fast),
+      opacity var(--transition-fast),
+      transform var(--transition-fast);
+  }
+
+  .career-map__segment::before {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 1px;
+    height: 0.7rem;
+    background: var(--color-accent);
+    content: '';
+    opacity: 0.75;
+    transform: translateY(-50%);
+  }
+
+  .career-map__segment.is-active {
+    height: 0.28rem;
+    opacity: 0.95;
+    transform: translateY(-0.04rem);
+  }
+
+  .career-map__cursor {
+    position: absolute;
+    z-index: 4;
+    top: 1.35rem;
     left: var(--cursor-position, 0%);
     width: 1px;
-    height: 1.15rem;
+    height: 1.2rem;
     background: var(--color-accent);
     transform: translateX(-50%);
     pointer-events: none;
   }
 
-  .experience-overview__cursor[hidden] {
+  .career-map__cursor[hidden],
+  .career-map__lens[hidden] {
     display: none;
   }
 
-  .experience-overview__cursor::after {
+  .career-map__cursor::after {
     position: absolute;
-    top: 0.46rem;
+    top: 0.58rem;
+    left: 50%;
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: 50%;
+    background: var(--color-accent);
+    content: '';
+    transform: translate(-50%, -50%);
+  }
+
+  .career-map__lens {
+    position: absolute;
+    z-index: 5;
+    top: 0.25rem;
+    left: var(--lens-left, 0px);
+    width: min(18rem, calc(100% - 0.5rem));
+    padding: 0.5rem 0.65rem 0.6rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-elevated);
+    box-shadow: var(--shadow-elevated);
+    pointer-events: none;
+  }
+
+  .career-map__lens-date {
+    display: block;
+    margin-bottom: 0.38rem;
+    color: var(--color-heading);
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-align: center;
+    text-transform: uppercase;
+  }
+
+  .career-map__lens-months {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 0.15rem;
+  }
+
+  .career-map__lens-month {
+    position: relative;
+    display: grid;
+    grid-template-rows: 0.8rem auto 0.7rem;
+    gap: 0.16rem;
+    justify-items: center;
+    min-width: 0;
+    color: var(--color-text-muted);
+    font-size: 0.56rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .career-map__lens-month.is-outside {
+    visibility: hidden;
+  }
+
+  .career-map__lens-stage {
+    color: var(--color-accent);
+    font-size: 0.52rem;
+    line-height: 1;
+    opacity: 0;
+  }
+
+  .career-map__lens-month.is-role-start .career-map__lens-stage {
+    opacity: 1;
+  }
+
+  .career-map__lens-label {
+    line-height: 1;
+  }
+
+  .career-map__lens-mark {
+    position: relative;
+    width: 100%;
+    height: 1px;
+    margin-top: 0.15rem;
+    background: var(--color-border);
+  }
+
+  .career-map__lens-month.has-experience .career-map__lens-mark {
+    height: 2px;
+    background: var(--color-accent);
+    opacity: 0.55;
+  }
+
+  .career-map__lens-month.is-current {
+    color: var(--color-heading);
+  }
+
+  .career-map__lens-month.is-current .career-map__lens-mark {
+    height: 3px;
+    background: var(--color-accent);
+    opacity: 1;
+  }
+
+  .career-map__lens-month.is-current .career-map__lens-mark::after {
+    position: absolute;
+    top: 50%;
     left: 50%;
     width: 0.42rem;
     height: 0.42rem;
@@ -389,65 +527,6 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
     background: var(--color-accent);
     content: '';
     transform: translate(-50%, -50%);
-  }
-
-  .experience-overview__cursor-label {
-    position: absolute;
-    top: 1.3rem;
-    left: 50%;
-    padding: 0.16rem 0.38rem;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-sm);
-    background: var(--color-surface-elevated);
-    color: var(--color-text);
-    font-size: 0.62rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    line-height: 1.25;
-    white-space: nowrap;
-    transform: translateX(-50%);
-  }
-
-  .experience-overview__stages {
-    position: relative;
-    min-width: 0;
-    height: 2rem;
-  }
-
-  .experience-overview__stage {
-    position: absolute;
-    top: 0.12rem;
-    left: var(--stage-left);
-    width: max(var(--stage-width), 2rem);
-    height: 1.65rem;
-    padding: 0;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-pill);
-    background: var(--color-background-subtle);
-    color: var(--color-text-muted);
-    font: inherit;
-    font-size: 0.66rem;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    cursor: pointer;
-    transition:
-      border-color var(--transition-fast),
-      background-color var(--transition-fast),
-      color var(--transition-fast),
-      transform var(--transition-fast);
-  }
-
-  .experience-overview__stage:is(:hover, :focus-visible),
-  .experience-overview__stage.is-previewed {
-    border-color: var(--color-text-muted);
-    color: var(--color-heading);
-    transform: translateY(-0.08rem);
-  }
-
-  .experience-overview__stage.is-active {
-    border-color: var(--color-accent);
-    background: var(--color-surface-elevated);
-    color: var(--color-accent);
   }
 
   .experience__companies {
@@ -752,7 +831,7 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
   }
 
   @media (max-width: 47.99rem) {
-    .experience-overview {
+    .career-map {
       display: none;
     }
   }
@@ -794,7 +873,8 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .experience-overview__stage,
+    .career-map__baseline,
+    .career-map__segment,
     .experience-track__progress,
     .experience-stage__index,
     .experience-stage__role,
@@ -809,20 +889,24 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
 </style>
 
 <script>
-  const overview = document.querySelector<HTMLElement>('[data-experience-overview]');
-  const overviewStages = overview
-    ? Array.from(overview.querySelectorAll<HTMLButtonElement>('[data-overview-role]'))
+  const careerMap = document.querySelector<HTMLElement>('[data-career-map]');
+  const careerAxis = careerMap?.querySelector<HTMLElement>('[data-career-axis]');
+  const careerCursor = careerMap?.querySelector<HTMLElement>('[data-career-cursor]');
+  const careerLens = careerMap?.querySelector<HTMLElement>('[data-career-lens]');
+  const careerMonth = careerMap?.querySelector<HTMLElement>('[data-career-month]');
+  const lensCells = careerMap
+    ? Array.from(careerMap.querySelectorAll<HTMLElement>('[data-lens-cell]'))
     : [];
-  const careerAxis = overview?.querySelector<HTMLElement>('[data-career-axis]');
-  const careerCursor = overview?.querySelector<HTMLElement>('[data-career-cursor]');
-  const careerMonth = overview?.querySelector<HTMLElement>('[data-career-month]');
+  const overviewSegments = careerMap
+    ? Array.from(careerMap.querySelectorAll<HTMLElement>('[data-overview-role]'))
+    : [];
   const roleActivators = new Map<string, () => void>();
 
   const updateOverview = (roleKey: string | undefined) => {
     if (!roleKey) return;
 
-    overviewStages.forEach((stage) => {
-      stage.classList.toggle('is-active', stage.dataset.overviewRole === roleKey);
+    overviewSegments.forEach((segment) => {
+      segment.classList.toggle('is-active', segment.dataset.overviewRole === roleKey);
     });
   };
 
@@ -887,82 +971,96 @@ const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
     activate(tabs.length - 1);
   });
 
-  overviewStages.forEach((stage, index) => {
-    const activateStage = () => {
-      const roleKey = stage.dataset.overviewRole;
-      if (roleKey) roleActivators.get(roleKey)?.();
-    };
-
-    stage.addEventListener('mouseenter', activateStage);
-    stage.addEventListener('focus', activateStage);
-    stage.addEventListener('click', activateStage);
-    stage.addEventListener('keydown', (event) => {
-      let nextIndex: number | null = null;
-
-      if (event.key === 'ArrowRight' || event.key === 'ArrowDown') nextIndex = (index + 1) % overviewStages.length;
-      if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') nextIndex = (index - 1 + overviewStages.length) % overviewStages.length;
-      if (event.key === 'Home') nextIndex = 0;
-      if (event.key === 'End') nextIndex = overviewStages.length - 1;
-
-      if (nextIndex !== null) {
-        event.preventDefault();
-        overviewStages[nextIndex]?.focus();
-      }
-    });
-  });
-
-  if (overview && careerAxis && careerCursor && careerMonth) {
-    const startDate = overview.dataset.timelineStart;
-    const monthCount = Number(overview.dataset.timelineMonths ?? 0);
+  if (careerMap && careerAxis && careerCursor && careerLens && careerMonth && lensCells.length > 0) {
+    const startDate = careerMap.dataset.timelineStart;
+    const monthCount = Number(careerMap.dataset.timelineMonths ?? 0);
 
     if (startDate && monthCount > 0) {
       const [startYear, startMonth] = startDate.split('-').map(Number);
+      const startAbsoluteMonth = startYear * 12 + startMonth - 1;
       const locale = document.documentElement.lang || 'es';
       const monthFormatter = new Intl.DateTimeFormat(locale, {
+        month: 'short',
+        timeZone: 'UTC',
+      });
+      const dateFormatter = new Intl.DateTimeFormat(locale, {
         month: 'short',
         year: 'numeric',
         timeZone: 'UTC',
       });
+      let hoveredRoleKey: string | undefined;
 
-      let previewedStage: HTMLButtonElement | null = null;
+      const getRoleForMonth = (monthIndex: number) =>
+        overviewSegments.find((segment) => {
+          const start = Number(segment.dataset.startIndex);
+          const end = Number(segment.dataset.endIndex);
+          return monthIndex >= start && monthIndex <= end;
+        });
 
-      const clearPreview = () => {
-        previewedStage?.classList.remove('is-previewed');
-        previewedStage = null;
+      const renderLens = (monthIndex: number) => {
+        lensCells.forEach((cell, index) => {
+          const relativeMonth = monthIndex + index - Math.floor(lensCells.length / 2);
+          const label = cell.querySelector<HTMLElement>('[data-lens-label]');
+          const stage = cell.querySelector<HTMLElement>('[data-lens-stage]');
+          const outside = relativeMonth < 0 || relativeMonth >= monthCount;
+
+          cell.classList.toggle('is-outside', outside);
+          cell.classList.remove('has-experience', 'is-current', 'is-role-start');
+
+          if (outside) {
+            if (label) label.textContent = '';
+            if (stage) stage.textContent = '';
+            return;
+          }
+
+          const absoluteMonth = startAbsoluteMonth + relativeMonth;
+          const year = Math.floor(absoluteMonth / 12);
+          const month = (absoluteMonth % 12) + 1;
+          const date = new Date(Date.UTC(year, month - 1, 1));
+          const role = getRoleForMonth(relativeMonth);
+          const isRoleStart = role && Number(role.dataset.startIndex) === relativeMonth;
+
+          if (label) label.textContent = monthFormatter.format(date).replace('.', '').toUpperCase();
+          if (stage) stage.textContent = isRoleStart ? role.dataset.stageNumber ?? '' : '';
+
+          cell.classList.toggle('has-experience', Boolean(role));
+          cell.classList.toggle('is-current', relativeMonth === monthIndex);
+          cell.classList.toggle('is-role-start', Boolean(isRoleStart));
+        });
       };
 
-      const updateCursor = (event: PointerEvent) => {
+      const updateTimeline = (event: PointerEvent) => {
         const bounds = careerAxis.getBoundingClientRect();
         const ratio = Math.max(0, Math.min((event.clientX - bounds.left) / bounds.width, 0.999999));
         const monthIndex = Math.min(Math.floor(ratio * monthCount), monthCount - 1);
         const position = ((monthIndex + 0.5) / monthCount) * 100;
-        const date = new Date(Date.UTC(startYear, startMonth - 1 + monthIndex, 1));
+        const absoluteMonth = startAbsoluteMonth + monthIndex;
+        const year = Math.floor(absoluteMonth / 12);
+        const month = (absoluteMonth % 12) + 1;
+        const date = new Date(Date.UTC(year, month - 1, 1));
+        const role = getRoleForMonth(monthIndex);
 
         careerCursor.hidden = false;
+        careerLens.hidden = false;
         careerCursor.style.setProperty('--cursor-position', `${position}%`);
-        careerMonth.textContent = monthFormatter.format(date).replace('.', '').toUpperCase();
+        careerMonth.textContent = dateFormatter.format(date).replace('.', '').toUpperCase();
+        hoveredRoleKey = role?.dataset.overviewRole;
+        renderLens(monthIndex);
 
-        const matchingStage = overviewStages.find((stage) => {
-          const start = Number(stage.dataset.startIndex);
-          const end = Number(stage.dataset.endIndex);
-          return monthIndex >= start && monthIndex <= end;
-        }) ?? null;
-
-        if (matchingStage !== previewedStage) {
-          clearPreview();
-          previewedStage = matchingStage;
-          previewedStage?.classList.add('is-previewed');
-        }
+        const lensWidth = careerLens.offsetWidth;
+        const cursorX = ratio * bounds.width;
+        const lensLeft = Math.max(0, Math.min(cursorX - lensWidth / 2, bounds.width - lensWidth));
+        careerLens.style.setProperty('--lens-left', `${lensLeft}px`);
       };
 
-      careerAxis.addEventListener('pointermove', updateCursor);
+      careerAxis.addEventListener('pointermove', updateTimeline);
       careerAxis.addEventListener('pointerleave', () => {
         careerCursor.hidden = true;
-        clearPreview();
+        careerLens.hidden = true;
+        hoveredRoleKey = undefined;
       });
       careerAxis.addEventListener('click', () => {
-        const roleKey = previewedStage?.dataset.overviewRole;
-        if (roleKey) roleActivators.get(roleKey)?.();
+        if (hoveredRoleKey) roleActivators.get(hoveredRoleKey)?.();
       });
     }
   }
