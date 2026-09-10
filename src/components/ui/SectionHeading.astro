@@ -59,11 +59,14 @@ const { index, eyebrow, title, description, headingId } = Astro.props;
     font-size: var(--text-lg);
   }
 
-  @media (min-width: 48rem) {
+  @media (min-width: 68rem) {
     .section-heading {
-      grid-template-columns: minmax(10rem, 0.35fr) minmax(0, 1fr);
+      grid-template-columns: var(
+        --section-layout-columns,
+        minmax(17rem, 0.42fr) minmax(0, 1fr)
+      );
       align-items: start;
-      gap: var(--space-7);
+      gap: var(--section-layout-gap, clamp(var(--space-7), 7vw, var(--space-10)));
     }
 
     .section-heading__meta {

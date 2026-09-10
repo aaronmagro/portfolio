@@ -151,6 +151,9 @@ const copy = {
 
 <style>
   .experience {
+    --section-layout-columns: minmax(17rem, 0.42fr) minmax(0, 1fr);
+    --section-layout-gap: clamp(var(--space-7), 7vw, var(--space-10));
+
     padding-block: clamp(var(--space-9), 12vw, var(--space-10));
     border-top: 1px solid var(--color-border);
     scroll-margin-top: 4.5rem;
@@ -159,7 +162,7 @@ const copy = {
   .experience__companies {
     display: grid;
     gap: var(--space-10);
-    margin-top: var(--space-9);
+    margin-top: clamp(var(--space-8), 7vw, var(--space-9));
   }
 
   .experience-company + .experience-company {
@@ -168,11 +171,12 @@ const copy = {
   }
 
   .experience-company__header {
+    display: grid;
+    gap: var(--space-3);
     margin-bottom: clamp(var(--space-7), 6vw, var(--space-9));
   }
 
   .experience-company__period {
-    margin-bottom: var(--space-3);
     color: var(--color-accent);
     font-size: var(--text-sm);
     font-weight: 700;
@@ -186,7 +190,6 @@ const copy = {
   }
 
   .experience-company__location {
-    margin-top: var(--space-3);
     color: var(--color-text-muted);
   }
 
@@ -431,10 +434,32 @@ const copy = {
     }
   }
 
-  @media (min-width: 56rem) {
+  @media (min-width: 68rem) {
+    .experience-company__header,
     .experience-company__workspace {
-      grid-template-columns: minmax(17rem, 0.42fr) minmax(0, 1fr);
-      gap: clamp(var(--space-7), 7vw, var(--space-10));
+      grid-template-columns: var(--section-layout-columns);
+      column-gap: var(--section-layout-gap);
+    }
+
+    .experience-company__header {
+      align-items: start;
+      row-gap: var(--space-2);
+    }
+
+    .experience-company__period {
+      grid-column: 1;
+      grid-row: 1;
+      padding-top: 0.35rem;
+    }
+
+    .experience-company h3 {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+    }
+
+    .experience-company__location {
+      grid-column: 1;
+      grid-row: 2;
     }
 
     .experience-track {

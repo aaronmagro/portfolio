@@ -79,6 +79,9 @@ const copy = {
 
 <style>
   .projects {
+    --section-layout-columns: minmax(0, 1.45fr) minmax(18rem, 0.55fr);
+    --section-layout-gap: var(--space-7);
+
     padding-block: clamp(var(--space-9), 12vw, var(--space-10));
     border-top: 1px solid var(--color-border);
     scroll-margin-top: 4.5rem;
@@ -87,7 +90,7 @@ const copy = {
   .projects__list {
     display: grid;
     gap: var(--space-8);
-    margin-top: var(--space-9);
+    margin-top: clamp(var(--space-8), 7vw, var(--space-9));
   }
 
   .project-card {
@@ -216,9 +219,9 @@ const copy = {
   @media (min-width: 68rem) {
     .project-card--featured {
       display: grid;
-      grid-template-columns: minmax(0, 1.45fr) minmax(18rem, 0.55fr);
+      grid-template-columns: var(--section-layout-columns);
       align-items: end;
-      gap: var(--space-7);
+      gap: var(--section-layout-gap);
     }
 
     .project-card--featured .project-card__content {
