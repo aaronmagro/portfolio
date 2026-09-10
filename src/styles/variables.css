@@ -1,0 +1,86 @@
+:root {
+  color-scheme: dark;
+  --font-sans: "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --container-max: 80rem;
+  --container-padding: clamp(1.25rem, 4vw, 3rem);
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+  --space-9: 6rem;
+  --space-10: 8rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: clamp(1.0625rem, 1vw, 1.125rem);
+  --text-xl: clamp(1.25rem, 1.8vw, 1.5rem);
+  --text-2xl: clamp(2rem, 4vw, 3.75rem);
+  --text-display: clamp(3rem, 8vw, 7rem);
+  --radius-sm: 0.5rem;
+  --radius-md: 0.875rem;
+  --radius-lg: 1.25rem;
+  --radius-pill: 999px;
+  --transition-fast: 160ms ease;
+  --transition-base: 240ms ease;
+  --color-background: #06131c;
+  --color-background-subtle: #081923;
+  --color-surface: #0b1d29;
+  --color-surface-elevated: #102735;
+  --color-heading: #f7fafc;
+  --color-text: #e8eef2;
+  --color-text-muted: #9fb1be;
+  --color-border: rgb(255 255 255 / 0.1);
+  --color-brand: #004b70;
+  --color-brand-strong: #003552;
+  --color-accent: #4bb4e6;
+  --color-link: #68c2ea;
+  --color-focus: #86d4f4;
+  --color-selection-background: #0f597d;
+  --color-selection-text: #ffffff;
+  --shadow-elevated: 0 1.5rem 4rem rgb(0 0 0 / 0.24);
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+  --color-background: #f4f8fa;
+  --color-background-subtle: #edf4f7;
+  --color-surface: #ffffff;
+  --color-surface-elevated: #f8fbfc;
+  --color-heading: #081720;
+  --color-text: #13252f;
+  --color-text-muted: #526773;
+  --color-border: #d8e4ea;
+  --color-brand: #005b86;
+  --color-brand-strong: #003b5c;
+  --color-accent: #006a9c;
+  --color-link: #005c89;
+  --color-focus: #006a9c;
+  --color-selection-background: #b9e4f5;
+  --color-selection-text: #081720;
+  --shadow-elevated: 0 1.5rem 4rem rgb(22 53 69 / 0.12);
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    color-scheme: light;
+    --color-background: #f4f8fa;
+    --color-background-subtle: #edf4f7;
+    --color-surface: #ffffff;
+    --color-surface-elevated: #f8fbfc;
+    --color-heading: #081720;
+    --color-text: #13252f;
+    --color-text-muted: #526773;
+    --color-border: #d8e4ea;
+    --color-brand: #005b86;
+    --color-brand-strong: #003b5c;
+    --color-accent: #006a9c;
+    --color-link: #005c89;
+    --color-focus: #006a9c;
+    --color-selection-background: #b9e4f5;
+    --color-selection-text: #081720;
+    --shadow-elevated: 0 1.5rem 4rem rgb(22 53 69 / 0.12);
+  }
+}
