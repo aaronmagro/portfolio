@@ -4,8 +4,8 @@ export const experienceItems = [
   {
     id: 'experience-01',
     period: {
-      es: '2024 — Actualidad',
-      en: '2024 — Present',
+      es: '2024 — 2026',
+      en: '2024 — 2026',
     },
     company: {
       es: 'Lorem Ipsum',
@@ -38,8 +38,8 @@ export const experienceItems = [
   {
     id: 'experience-02',
     period: {
-      es: '2022 — 2024',
-      en: '2022 — 2024',
+      es: '2023 — 2024',
+      en: '2023 — 2024',
     },
     company: {
       es: 'Dolor Sit',
