@@ -1,0 +1,257 @@
+---
+import Container from '../ui/Container.astro';
+import { navigationItems } from '../../data/navigation';
+import { siteConfig } from '../../config/site';
+
+type SupportedLocale = (typeof siteConfig.locales)[number];
+
+interface Props {
+  lang?: SupportedLocale;
+}
+
+const { lang = siteConfig.defaultLocale } = Astro.props;
+
+const labels = {
+  es: {
+    home: 'Inicio',
+    navigation: 'Navegación principal',
+    mobileNavigation: 'Navegación móvil',
+    openMenu: 'Abrir menú',
+    closeMenu: 'Cerrar menú',
+  },
+  en: {
+    home: 'Home',
+    navigation: 'Primary navigation',
+    mobileNavigation: 'Mobile navigation',
+    openMenu: 'Open menu',
+    closeMenu: 'Close menu',
+  },
+} as const;
+
+const copy = labels[lang];
+---
+
+<header class="site-header" data-header>
+  <Container>
+    <div class="site-header__content">
+      <a class="site-header__brand" href="/" aria-label={copy.home}>LI.</a>
+
+      <nav class="site-header__desktop-nav" aria-label={copy.navigation}>
+        <ul>
+          {navigationItems.map((item) => (
+            <li>
+              <a href={item.href}>{item.label[lang]}</a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      <button
+        class="site-header__menu-toggle"
+        type="button"
+        aria-expanded="false"
+        aria-controls="mobile-navigation"
+        aria-label={copy.openMenu}
+        data-menu-toggle
+        data-open-label={copy.openMenu}
+        data-close-label={copy.closeMenu}
+      >
+        <span aria-hidden="true"></span>
+        <span aria-hidden="true"></span>
+      </button>
+
+      <div class="site-header__mobile" id="mobile-navigation" data-mobile-menu hidden>
+        <nav aria-label={copy.mobileNavigation}>
+          <ul>
+            {navigationItems.map((item) => (
+              <li>
+                <a href={item.href} data-mobile-link>{item.label[lang]}</a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </Container>
+</header>
+
+<script>
+  const headers = document.querySelectorAll<HTMLElement>('[data-header]');
+
+  for (const header of headers) {
+    const toggle = header.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+    const menu = header.querySelector<HTMLElement>('[data-mobile-menu]');
+    const links = header.querySelectorAll<HTMLAnchorElement>('[data-mobile-link]');
+
+    if (!toggle || !menu) continue;
+
+    const setMenuState = (open: boolean) => {
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.setAttribute(
+        'aria-label',
+        open ? toggle.dataset.closeLabel ?? '' : toggle.dataset.openLabel ?? '',
+      );
+      menu.hidden = !open;
+      header.dataset.menuOpen = String(open);
+    };
+
+    toggle.addEventListener('click', () => {
+      setMenuState(toggle.getAttribute('aria-expanded') !== 'true');
+    });
+
+    for (const link of links) {
+      link.addEventListener('click', () => setMenuState(false));
+    }
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') {
+        setMenuState(false);
+        toggle.focus();
+      }
+    });
+
+    window.matchMedia('(min-width: 52rem)').addEventListener('change', (event) => {
+      if (event.matches) setMenuState(false);
+    });
+  }
+</script>
+
+<style>
+  .site-header {
+    position: sticky;
+    z-index: 100;
+    top: 0;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-background);
+  }
+
+  @supports (backdrop-filter: blur(1rem)) {
+    .site-header {
+      background: color-mix(in srgb, var(--color-background) 86%, transparent);
+      backdrop-filter: blur(1rem);
+    }
+  }
+
+  .site-header__content {
+    position: relative;
+    display: flex;
+    min-height: 4.5rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-5);
+  }
+
+  .site-header__brand {
+    color: var(--color-heading);
+    font-size: var(--text-xl);
+    font-weight: 800;
+    letter-spacing: -0.05em;
+    line-height: 1;
+    text-decoration: none;
+  }
+
+  .site-header__desktop-nav {
+    display: none;
+  }
+
+  .site-header__desktop-nav ul,
+  .site-header__mobile ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .site-header__desktop-nav ul {
+    align-items: center;
+    gap: var(--space-6);
+  }
+
+  .site-header__desktop-nav a,
+  .site-header__mobile a {
+    color: var(--color-text-muted);
+    font-weight: 600;
+    text-decoration: none;
+    transition: color var(--transition-fast);
+  }
+
+  .site-header__desktop-nav a:hover,
+  .site-header__mobile a:hover {
+    color: var(--color-heading);
+  }
+
+  .site-header__menu-toggle {
+    display: inline-grid;
+    width: 2.75rem;
+    height: 2.75rem;
+    place-content: center;
+    gap: 0.35rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    background: var(--color-surface);
+    color: var(--color-heading);
+    cursor: pointer;
+  }
+
+  .site-header__menu-toggle span {
+    display: block;
+    width: 1.15rem;
+    height: 0.125rem;
+    border-radius: var(--radius-pill);
+    background: currentColor;
+    transition:
+      transform var(--transition-fast),
+      opacity var(--transition-fast);
+  }
+
+  [data-menu-open='true'] .site-header__menu-toggle span:first-child {
+    transform: translateY(0.2375rem) rotate(45deg);
+  }
+
+  [data-menu-open='true'] .site-header__menu-toggle span:last-child {
+    transform: translateY(-0.2375rem) rotate(-45deg);
+  }
+
+  .site-header__mobile {
+    position: absolute;
+    top: calc(100% + 1px);
+    right: 0;
+    left: 0;
+    padding: var(--space-3);
+    border: 1px solid var(--color-border);
+    border-top: 0;
+    border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-elevated);
+  }
+
+  .site-header__mobile[hidden] {
+    display: none;
+  }
+
+  .site-header__mobile a {
+    display: block;
+    padding: var(--space-4);
+    border-radius: var(--radius-md);
+    color: var(--color-heading);
+    font-size: var(--text-lg);
+  }
+
+  .site-header__mobile a:hover {
+    background: var(--color-surface-elevated);
+  }
+
+  @media (min-width: 52rem) {
+    .site-header__desktop-nav {
+      display: block;
+    }
+
+    .site-header__desktop-nav ul {
+      display: flex;
+    }
+
+    .site-header__menu-toggle,
+    .site-header__mobile {
+      display: none;
+    }
+  }
+</style>
