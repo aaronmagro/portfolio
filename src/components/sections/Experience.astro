@@ -260,8 +260,8 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
                 ))}
               </div>
               <span class="career-map__lens-center"></span>
-              <span class="career-map__pointer-dot" data-career-pointer hidden aria-hidden="true"></span>
             </div>
+            <span class="career-map__pointer-dot" data-career-pointer hidden aria-hidden="true"></span>
           </div>
         </div>
       </div>
@@ -653,10 +653,10 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
   }
 
   .career-map__pointer-dot {
-    position: absolute;
-    z-index: 3;
-    top: var(--pointer-dot-y, 50%);
-    left: var(--pointer-dot-x, 50%);
+    position: fixed;
+    z-index: 7;
+    top: var(--pointer-dot-y, 0px);
+    left: var(--pointer-dot-x, 0px);
     width: 0.2rem;
     height: 0.2rem;
     border-radius: 50%;
@@ -878,6 +878,7 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
       let renderedLensLeft = 0;
       let frameId: number | null = null;
       let isDragging = false;
+      let isPointerExploring = false;
       let dragStartX = 0;
       let dragMoved = false;
 
@@ -977,19 +978,8 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
           return;
         }
 
-        const bounds = careerScrubber.getBoundingClientRect();
-        const xRatio = clamp((event.clientX - bounds.left) / bounds.width, 0, 1);
-        const yRatio = clamp((event.clientY - bounds.top) / bounds.height, 0, 1);
-        const inset = 8;
-
-        careerPointer.style.setProperty(
-          '--pointer-dot-x',
-          `${inset + xRatio * (100 - inset * 2)}%`,
-        );
-        careerPointer.style.setProperty(
-          '--pointer-dot-y',
-          `${inset + yRatio * (100 - inset * 2)}%`,
-        );
+        careerPointer.style.setProperty('--pointer-dot-x', `${event.clientX}px`);
+        careerPointer.style.setProperty('--pointer-dot-y', `${event.clientY}px`);
         careerPointer.hidden = false;
       };
 
@@ -1002,6 +992,7 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
       const hideExplorer = () => {
         if (frameId !== null) cancelAnimationFrame(frameId);
         frameId = null;
+        isPointerExploring = false;
         careerCursor.hidden = true;
         careerLens.hidden = true;
         careerPointer.hidden = true;
@@ -1010,6 +1001,7 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
 
       careerScrubber.addEventListener('pointerenter', (event) => {
         if ((event.pointerType === 'mouse' || event.pointerType === 'pen') && !isDragging) {
+          isPointerExploring = true;
           setTargetFromClientX(event.clientX, true);
           updatePointerFeedback(event);
         }
@@ -1018,6 +1010,7 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
       careerScrubber.addEventListener('pointermove', (event) => {
         const isHoverPointer = event.pointerType === 'mouse' || event.pointerType === 'pen';
         if (!isHoverPointer && !isDragging) return;
+        if (isHoverPointer) isPointerExploring = true;
         if (isDragging && Math.abs(event.clientX - dragStartX) > 5) dragMoved = true;
         setTargetFromClientX(event.clientX);
         updatePointerFeedback(event);
@@ -1027,6 +1020,7 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
         if (event.pointerType === 'mouse' && event.button !== 0) return;
         event.preventDefault();
         isDragging = true;
+        isPointerExploring = event.pointerType === 'mouse' || event.pointerType === 'pen';
         dragStartX = event.clientX;
         dragMoved = false;
         careerScrubber.classList.add('is-dragging');
@@ -1071,18 +1065,31 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
         hideExplorer();
       });
 
-      careerScrubber.addEventListener('pointerleave', (event) => {
-        if ((event.pointerType === 'mouse' || event.pointerType === 'pen') && !isDragging) {
-          hideExplorer();
-        }
+      document.addEventListener('pointermove', (event) => {
+        if (!isPointerExploring || isDragging || careerLens.hidden) return;
+        if (event.pointerType !== 'mouse' && event.pointerType !== 'pen') return;
+
+        updatePointerFeedback(event);
+
+        const lensBounds = careerLens.getBoundingClientRect();
+        const exitTolerance = 6;
+        const isOutsideLens =
+          event.clientX < lensBounds.left - exitTolerance ||
+          event.clientX > lensBounds.right + exitTolerance ||
+          event.clientY < lensBounds.top - exitTolerance ||
+          event.clientY > lensBounds.bottom + exitTolerance;
+
+        if (isOutsideLens) hideExplorer();
       });
+
+      window.addEventListener('blur', hideExplorer);
 
       careerScrubber.addEventListener('focus', () => {
         setTargetFromMonth(keyboardMonthIndex, true);
       });
 
       careerScrubber.addEventListener('blur', () => {
-        if (!isDragging) hideExplorer();
+        if (!isDragging && !isPointerExploring) hideExplorer();
       });
 
       careerScrubber.addEventListener('keydown', (event) => {
