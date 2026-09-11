@@ -260,6 +260,7 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
                 ))}
               </div>
               <span class="career-map__lens-center"></span>
+              <span class="career-map__pointer-dot" data-career-pointer hidden aria-hidden="true"></span>
             </div>
           </div>
         </div>
@@ -565,7 +566,9 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
     pointer-events: none;
   }
 
-  .career-map__cursor[hidden], .career-map__lens[hidden] { display: none; }
+  .career-map__cursor[hidden],
+  .career-map__lens[hidden],
+  .career-map__pointer-dot[hidden] { display: none; }
 
   .career-map__lens {
     --lens-cell-width: 2.45rem;
@@ -595,7 +598,7 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
   }
 
   .career-map__lens-window { position: relative; overflow: hidden; width: 100%; padding-block: 0.1rem 0.2rem; }
-  .career-map__lens-track { display: flex; width: max-content; transform: translate3d(var(--lens-track-x, 0px), 0, 0); will-change: transform; }
+  .career-map__lens-track { display: flex; width: max-content; transform: translate3( var(--lens-track-x, 0px), 0, 0); will-change: transform; }
 
   .career-map__lens-month {
     position: relative;
@@ -649,6 +652,20 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
     pointer-events: none;
   }
 
+  .career-map__pointer-dot {
+    position: absolute;
+    z-index: 3;
+    top: var(--pointer-dot-y, 50%);
+    left: var(--pointer-dot-x, 50%);
+    width: 0.2rem;
+    height: 0.2rem;
+    border-radius: 50%;
+    background: var(--color-accent);
+    opacity: 0.28;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
   .experience__companies { display: grid; gap: var(--space-10); margin-top: clamp(var(--space-8), 7vw, var(--space-9)); }
   .experience-company + .experience-company { padding-top: var(--space-9); border-top: 1px solid var(--color-border); }
   .experience-company__header { display: flex; align-items: end; justify-content: space-between; gap: var(--space-6); margin-bottom: clamp(var(--space-7), 5vw, var(--space-8)); }
@@ -690,16 +707,16 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
   .experience-detail { position: relative; min-height: 24rem; overflow: hidden; padding-top: var(--space-3); }
   .experience-detail[hidden] { display: none; }
   .experience-detail.is-entering { animation: experience-detail-in 220ms ease both; }
-  .experience-detail__watermark { position: absolute; z-index: 0; top: -1.5rem; right: 0; color: var(--color-border); font-size: clamp(5rem, 12vw, 9rem); font-weight: 800; line-height: 1; letter-spacing: -0.08em; opacity: 0.5; pointer-events: none; user-select: none; }
+  .experience-detail__watermark  { position: absolute; z-index: 0; top: -1.5rem; right: 0; color: var(--color-border); font-size: clamp(5rem, 12vw, 9rem); font-weight: 800; line-height: 1; letter-spacing: -0.08em; opacity: 0.5; pointer-events: none; user-select: none; }
   .experience-detail > :not(.experience-detail__watermark) { position: relative; z-index: 1; }
   .experience-detail__meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-3); max-width: 46rem; color: var(--color-accent); font-size: var(--text-sm); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
   .experience-detail h4 { max-width: 24ch; margin-top: var(--space-5); font-size: clamp(1.8rem, 4vw, 3rem); letter-spacing: -0.04em; }
   .experience-detail__company { margin-top: var(--space-2); color: var(--color-text-muted); font-weight: 700; }
   .experience-detail__description { max-width: 46rem; margin-top: var(--space-5); color: var(--color-text-muted); font-size: var(--text-lg); }
-  .experience-detail__highlights { display: grid; gap: var(--space-3); max-width: 46rem; margin: var(--space-6) 0 0; padding: 0; list-style: none; }
+  .experience-detail__highlights { display: grid; gap: var(--space-3); max-width: 46rem; margin: var(--space-6) 0 0 0; padding: 0; list-style: none; }
   .experience-detail__highlights li { position: relative; padding-left: var(--space-5); }
   .experience-detail__highlights li::before { position: absolute; top: 0.7em; left: 0; width: 0.35rem; height: 0.35rem; border-radius: 50%; background: var(--color-accent); content: ''; }
-  .experience-detail__technologies { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: var(--space-6) 0 0; padding: 0; list-style: none; }
+  .experience-detail__technologies { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: var(--space-6) 0 0 0 ; padding: 0; list-style: none; }
   .experience-detail__technologies li { padding: 0.35rem 0.7rem; border: 1px solid var(--color-border); border-radius: var(--radius-pill); color: var(--color-text-muted); font-size: 0.78rem; font-weight: 600; }
 
   @keyframes experience-detail-in { from { opacity: 0; transform: translateY(0.4rem); } to { opacity: 1; transform: translateY(0); } }
@@ -748,6 +765,7 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
   const careerMonth = careerMap?.querySelector<HTMLElement>('[data-career-month]');
   const careerLensWindow = careerMap?.querySelector<HTMLElement>('[data-career-lens-window]');
   const careerMonthTrack = careerMap?.querySelector<HTMLElement>('[data-career-month-track]');
+  const careerPointer = careerMap?.querySelector<HTMLElement>('[data-career-pointer]');
   const overviewSegments = careerMap
     ? Array.from(careerMap.querySelectorAll<HTMLElement>('[data-overview-role]'))
     : [];
@@ -825,7 +843,8 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
     careerLens &&
     careerMonth &&
     careerLensWindow &&
-    careerMonthTrack
+    careerMonthTrack &&
+    careerPointer
   ) {
     const startDate = careerMap.dataset.timelineStart;
     const monthCount = Number(careerMap.dataset.timelineMonths ?? 0);
@@ -836,8 +855,8 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
       const locale = document.documentElement.lang || 'es';
       const dateFormatter = new Intl.DateTimeFormat(locale, {
         month: 'short',
-        year: 'numeric',
-        timeZone: 'UTC',
+       year: 'numeric',
+        timeZone: 'UTCg,
       });
       const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       const initialMonthIndex = Math.max(
@@ -947,9 +966,31 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
       };
 
       const setTargetFromClientX = (clientX: number, snap = false) => {
-        const bounds = careerScrubber.getBoundingClientRect();
+        const bounds = careerScrubbber.getBoundingClientRect();
         const ratio = clamp((clientX - bounds.left) / bounds.width, 0, 1);
         setTargetRatio(ratio, snap);
+      };
+
+      const updatePointerFeedback = (event: PointerEvent) => {
+        if (event.pointerType !== 'mouse' && event.pointerType !== 'pen') {
+          careerPointer.hidden = true;
+          return;
+        }
+
+        const bounds = careerScrubber.getBoundingClientRect();
+        const xRatio = clamp((event.clientX - bounds.left) / bounds.width, 0, 1);
+        const yRatio = clamp((event.clientY - bounds.top) / bounds.height, 0, 1);
+        const inset = 8;
+
+        careerPointer.style.setProperty(
+          '--pointer-dot-x',
+          `${inset + xRatio * (100 - inset * 2)}%`,
+        );
+        careerPointer.style.setProperty(
+          '--pointer-dot-y',
+          `${inset + yRatio * (100 - inset * 2)}%`,
+        );
+        careerPointer.hidden = false;
       };
 
       const setTargetFromMonth = (monthIndex: number, snap = false) => {
@@ -963,19 +1004,23 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
         frameId = null;
         careerCursor.hidden = true;
         careerLens.hidden = true;
+        careerPointer.hidden = true;
         hoveredRoleKey = undefined;
       };
 
       careerScrubber.addEventListener('pointerenter', (event) => {
-        if (event.pointerType === 'mouse' && !isDragging) {
+        if ((event.pointerType === 'mouse' || event.pointerType === 'pen') && !isDragging) {
           setTargetFromClientX(event.clientX, true);
+          updatePointerFeedback(event);
         }
       });
 
       careerScrubber.addEventListener('pointermove', (event) => {
-        if (event.pointerType !== 'mouse' && !isDragging) return;
+        const isHoverPointer = event.pointerType === 'mouse' || event.pointerType === 'pen';
+        if (!isHoverPointer && !isDragging) return;
         if (isDragging && Math.abs(event.clientX - dragStartX) > 5) dragMoved = true;
         setTargetFromClientX(event.clientX);
+        updatePointerFeedback(event);
       });
 
       careerScrubber.addEventListener('pointerdown', (event) => {
@@ -987,15 +1032,17 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
         careerScrubber.classList.add('is-dragging');
         careerScrubber.setPointerCapture(event.pointerId);
         setTargetFromClientX(event.clientX, true);
+        updatePointerFeedback(event);
       });
 
       careerScrubber.addEventListener('pointerup', (event) => {
         if (!isDragging) return;
         setTargetFromClientX(event.clientX);
+        updatePointerFeedback(event);
         const shouldSelect = !dragMoved && Math.abs(event.clientX - dragStartX) <= 5;
         const clickedRatio = clamp(
           (event.clientX - careerScrubber.getBoundingClientRect().left) /
-            careerScrubber.getBoundingClientRect().width,
+            careerScrubbber.getBoundingClientRect().width,
           0,
           1,
         );
@@ -1014,10 +1061,10 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
         if (shouldSelect && clickedRoleKey) roleActivators.get(clickedRoleKey)?.();
       });
 
-      careerScrubber.addEventListener('pointercancel', (event) => {
+      careerScrubbber.addEventListener('pointercancel', (event) => {
         isDragging = false;
         dragMoved = false;
-        careerScrubber.classList.remove('is-dragging');
+        careerScrubbber.classList.remove('is-dragging');
         if (careerScrubber.hasPointerCapture(event.pointerId)) {
           careerScrubber.releasePointerCapture(event.pointerId);
         }
