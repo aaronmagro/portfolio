@@ -880,6 +880,7 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
       let frameId: number | null = null;
       let isDragging = false;
       let isPointerExploring = false;
+      let lastPointerX: number | null = null;
       let dragStartX = 0;
       let dragMoved = false;
 
@@ -887,6 +888,7 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
 
       const setPointerExploring = (active: boolean) => {
         isPointerExploring = active;
+        if (!active) lastPointerX = null;
         document.documentElement.classList.toggle('is-career-exploring', active);
       };
 
@@ -1018,6 +1020,7 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
       careerScrubber.addEventListener('pointerenter', (event) => {
         if ((event.pointerType === 'mouse' || event.pointerType === 'pen') && !isDragging) {
           setPointerExploring(true);
+          lastPointerX = event.clientX;
           setTargetFromClientX(event.clientX, true);
           updatePointerFeedback(event);
         }
@@ -1026,7 +1029,10 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
       careerScrubber.addEventListener('pointermove', (event) => {
         const isHoverPointer = event.pointerType === 'mouse' || event.pointerType === 'pen';
         if (!isHoverPointer && !isDragging) return;
-        if (isHoverPointer) setPointerExploring(true);
+        if (isHoverPointer) {
+          setPointerExploring(true);
+          lastPointerX = event.clientX;
+        }
         if (isDragging && Math.abs(event.clientX - dragStartX) > 5) dragMoved = true;
         setTargetFromClientX(event.clientX);
         updatePointerFeedback(event);
@@ -1037,6 +1043,7 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
         event.preventDefault();
         isDragging = true;
         setPointerExploring(event.pointerType === 'mouse' || event.pointerType === 'pen');
+        lastPointerX = event.clientX;
         dragStartX = event.clientX;
         dragMoved = false;
         careerScrubber.classList.add('is-dragging');
@@ -1049,6 +1056,7 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
         if (!isDragging) return;
         setTargetFromClientX(event.clientX);
         updatePointerFeedback(event);
+        lastPointerX = event.clientX;
         const shouldSelect = !dragMoved && Math.abs(event.clientX - dragStartX) <= 5;
         const scrubberBounds = careerScrubber.getBoundingClientRect();
         const clickedRatio = clamp(
@@ -1089,7 +1097,30 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
         if (event.pointerType !== 'mouse' && event.pointerType !== 'pen') return;
 
         updatePointerFeedback(event);
-        if (!isPointInsideLens(event.clientX, event.clientY)) hideExplorer();
+
+        if (event.composedPath().includes(careerScrubber)) {
+          lastPointerX = event.clientX;
+          return;
+        }
+
+        if (!isPointInsideLens(event.clientX, event.clientY)) {
+          hideExplorer();
+          return;
+        }
+
+        if (lastPointerX === null) {
+          lastPointerX = event.clientX;
+          return;
+        }
+
+        const deltaX = event.clientX - lastPointerX;
+        lastPointerX = event.clientX;
+        if (deltaX === 0) return;
+
+        const scrubberWidth = careerScrubber.getBoundingClientRect().width;
+        if (scrubberWidth > 0) {
+          setTargetRatio(targetRatio + deltaX / scrubberWidth);
+        }
       });
 
       window.addEventListener('blur', hideExplorer);
