@@ -912,7 +912,11 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
         const idealTrackOffset = windowWidth / 2 - (monthFloat + 0.5) * cellWidth;
         const minTrackOffset = Math.min(0, windowWidth - trackWidth);
         const trackOffset = clamp(idealTrackOffset, minTrackOffset, 0);
-        const focusX = (monthFloat + 0.5) * cellWidth + trackOffset;
+        const focusX = clamp(
+          (monthFloat + 0.5) * cellWidth + trackOffset,
+          cellWidth / 2,
+          windowWidth - cellWidth / 2,
+        );
         const formattedDate = dateFormatter.format(date).replace('.', '').toUpperCase();
 
         careerLens.style.setProperty('--lens-left', `${renderedLensLeft}px`);
