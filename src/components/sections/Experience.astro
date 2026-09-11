@@ -554,12 +554,13 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
   .career-map__cursor {
     position: absolute;
     z-index: 5;
-    top: 1.58rem;
+    top: 1.46rem;
     left: var(--cursor-position, 0%);
-    width: 1px;
-    height: 1.45rem;
+    width: 2px;
+    height: 1.7rem;
+    border-radius: var(--radius-pill);
     background: var(--color-accent);
-    opacity: 0.85;
+    opacity: 0.95;
     transform: translateX(-50%);
     pointer-events: none;
   }
@@ -707,6 +708,10 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
     .experience-company__workspace { grid-template-columns: var(--section-layout-columns); column-gap: var(--section-layout-gap); }
     .experience-track { padding-right: var(--space-4); }
     .experience-details { position: sticky; top: 7rem; align-self: start; }
+  }
+
+  @media (pointer: fine) {
+    .career-map__scrubber { cursor: none; }
   }
 
   @media (max-width: 47.99rem) { .career-map { display: none; } }
@@ -896,7 +901,6 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
         const focusX = (monthFloat + 0.5) * cellWidth + trackOffset;
         const formattedDate = dateFormatter.format(date).replace('.', '').toUpperCase();
 
-        careerCursor.style.setProperty('--cursor-position', `${renderedRatio * 100}%`);
         careerLens.style.setProperty('--lens-left', `${renderedLensLeft}px`);
         careerMonthTrack.style.setProperty('--lens-track-x', `${trackOffset}px`);
         careerLensWindow.style.setProperty('--lens-focus-x', `${focusX}px`);
@@ -920,6 +924,7 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
         const wasHidden = careerLens.hidden;
 
         targetRatio = clamp(ratio, 0, 1);
+        careerCursor.style.setProperty('--cursor-position', `${targetRatio * 100}%`);
         careerCursor.hidden = false;
         careerLens.hidden = false;
 
