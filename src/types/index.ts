@@ -35,21 +35,19 @@ export interface Project {
   technologies: readonly string[];
 }
 
-export interface ExperienceRole {
+export interface ExperienceCompany {
   id: string;
+  name: LocalizedText;
+  location: LocalizedText;
+}
+
+export interface ExperienceEntry {
+  id: string;
+  companyId: ExperienceCompany['id'];
   startDate: YearMonth;
   endDate: YearMonth | null;
-  period: LocalizedText;
   role: LocalizedText;
   description: LocalizedText;
   highlights: readonly LocalizedText[];
   technologies: readonly string[];
-}
-
-export interface ExperienceCompany {
-  id: string;
-  company: LocalizedText;
-  period: LocalizedText;
-  location: LocalizedText;
-  roles: readonly ExperienceRole[];
 }
