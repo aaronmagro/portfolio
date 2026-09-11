@@ -598,7 +598,7 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
   }
 
   .career-map__lens-window { position: relative; overflow: hidden; width: 100%; padding-block: 0.1rem 0.2rem; }
-  .career-map__lens-track { display: flex; width: max-content; transform: translate3( var(--lens-track-x, 0px), 0, 0); will-change: transform; }
+  .career-map__lens-track { display: flex; width: max-content; transform: translate3d(var(--lens-track-x, 0px), 0, 0); will-change: transform; }
 
   .career-map__lens-month {
     position: relative;
@@ -701,22 +701,22 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
   .experience-stage__signal { width: 0.7rem; height: 0.7rem; border: 1px solid var(--color-border); border-radius: 50%; transition: border-color var(--transition-fast), background-color var(--transition-fast), transform var(--transition-fast); }
   .experience-stage:is(:hover, :focus-visible) .experience-stage__role, .experience-stage.is-active .experience-stage__role { color: var(--color-heading); }
   .experience-stage.is-active .experience-stage__index { border-color: var(--color-accent); background: var(--color-surface-elevated); color: var(--color-accent); }
-  .experience-stage.is-active .experience-stage__signal { border-color: var(--color-accent); background: var(--color-accent); transform: scale(1.15); }
+  .experience-stage.is-active .experience-stage__signal { border-color: var(--color-accent); background-color: var(--color-accent); transform: scale(1.15); }
 
   .experience-details { min-width: 0; }
   .experience-detail { position: relative; min-height: 24rem; overflow: hidden; padding-top: var(--space-3); }
   .experience-detail[hidden] { display: none; }
   .experience-detail.is-entering { animation: experience-detail-in 220ms ease both; }
-  .experience-detail__watermark  { position: absolute; z-index: 0; top: -1.5rem; right: 0; color: var(--color-border); font-size: clamp(5rem, 12vw, 9rem); font-weight: 800; line-height: 1; letter-spacing: -0.08em; opacity: 0.5; pointer-events: none; user-select: none; }
+  .experience-detail__watermark { position: absolute; z-index: 0; top: -1.5rem; right: 0; color: var(--color-border); font-size: clamp(5rem, 12vw, 9rem); font-weight: 800; line-height: 1; letter-spacing: -0.08em; opacity: 0.5; pointer-events: none; user-select: none; }
   .experience-detail > :not(.experience-detail__watermark) { position: relative; z-index: 1; }
   .experience-detail__meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-3); max-width: 46rem; color: var(--color-accent); font-size: var(--text-sm); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
   .experience-detail h4 { max-width: 24ch; margin-top: var(--space-5); font-size: clamp(1.8rem, 4vw, 3rem); letter-spacing: -0.04em; }
   .experience-detail__company { margin-top: var(--space-2); color: var(--color-text-muted); font-weight: 700; }
   .experience-detail__description { max-width: 46rem; margin-top: var(--space-5); color: var(--color-text-muted); font-size: var(--text-lg); }
-  .experience-detail__highlights { display: grid; gap: var(--space-3); max-width: 46rem; margin: var(--space-6) 0 0 0; padding: 0; list-style: none; }
+  .experience-detail__highlights { display: grid; gap: var(--space-3); max-width: 46rem; margin: var(--space-6) 0 0; padding: 0; list-style: none; }
   .experience-detail__highlights li { position: relative; padding-left: var(--space-5); }
   .experience-detail__highlights li::before { position: absolute; top: 0.7em; left: 0; width: 0.35rem; height: 0.35rem; border-radius: 50%; background: var(--color-accent); content: ''; }
-  .experience-detail__technologies { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: var(--space-6) 0 0 0 ; padding: 0; list-style: none; }
+  .experience-detail__technologies { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: var(--space-6) 0 0; padding: 0; list-style: none; }
   .experience-detail__technologies li { padding: 0.35rem 0.7rem; border: 1px solid var(--color-border); border-radius: var(--radius-pill); color: var(--color-text-muted); font-size: 0.78rem; font-weight: 600; }
 
   @keyframes experience-detail-in { from { opacity: 0; transform: translateY(0.4rem); } to { opacity: 1; transform: translateY(0); } }
@@ -855,8 +855,8 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
       const locale = document.documentElement.lang || 'es';
       const dateFormatter = new Intl.DateTimeFormat(locale, {
         month: 'short',
-       year: 'numeric',
-        timeZone: 'UTCg,
+        year: 'numeric',
+        timeZone: 'UTC',
       });
       const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       const initialMonthIndex = Math.max(
@@ -966,7 +966,7 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
       };
 
       const setTargetFromClientX = (clientX: number, snap = false) => {
-        const bounds = careerScrubbber.getBoundingClientRect();
+        const bounds = careerScrubber.getBoundingClientRect();
         const ratio = clamp((clientX - bounds.left) / bounds.width, 0, 1);
         setTargetRatio(ratio, snap);
       };
@@ -1040,9 +1040,9 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
         setTargetFromClientX(event.clientX);
         updatePointerFeedback(event);
         const shouldSelect = !dragMoved && Math.abs(event.clientX - dragStartX) <= 5;
+        const scrubberBounds = careerScrubber.getBoundingClientRect();
         const clickedRatio = clamp(
-          (event.clientX - careerScrubber.getBoundingClientRect().left) /
-            careerScrubbber.getBoundingClientRect().width,
+          (event.clientX - scrubberBounds.left) / scrubberBounds.width,
           0,
           1,
         );
@@ -1061,10 +1061,10 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
         if (shouldSelect && clickedRoleKey) roleActivators.get(clickedRoleKey)?.();
       });
 
-      careerScrubbber.addEventListener('pointercancel', (event) => {
+      careerScrubber.addEventListener('pointercancel', (event) => {
         isDragging = false;
         dragMoved = false;
-        careerScrubbber.classList.remove('is-dragging');
+        careerScrubber.classList.remove('is-dragging');
         if (careerScrubber.hasPointerCapture(event.pointerId)) {
           careerScrubber.releasePointerCapture(event.pointerId);
         }
@@ -1072,7 +1072,9 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
       });
 
       careerScrubber.addEventListener('pointerleave', (event) => {
-        if (event.pointerType === 'mouse' && !isDragging) hideExplorer();
+        if ((event.pointerType === 'mouse' || event.pointerType === 'pen') && !isDragging) {
+          hideExplorer();
+        }
       });
 
       careerScrubber.addEventListener('focus', () => {
