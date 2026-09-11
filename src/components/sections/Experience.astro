@@ -674,8 +674,8 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
   .experience-company__location { margin-top: var(--space-2); color: var(--color-text-muted); }
   .experience-company__period { flex: none; padding-bottom: 0.2rem; color: var(--color-accent); font-size: var(--text-sm); font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
   .experience-company__workspace { display: grid; gap: var(--space-8); }
-  .experience-track { position: relative; display: grid; align-content: start; }
-  .experience-track__rail { position: absolute; top: 2.15rem; bottom: 2.15rem; left: 1.34rem; width: 1px; overflow: hidden; background: var(--color-border); pointer-events: none; }
+  .experience-track { position: relative; display: grid; align-content: start; align-self: start; }
+  .experience-track__rail { position: absolute; top: 2.375rem; bottom: 2.375rem; left: 1.34rem; width: 1px; overflow: hidden; background: var(--color-border); pointer-events: none; }
   .experience-track__progress { display: block; width: 100%; height: var(--track-progress, 0%); background: var(--color-accent); transition: height 280ms ease; }
 
   .experience-stage {
@@ -773,7 +773,6 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
   const stageMarkers = careerMap
     ? Array.from(careerMap.querySelectorAll<HTMLElement>('[data-stage-marker]'))
     : [];
-  const roleActivators = new Map<string, () => void>();
 
   const updateOverview = (roleKey: string | undefined) => {
     if (!roleKey) return;
@@ -818,8 +817,6 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
     };
 
     tabs.forEach((tab, index) => {
-      const roleKey = tab.dataset.roleKey;
-      if (roleKey) roleActivators.set(roleKey, () => activate(index));
       tab.addEventListener('click', () => activate(index));
       tab.addEventListener('keydown', (event) => {
         let nextIndex: number | null = null;
@@ -871,7 +868,6 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
         ),
       );
 
-      let hoveredRoleKey: string | undefined;
       let keyboardMonthIndex = initialMonthIndex;
       let targetRatio = (initialMonthIndex + 0.5) / monthCount;
       let renderedRatio = targetRatio;
@@ -881,8 +877,6 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
       let isDragging = false;
       let isPointerExploring = false;
       let lastPointerX: number | null = null;
-      let dragStartX = 0;
-      let dragMoved = false;
 
       const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(value, max));
 
@@ -891,13 +885,6 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
         if (!active) lastPointerX = null;
         document.documentElement.classList.toggle('is-career-exploring', active);
       };
-
-      const getRoleForMonth = (monthIndex: number) =>
-        overviewSegments.find((segment) => {
-          const start = Number(segment.dataset.startIndex);
-          const end = Number(segment.dataset.endIndex);
-          return monthIndex >= start && monthIndex <= end;
-        });
 
       const getDateForMonth = (monthIndex: number) => {
         const absoluteMonth = startAbsoluteMonth + monthIndex;
@@ -918,7 +905,6 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
         const monthFloat = clamp(renderedRatio * monthCount, 0, monthCount - 0.001);
         const monthIndex = clamp(Math.floor(monthFloat), 0, monthCount - 1);
         const date = getDateForMonth(monthIndex);
-        const role = getRoleForMonth(monthIndex);
         const firstMonth = careerMonthTrack.querySelector<HTMLElement>('[data-lens-month]');
         const cellWidth = firstMonth?.getBoundingClientRect().width ?? 39.2;
         const windowWidth = careerLensWindow.clientWidth;
@@ -935,7 +921,6 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
         careerMonth.textContent = formattedDate;
         careerScrubber.setAttribute('aria-valuenow', String(monthIndex + 1));
         careerScrubber.setAttribute('aria-valuetext', formattedDate);
-        hoveredRoleKey = role?.dataset.overviewRole;
         keyboardMonthIndex = monthIndex;
 
         const settled =
@@ -1014,7 +999,6 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
         careerCursor.hidden = true;
         careerLens.hidden = true;
         careerPointer.hidden = true;
-        hoveredRoleKey = undefined;
       };
 
       careerScrubber.addEventListener('pointerenter', (event) => {
@@ -1033,7 +1017,6 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
           setPointerExploring(true);
           lastPointerX = event.clientX;
         }
-        if (isDragging && Math.abs(event.clientX - dragStartX) > 5) dragMoved = true;
         setTargetFromClientX(event.clientX);
         updatePointerFeedback(event);
       });
@@ -1044,8 +1027,6 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
         isDragging = true;
         setPointerExploring(event.pointerType === 'mouse' || event.pointerType === 'pen');
         lastPointerX = event.clientX;
-        dragStartX = event.clientX;
-        dragMoved = false;
         careerScrubber.classList.add('is-dragging');
         careerScrubber.setPointerCapture(event.pointerId);
         setTargetFromClientX(event.clientX, true);
@@ -1057,26 +1038,12 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
         setTargetFromClientX(event.clientX);
         updatePointerFeedback(event);
         lastPointerX = event.clientX;
-        const shouldSelect = !dragMoved && Math.abs(event.clientX - dragStartX) <= 5;
-        const scrubberBounds = careerScrubber.getBoundingClientRect();
-        const clickedRatio = clamp(
-          (event.clientX - scrubberBounds.left) / scrubberBounds.width,
-          0,
-          1,
-        );
-        const clickedMonthIndex = clamp(
-          Math.floor(clickedRatio * monthCount),
-          0,
-          monthCount - 1,
-        );
-        const clickedRoleKey = getRoleForMonth(clickedMonthIndex)?.dataset.overviewRole;
 
         isDragging = false;
         careerScrubber.classList.remove('is-dragging');
         if (careerScrubber.hasPointerCapture(event.pointerId)) {
           careerScrubber.releasePointerCapture(event.pointerId);
         }
-        if (shouldSelect && clickedRoleKey) roleActivators.get(clickedRoleKey)?.();
         if (isPointerExploring && !isPointInsideLens(event.clientX, event.clientY)) {
           hideExplorer();
         }
@@ -1084,7 +1051,6 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
 
       careerScrubber.addEventListener('pointercancel', (event) => {
         isDragging = false;
-        dragMoved = false;
         careerScrubber.classList.remove('is-dragging');
         if (careerScrubber.hasPointerCapture(event.pointerId)) {
           careerScrubber.releasePointerCapture(event.pointerId);
@@ -1151,12 +1117,6 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
           event.preventDefault();
           setTargetFromMonth(nextMonthIndex);
           return;
-        }
-
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.preventDefault();
-          const roleKey = getRoleForMonth(keyboardMonthIndex)?.dataset.overviewRole;
-          if (roleKey) roleActivators.get(roleKey)?.();
         }
 
         if (event.key === 'Escape') {
