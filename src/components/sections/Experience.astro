@@ -727,8 +727,9 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
     .experience-details { position: sticky; top: 7rem; align-self: start; }
   }
 
-  @media (pointer: fine) {
-    .career-map__scrubber { cursor: none; }
+  :global(html.is-career-exploring),
+  :global(html.is-career-exploring *) {
+    cursor: none !important;
   }
 
   @media (max-width: 47.99rem) { .career-map { display: none; } }
@@ -884,6 +885,11 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
 
       const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(value, max));
 
+      const setPointerExploring = (active: boolean) => {
+        isPointerExploring = active;
+        document.documentElement.classList.toggle('is-career-exploring', active);
+      };
+
       const getRoleForMonth = (monthIndex: number) =>
         overviewSegments.find((segment) => {
           const start = Number(segment.dataset.startIndex);
@@ -983,6 +989,16 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
         careerPointer.hidden = false;
       };
 
+      const isPointInsideLens = (clientX: number, clientY: number) => {
+        const lensBounds = careerLens.getBoundingClientRect();
+        return (
+          clientX >= lensBounds.left &&
+          clientX <= lensBounds.right &&
+          clientY >= lensBounds.top &&
+          clientY <= lensBounds.bottom
+        );
+      };
+
       const setTargetFromMonth = (monthIndex: number, snap = false) => {
         const nextMonthIndex = clamp(monthIndex, 0, monthCount - 1);
         keyboardMonthIndex = nextMonthIndex;
@@ -992,7 +1008,7 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
       const hideExplorer = () => {
         if (frameId !== null) cancelAnimationFrame(frameId);
         frameId = null;
-        isPointerExploring = false;
+        setPointerExploring(false);
         careerCursor.hidden = true;
         careerLens.hidden = true;
         careerPointer.hidden = true;
@@ -1001,7 +1017,7 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
 
       careerScrubber.addEventListener('pointerenter', (event) => {
         if ((event.pointerType === 'mouse' || event.pointerType === 'pen') && !isDragging) {
-          isPointerExploring = true;
+          setPointerExploring(true);
           setTargetFromClientX(event.clientX, true);
           updatePointerFeedback(event);
         }
@@ -1010,7 +1026,7 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
       careerScrubber.addEventListener('pointermove', (event) => {
         const isHoverPointer = event.pointerType === 'mouse' || event.pointerType === 'pen';
         if (!isHoverPointer && !isDragging) return;
-        if (isHoverPointer) isPointerExploring = true;
+        if (isHoverPointer) setPointerExploring(true);
         if (isDragging && Math.abs(event.clientX - dragStartX) > 5) dragMoved = true;
         setTargetFromClientX(event.clientX);
         updatePointerFeedback(event);
@@ -1020,7 +1036,7 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
         if (event.pointerType === 'mouse' && event.button !== 0) return;
         event.preventDefault();
         isDragging = true;
-        isPointerExploring = event.pointerType === 'mouse' || event.pointerType === 'pen';
+        setPointerExploring(event.pointerType === 'mouse' || event.pointerType === 'pen');
         dragStartX = event.clientX;
         dragMoved = false;
         careerScrubber.classList.add('is-dragging');
@@ -1053,6 +1069,9 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
           careerScrubber.releasePointerCapture(event.pointerId);
         }
         if (shouldSelect && clickedRoleKey) roleActivators.get(clickedRoleKey)?.();
+        if (isPointerExploring && !isPointInsideLens(event.clientX, event.clientY)) {
+          hideExplorer();
+        }
       });
 
       careerScrubber.addEventListener('pointercancel', (event) => {
@@ -1070,16 +1089,7 @@ const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${ini
         if (event.pointerType !== 'mouse' && event.pointerType !== 'pen') return;
 
         updatePointerFeedback(event);
-
-        const lensBounds = careerLens.getBoundingClientRect();
-        const exitTolerance = 6;
-        const isOutsideLens =
-          event.clientX < lensBounds.left - exitTolerance ||
-          event.clientX > lensBounds.right + exitTolerance ||
-          event.clientY < lensBounds.top - exitTolerance ||
-          event.clientY > lensBounds.bottom + exitTolerance;
-
-        if (isOutsideLens) hideExplorer();
+        if (!isPointInsideLens(event.clientX, event.clientY)) hideExplorer();
       });
 
       window.addEventListener('blur', hideExplorer);
