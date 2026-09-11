@@ -3,6 +3,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import Hero from '../components/sections/Hero.astro';
 import Projects from '../components/sections/Projects.astro';
 import Experience from '../components/sections/Experience.astro';
+import About from '../components/sections/About.astro';
 import Container from '../components/ui/Container.astro';
 ---
 
@@ -11,14 +12,7 @@ import Container from '../components/ui/Container.astro';
     <Hero />
     <Projects />
     <Experience />
-
-    <section class="page-placeholder" id="about" aria-labelledby="about-title">
-      <Container>
-        <p class="page-placeholder__index">03</p>
-        <h2 id="about-title">Sobre mí</h2>
-        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-      </Container>
-    </section>
+    <About />
 
     <section class="page-placeholder" id="contact" aria-labelledby="contact-title">
       <Container>

@@ -1,0 +1,278 @@
+---
+import Container from '../ui/Container.astro';
+import SectionHeading from '../ui/SectionHeading.astro';
+import { siteConfig } from '../../config/site';
+
+type SupportedLocale = (typeof siteConfig.locales)[number];
+
+interface Props {
+  lang?: SupportedLocale;
+}
+
+const { lang = siteConfig.defaultLocale } = Astro.props;
+
+const copy = {
+  es: {
+    eyebrow: 'Perfil',
+    title: 'Sobre mí',
+    description:
+      'Desarrollo software con una base técnica sólida y una idea sencilla: entender bien el problema antes de complicar la solución.',
+    statement:
+      'Me interesa construir software que funcione bien hoy y siga teniendo sentido cuando tenga que evolucionar.',
+    body: [
+      'Soy desarrollador full-stack con formación en Desarrollo de Aplicaciones Web. Mi trayectoria profesional incluye desarrollo y mantenimiento de aplicaciones, servicios Web API en .NET y soporte técnico en entornos bancarios e inmobiliarios.',
+      'He trabajado sobre sistemas existentes, nuevas funcionalidades, automatización de pruebas y resolución de incidencias, prestando atención a estabilidad, accesibilidad, rendimiento y seguridad. Valoro el código claro, la comunicación entre equipos y las soluciones que puedan evolucionar sin añadir complejidad innecesaria.',
+    ],
+    facts: [
+      { label: 'Perfil', value: 'Desarrollo full-stack' },
+      { label: 'Ubicación', value: 'Badajoz, España' },
+      { label: 'Enfoque', value: 'Backend, frontend y producto' },
+    ],
+    principlesLabel: 'Forma de trabajar',
+    principles: [
+      {
+        index: '01',
+        title: 'Entender',
+        description:
+          'Antes de escribir código, intento entender el problema, el contexto y qué necesita realmente quien va a usar o mantener la solución.',
+      },
+      {
+        index: '02',
+        title: 'Construir',
+        description:
+          'Busco soluciones claras y proporcionadas, con una estructura que permita avanzar sin añadir dependencias o complejidad porque sí.',
+      },
+      {
+        index: '03',
+        title: 'Mantener',
+        description:
+          'Pienso en el siguiente cambio desde el primero: nombres consistentes, responsabilidades claras y código que otro desarrollador pueda continuar.',
+      },
+    ],
+  },
+  en: {
+    eyebrow: 'Profile',
+    title: 'About me',
+    description:
+      'I build software on solid technical foundations with a simple principle: understand the problem before making the solution complicated.',
+    statement:
+      'I want to build software that works well today and still makes sense when it needs to evolve.',
+    body: [
+      'I am a full-stack developer with a background in Web Application Development. My professional path includes application development and maintenance, .NET Web API services and technical support across banking and real-estate environments.',
+      'I have worked on existing systems, new features, test automation and incident resolution, with attention to stability, accessibility, performance and security. I value clear code, effective team communication and solutions that can evolve without unnecessary complexity.',
+    ],
+    facts: [
+      { label: 'Profile', value: 'Full-stack development' },
+      { label: 'Location', value: 'Badajoz, Spain' },
+      { label: 'Focus', value: 'Backend, frontend and product' },
+    ],
+    principlesLabel: 'How I work',
+    principles: [
+      {
+        index: '01',
+        title: 'Understand',
+        description:
+          'Before writing code, I try to understand the problem, its context and what the people using or maintaining the solution actually need.',
+      },
+      {
+        index: '02',
+        title: 'Build',
+        description:
+          'I look for clear, proportionate solutions with a structure that supports progress without adding dependencies or complexity for their own sake.',
+      },
+      {
+        index: '03',
+        title: 'Maintain',
+        description:
+          'I think about the next change from the first one: consistent naming, clear responsibilities and code another developer can continue.',
+      },
+    ],
+  },
+} as const;
+---
+
+<section class="about" id="about" aria-labelledby="about-title">
+  <Container>
+    <SectionHeading
+      index="03"
+      eyebrow={copy[lang].eyebrow}
+      title={copy[lang].title}
+      description={copy[lang].description}
+      headingId="about-title"
+    />
+
+    <div class="about__layout">
+      <p class="about__statement">{copy[lang].statement}</p>
+
+      <div class="about__narrative">
+        <div class="about__copy">
+          {copy[lang].body.map((paragraph) => <p>{paragraph}</p>)}
+        </div>
+
+        <dl class="about__facts">
+          {copy[lang].facts.map((fact) => (
+            <div class="about__fact">
+              <dt>{fact.label}</dt>
+              <dd>{fact.value}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    </div>
+
+    <div class="about__principles" aria-label={copy[lang].principlesLabel}>
+      {copy[lang].principles.map((principle) => (
+        <div class="about__principle">
+          <span class="about__principle-index" aria-hidden="true">{principle.index}</span>
+          <h3>{principle.title}</h3>
+          <p>{principle.description}</p>
+        </div>
+      ))}
+    </div>
+  </Container>
+</section>
+
+<style>
+  .about {
+    padding-block: clamp(var(--space-9), 12vw, var(--space-10));
+    border-top: 1px solid var(--color-border);
+    scroll-margin-top: 4.5rem;
+  }
+
+  .about__layout {
+    display: grid;
+    gap: clamp(var(--space-7), 7vw, var(--space-10));
+    margin-top: clamp(var(--space-8), 8vw, var(--space-10));
+  }
+
+  .about__statement {
+    max-width: 15ch;
+    color: var(--color-heading);
+    font-size: clamp(2rem, 5.5vw, 4.75rem);
+    font-weight: 700;
+    line-height: 1.02;
+    letter-spacing: -0.055em;
+  }
+
+  .about__narrative {
+    display: grid;
+    gap: var(--space-7);
+    max-width: 48rem;
+  }
+
+  .about__copy {
+    display: grid;
+    gap: var(--space-5);
+  }
+
+  .about__copy p {
+    color: var(--color-text-muted);
+    font-size: var(--text-lg);
+  }
+
+  .about__copy p:first-child {
+    color: var(--color-text);
+  }
+
+  .about__facts {
+    margin: 0;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .about__fact {
+    display: grid;
+    grid-template-columns: minmax(6.5rem, 0.35fr) minmax(0, 1fr);
+    gap: var(--space-5);
+    padding-block: var(--space-4);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .about__fact dt {
+    color: var(--color-text-muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .about__fact dd {
+    margin: 0;
+    color: var(--color-heading);
+    font-weight: 650;
+  }
+
+  .about__principles {
+    display: grid;
+    margin-top: clamp(var(--space-8), 9vw, var(--space-10));
+    border-top: 1px solid var(--color-border);
+  }
+
+  .about__principle {
+    padding-block: var(--space-6);
+  }
+
+  .about__principle + .about__principle {
+    border-top: 1px solid var(--color-border);
+  }
+
+  .about__principle-index {
+    display: block;
+    margin-bottom: var(--space-4);
+    color: var(--color-accent);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+  }
+
+  .about__principle h3 {
+    font-size: var(--text-xl);
+    letter-spacing: -0.025em;
+  }
+
+  .about__principle p {
+    max-width: 32rem;
+    margin-top: var(--space-3);
+    color: var(--color-text-muted);
+  }
+
+  @media (min-width: 48rem) {
+    .about__principles {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .about__principle {
+      padding: var(--space-6) clamp(var(--space-5), 3vw, var(--space-7));
+    }
+
+    .about__principle:first-child {
+      padding-left: 0;
+    }
+
+    .about__principle:last-child {
+      padding-right: 0;
+    }
+
+    .about__principle + .about__principle {
+      border-top: 0;
+      border-left: 1px solid var(--color-border);
+    }
+  }
+
+  @media (min-width: 68rem) {
+    .about__layout {
+      grid-template-columns: minmax(0, 0.9fr) minmax(25rem, 1fr);
+      align-items: start;
+    }
+
+    .about__narrative {
+      justify-self: end;
+    }
+  }
+
+  @media (max-width: 32rem) {
+    .about__fact {
+      grid-template-columns: 1fr;
+      gap: var(--space-2);
+    }
+  }
+</style>
