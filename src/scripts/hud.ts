@@ -22,11 +22,13 @@ const requestUpdate = () => {
 window.addEventListener('scroll', requestUpdate, { passive: true });
 window.addEventListener('resize', requestUpdate);
 
-// Page scroll as CSS variables: the backdrop parallax and the progress bar read them.
+// Reading progress bar. Set on the bar itself, not as a variable on <html>: a variable there restyles the
+// whole page on every scrolled frame, which is what makes scrolling stutter without hardware acceleration.
+const progressBar = document.querySelector<HTMLElement>('.scroll-progress');
 updaters.push(() => {
+  if (!progressBar) return;
   const max = root.scrollHeight - window.innerHeight;
-  root.style.setProperty('--scroll', String(reducedMotion ? 0 : window.scrollY));
-  root.style.setProperty('--progress', String(max > 0 ? clamp(window.scrollY / max) : 0));
+  progressBar.style.transform = `scaleX(${max > 0 ? clamp(window.scrollY / max) : 0})`;
 });
 
 // Highlight the menu entry of the section in view.
@@ -132,7 +134,7 @@ document.querySelectorAll<SVGSVGElement>('[data-profile]').forEach((svg) => {
     if (progress >= 1) return length;
     const segment = Math.min(Math.floor(progress * segments), segments - 1);
     const local = progress * segments - segment;
-    const moving = clamp((local - 0.18) / 0.64);
+    const moving = clamp((local - 0.12) / 0.76);
     const eased = moving * moving * (3 - 2 * moving);
     return anchors[segment] + (anchors[segment + 1] - anchors[segment]) * eased;
   };

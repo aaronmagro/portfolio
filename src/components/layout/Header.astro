@@ -201,8 +201,8 @@ const otherLangHref = alternates?.[otherLang] ?? routes.home[otherLang];
     z-index: 100;
     top: 0;
     border-bottom: 1px solid var(--line);
-    background: color-mix(in srgb, var(--bg) 82%, transparent);
-    backdrop-filter: blur(12px);
+    /* Solid instead of a blur: a backdrop blur is recomputed on every scrolled frame. */
+    background: color-mix(in srgb, var(--bg) 96%, transparent);
   }
 
   .site-header__content {
