@@ -1,0 +1,179 @@
+---
+import Container from '../ui/Container.astro';
+import ButtonLink from '../ui/ButtonLink.astro';
+import { siteConfig, type SupportedLocale } from '../../config/site';
+
+interface Props {
+  lang?: SupportedLocale;
+}
+
+const { lang = siteConfig.defaultLocale } = Astro.props;
+
+const copy = {
+  es: {
+    title: 'Escríbeme',
+    description: 'Busco un puesto full-stack, backend o frontend. Al correo o por LinkedIn, como te venga mejor.',
+    cv: 'Descargar CV',
+    next: 'Siguiente etapa: tu equipo',
+  },
+  en: {
+    title: 'Get in touch',
+    description: 'I am looking for a full-stack, backend or frontend role. Email or LinkedIn, whichever suits you.',
+    cv: 'Download CV',
+    next: 'Next stage: your team',
+  },
+} as const;
+
+const text = copy[lang];
+const [emailUser, emailDomain] = siteConfig.email.split('@');
+---
+
+<section class="contact" id="contact" aria-labelledby="contact-title">
+  <Container>
+    <div class="contact__panel panel-cut">
+      <svg class="contact__summit" viewBox="0 0 520 340" aria-hidden="true">
+        <defs>
+          <linearGradient id="summit-fill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="var(--lime-ink)" stop-opacity="0.22"></stop>
+            <stop offset="1" stop-color="var(--lime-ink)" stop-opacity="0"></stop>
+          </linearGradient>
+        </defs>
+        <path class="contact__summit-area" d="M0 300 C 60 292 92 252 140 262 S 228 232 280 204 S 352 176 398 124 S 452 70 478 44 L 478 340 L 0 340 Z"></path>
+        <path class="contact__summit-route" d="M0 300 C 60 292 92 252 140 262 S 228 232 280 204 S 352 176 398 124 S 452 70 478 44"></path>
+        <circle cx="140" cy="262" r="6"></circle>
+        <circle cx="280" cy="204" r="6"></circle>
+        <circle cx="398" cy="124" r="6"></circle>
+        <line x1="478" y1="44" x2="478" y2="2"></line>
+        <path class="contact__summit-flag" d="M478 2 L510 12 L478 22 Z"></path>
+      </svg>
+      <h2 id="contact-title">{text.title}</h2>
+      <p class="contact__next label">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 18V2"></path><path class="contact__flag" d="M4 3h11l-3 3.5 3 3.5H4z"></path></svg>
+        {text.next}
+      </p>
+      <p class="contact__description">{text.description}</p>
+
+      <a class="contact__email" href={`mailto:${siteConfig.email}`}>{emailUser}<wbr />@{emailDomain}</a>
+
+      <div class="contact__actions">
+        <ButtonLink href={siteConfig.cvPath[lang]} download>{text.cv}</ButtonLink>
+        <ButtonLink href={siteConfig.linkedinUrl} variant="secondary" target="_blank" rel="noopener">LinkedIn</ButtonLink>
+        <ButtonLink href={siteConfig.githubUrl} variant="secondary" target="_blank" rel="noopener">GitHub</ButtonLink>
+      </div>
+    </div>
+  </Container>
+</section>
+
+<style>
+  .contact {
+    padding-block: clamp(var(--space-8), 8vw, var(--space-10));
+    scroll-margin-top: 4.5rem;
+  }
+
+  .contact__panel {
+    --cut: 1.6rem;
+    position: relative;
+    padding: clamp(var(--space-6), 6vw, var(--space-9));
+    --panel-fill: radial-gradient(circle at 85% 0%, var(--glow), transparent 55%), var(--panel);
+  }
+
+  .contact__next {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-top: var(--space-5);
+    color: var(--lime-ink);
+    font-weight: 700;
+  }
+
+  .contact__next svg {
+    width: 1.1rem;
+    height: 1.1rem;
+    fill: none;
+    stroke: var(--ink);
+    stroke-width: 1.6;
+  }
+
+  .contact__next .contact__flag {
+    fill: var(--lime);
+    stroke: none;
+  }
+
+  .contact h2 {
+    font-size: var(--text-display);
+    line-height: 0.85;
+    text-transform: uppercase;
+  }
+
+  .contact__description {
+    max-width: 38rem;
+    margin-top: var(--space-5);
+    color: var(--soft);
+    font-size: var(--text-lg);
+  }
+
+  .contact__email {
+    display: inline-block;
+    margin-top: var(--space-6);
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-size: clamp(1.15rem, 4.6vw, 2.6rem);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-decoration: underline;
+    text-decoration-color: var(--lime-ink);
+    text-decoration-thickness: 3px;
+    text-underline-offset: 0.25em;
+  }
+
+  .contact__email:hover {
+    color: var(--lime-ink);
+  }
+
+  .contact__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-7);
+  }
+
+  .contact__summit {
+    display: none;
+  }
+
+  @media (min-width: 60rem) {
+    .contact__summit {
+      position: absolute;
+      right: var(--space-8);
+      bottom: var(--space-8);
+      display: block;
+      width: min(40%, 32rem);
+      height: auto;
+      overflow: visible;
+    }
+
+    .contact__summit-area {
+      fill: url(#summit-fill);
+    }
+
+    .contact__summit-route {
+      fill: none;
+      stroke: var(--lime-ink);
+      stroke-linejoin: round;
+      stroke-width: 3;
+    }
+
+    .contact__summit circle {
+      fill: var(--lime);
+    }
+
+    .contact__summit line {
+      stroke: var(--ink);
+      stroke-width: 2;
+    }
+
+    .contact__summit-flag {
+      fill: var(--lime);
+    }
+  }
+</style>
