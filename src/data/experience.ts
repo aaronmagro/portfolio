@@ -1,15 +1,16 @@
 import type { ExperienceCompany, ExperienceEntry } from '../types';
+import { toMonthIndex } from '../utils/dates';
 
 export const companies = [
   {
     id: 'ntt-data',
     name: {
-      es: 'NTT DATA, Inc.',
-      en: 'NTT DATA, Inc.',
+      es: 'NTT DATA',
+      en: 'NTT DATA',
     },
     location: {
       es: 'Salamanca · En remoto',
-      en: 'Salamanca · Remote',
+      en: 'Salamanca, Spain · Remote',
     },
   },
 ] satisfies readonly ExperienceCompany[];
@@ -20,26 +21,27 @@ export const experiences = [
     companyId: 'ntt-data',
     startDate: '2024-04',
     endDate: '2024-06',
+    sector: { es: 'Banca', en: 'Banking' },
     role: {
       es: 'Becario',
       en: 'Intern',
     },
     description: {
-      es: 'Participación en desarrollo y mantenimiento web, trabajando sobre aplicaciones existentes y nuevas funcionalidades orientadas a mejorar estabilidad, funcionalidad y experiencia de usuario.',
-      en: 'Worked on web development and maintenance across existing applications and new features focused on improving stability, functionality and user experience.',
+      es: 'Prácticas del ciclo en el equipo que mantenía la web de un banco.',
+      en: 'Work placement in the team maintaining a bank website.',
     },
     highlights: [
       {
-        es: 'Remodelación completa de un apartado de una web existente siguiendo los requisitos del cliente.',
-        en: 'Complete redesign of an existing website section following client requirements.',
+        es: 'Rehice por completo un apartado de la web siguiendo los requisitos del cliente, tanto el diseño como la funcionalidad.',
+        en: 'Rebuilt a whole section of the site to the client’s requirements, both design and functionality.',
       },
       {
-        es: 'Desarrollo y mantenimiento de la aplicación con .NET, resolviendo errores e incidencias funcionales.',
-        en: 'Development and maintenance of the application with .NET, resolving functional errors and incidents.',
+        es: 'Corregí errores e implementé mejoras en la aplicación .NET.',
+        en: 'Fixed bugs and shipped improvements in the .NET application.',
       },
       {
-        es: 'Implementación de nuevas funcionalidades y apoyo en la resolución de incidencias de Application Management.',
-        en: 'Implementation of new features and support in resolving Application Management incidents.',
+        es: 'Apoyé al equipo de Application Management con incidencias.',
+        en: 'Supported the Application Management team with incidents.',
       },
     ],
     technologies: ['.NET', 'ASP.NET', 'Visual Basic .NET', 'SQL', 'JavaScript', 'CSS'],
@@ -49,68 +51,84 @@ export const experiences = [
     companyId: 'ntt-data',
     startDate: '2024-09',
     endDate: '2025-10',
+    sector: { es: 'Banca', en: 'Banking' },
     role: {
       es: 'Desarrollador web',
       en: 'Web Developer',
     },
     description: {
-      es: 'Desarrollo y mantenimiento de servicios Web API en .NET para entornos bancarios, combinando evolución funcional, automatización de pruebas y resolución de incidencias.',
-      en: 'Development and maintenance of .NET Web API services for banking environments, combining feature work, test automation and incident resolution.',
+      es: 'Servicios Web API en .NET para un cliente de banca: su web y su app móvil.',
+      en: '.NET Web API services for a banking client: its website and mobile app.',
     },
     highlights: [
       {
-        es: 'Diseño y mantenimiento de endpoints consumidos por sistemas Java y colaboración en nuevos servicios y versionados para aplicaciones bancarias.',
-        en: 'Designed and maintained endpoints consumed by Java systems and collaborated on new services and versioning for banking applications.',
+        es: 'Diseñé y mantuve endpoints consumidos por sistemas Java, y participé en nuevos servicios y versionados para la app móvil.',
+        en: 'Designed and maintained endpoints consumed by Java systems, and worked on new services and versioning for the mobile app.',
       },
       {
-        es: 'Automatización de pruebas de servicios API mediante colecciones de Postman para acelerar validaciones y detectar errores antes.',
-        en: 'Automated API service testing with Postman collections to speed up validation and detect errors earlier.',
+        es: 'Automaticé todas las pruebas de los servicios API con colecciones de Postman.',
+        en: 'Automated all API service tests with Postman collections.',
       },
       {
-        es: 'Resolución de incidencias en distintos entornos y participación en mejoras de usabilidad, rendimiento, accesibilidad y seguridad.',
-        en: 'Resolved incidents across multiple environments and contributed to usability, performance, accessibility and security improvements.',
+        es: 'Implementé un programa de automatización de fallos en cliente para controlar mejor las incidencias y resolverlas antes.',
+        en: 'Implemented a client-side failure automation tool to keep incidents under control and resolve them sooner.',
       },
       {
-        es: 'Apoyo en incidencias de ciberseguridad mediante revisión de accesos, validaciones y aplicación de buenas prácticas.',
-        en: 'Supported cybersecurity incidents through access reviews, validation and security best practices.',
+        es: 'Participé en la nueva web del banco con mejoras de usabilidad, rendimiento y seguridad.',
+        en: 'Worked on the bank’s new website with usability, performance and security improvements.',
+      },
+      {
+        es: 'Resolví incidencias de F&F, UAT, accesibilidad y servicios, y también de ciberseguridad: revisión de accesos y validaciones.',
+        en: 'Resolved F&F, UAT, accessibility and service incidents, plus security ones: access reviews and validation.',
       },
     ],
-    technologies: ['C#', '.NET', 'ASP.NET Web API', 'SQL', 'Postman', 'JavaScript', 'Accesibilidad'],
+    technologies: ['C#', '.NET', 'ASP.NET Web API', 'Java', 'Spring Boot', 'SQL', 'Postman', 'JavaScript'],
   },
   {
     id: 'support-maintenance-developer',
     companyId: 'ntt-data',
     startDate: '2025-10',
     endDate: '2026-07',
+    sector: { es: 'Inmobiliario', en: 'Real estate' },
     role: {
-      es: 'Desarrollador / Soporte y Mantenimiento',
-      en: 'Developer / Support and Maintenance',
+      es: 'Desarrollador · Soporte y mantenimiento',
+      en: 'Developer · Support and Maintenance',
     },
     description: {
-      es: 'Soporte y mantenimiento de múltiples aplicaciones del entorno inmobiliario, combinando resolución de incidencias con tareas operativas y tratamiento de datos.',
-      en: 'Support and maintenance of multiple applications in a real-estate environment, combining incident resolution with operational work and data handling.',
+      es: 'Soporte de varias aplicaciones de un cliente del sector inmobiliario.',
+      en: 'Support for several applications of a real-estate client.',
     },
     highlights: [
       {
-        es: 'Gestión de tickets y resolución de incidencias funcionales y técnicas en aplicaciones del cliente.',
-        en: 'Managed support tickets and resolved functional and technical incidents across client applications.',
+        es: 'Gestioné tickets y resolví incidencias funcionales y técnicas.',
+        en: 'Handled tickets and resolved functional and technical incidents.',
       },
       {
-        es: 'Análisis, validación y corrección de datos asociados a incidencias mediante SQL y JavaScript.',
-        en: 'Analysed, validated and corrected incident-related data using SQL and JavaScript.',
+        es: 'Analicé y corregí datos de incidencias con SQL y JavaScript.',
+        en: 'Analysed and fixed incident data with SQL and JavaScript.',
       },
       {
-        es: 'Coordinación con otros equipos para ejecutar tareas operativas y asegurar la continuidad del servicio.',
-        en: 'Coordinated with other teams to carry out operational tasks and maintain service continuity.',
+        es: 'Me coordiné con otros equipos para tareas operativas sin cortar el servicio.',
+        en: 'Coordinated with other teams on operational tasks without service interruptions.',
       },
     ],
     technologies: ['SQL', 'JavaScript'],
   },
 ] satisfies readonly ExperienceEntry[];
 
-export const experienceCompanies = companies.map((company) => ({
-  id: company.id,
-  company: company.name,
-  location: company.location,
-  roles: experiences.filter((experience) => experience.companyId === company.id),
-}));
+const byNewest = (a: ExperienceEntry, b: ExperienceEntry) =>
+  toMonthIndex(b.startDate) - toMonthIndex(a.startDate);
+
+export const experienceCompanies = companies.map((company) => {
+  const roles = experiences.filter((experience) => experience.companyId === company.id).sort(byNewest);
+  const oldest = roles[roles.length - 1];
+
+  return {
+    id: company.id,
+    company: company.name,
+    location: company.location,
+    startDate: oldest.startDate,
+    endDate: roles[0].endDate,
+    roles,
+  };
+});

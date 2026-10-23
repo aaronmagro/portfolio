@@ -18,6 +18,14 @@ export const navigationItems: NavigationItem[] = [
     },
   },
   {
+    id: 'stack',
+    href: '#stack',
+    label: {
+      es: 'Stack',
+      en: 'Stack',
+    },
+  },
+  {
     id: 'about',
     href: '#about',
     label: {

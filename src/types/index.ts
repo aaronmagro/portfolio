@@ -1,3 +1,5 @@
+import type { ImageMetadata } from 'astro';
+
 export type Locale = 'es' | 'en';
 
 export type MonthNumber =
@@ -27,12 +29,29 @@ export interface NavigationItem {
   label: LocalizedText;
 }
 
+export interface ProjectLink {
+  href: string;
+  label: LocalizedText;
+}
+
+export interface ProjectImage {
+  src: ImageMetadata;
+  alt: LocalizedText;
+  caption?: LocalizedText;
+}
+
 export interface Project {
   id: string;
-  label: LocalizedText;
   title: LocalizedText;
-  description: LocalizedText;
+  kind: LocalizedText;
+  startDate: YearMonth;
+  endDate: YearMonth | null;
+  summary: LocalizedText;
+  highlights: readonly LocalizedText[];
   technologies: readonly string[];
+  links: readonly ProjectLink[];
+  caseStudy?: LocalizedText;
+  image?: ProjectImage;
 }
 
 export interface ExperienceCompany {
@@ -46,8 +65,24 @@ export interface ExperienceEntry {
   companyId: ExperienceCompany['id'];
   startDate: YearMonth;
   endDate: YearMonth | null;
+  sector: LocalizedText;
   role: LocalizedText;
   description: LocalizedText;
   highlights: readonly LocalizedText[];
   technologies: readonly string[];
+}
+
+export type TechnologyUsage = 'professional' | 'project' | 'training';
+
+export interface Technology {
+  name: string;
+  // Only for names that change with the language, like the practices.
+  localizedName?: LocalizedText;
+  usage: readonly TechnologyUsage[];
+}
+
+export interface TechnologyGroup {
+  id: string;
+  label: LocalizedText;
+  items: readonly Technology[];
 }
