@@ -1,0 +1,531 @@
+---
+import { Image } from 'astro:assets';
+import '@fontsource/rajdhani/600.css';
+import '@fontsource/rajdhani/700.css';
+import '@fontsource/chakra-petch/400.css';
+import '@fontsource/chakra-petch/600.css';
+import '@fontsource/jetbrains-mono/400.css';
+import '@fontsource/jetbrains-mono/700.css';
+import { siteConfig, type SupportedLocale } from '../../config/site';
+import { experienceCompanies } from '../../data/experience';
+import { projects } from '../../data/projects';
+import { technologyGroups, technologyName, usageLabels } from '../../data/technologies';
+import { availability, education, extras, languages } from '../../data/profile';
+import { formatPeriod } from '../../utils/dates';
+import { profilePhoto } from '../../utils/profile-photo';
+import type { TechnologyUsage } from '../../types';
+
+// Print-first page: `npm run cv` turns /cv/ and /en/cv/ into the PDFs in public/.
+interface Props {
+  lang: SupportedLocale;
+}
+
+const { lang } = Astro.props;
+
+const copy = {
+  es: {
+    role: 'Desarrollador full-stack',
+    summary:
+      'Dos años en NTT DATA desarrollando y manteniendo APIs .NET para banca y dando soporte a aplicaciones del sector inmobiliario. Por mi cuenta he diseñado, desarrollado y puesto en producción la web y el CMS de un negocio real con Astro y Cloudflare.',
+    location: 'Residencia en Badajoz',
+    experience: 'Experiencia',
+    projects: 'Proyectos',
+    education: 'Formación',
+    languages: 'Idiomas',
+    more: 'Más',
+  },
+  en: {
+    role: 'Full-stack developer',
+    summary:
+      'Two years at NTT DATA building and maintaining .NET APIs for banking and supporting real-estate applications. On my own I designed, built and launched the website and CMS of a real business with Astro and Cloudflare.',
+    location: 'Based in Badajoz, Spain',
+    experience: 'Experience',
+    projects: 'Projects',
+    education: 'Education',
+    languages: 'Languages',
+    more: 'More',
+  },
+} as const;
+
+const text = copy[lang];
+
+const stripProtocol = (url: string) => url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
+
+const contacts = [
+  { label: siteConfig.email[lang], href: `mailto:${siteConfig.email[lang]}` },
+  { label: stripProtocol(siteConfig.url), href: siteConfig.url },
+  { label: stripProtocol(siteConfig.linkedinUrl), href: siteConfig.linkedinUrl },
+  { label: stripProtocol(siteConfig.githubUrl), href: siteConfig.githubUrl },
+];
+
+// Each technology goes under the strongest place I have used it.
+const technologyGroupsToList = technologyGroups.filter((group) => group.id !== 'practices');
+const practices = technologyGroups.find((group) => group.id === 'practices');
+const usageOrder: TechnologyUsage[] = ['professional', 'project', 'training'];
+// "Training" alone would read like the Education section next to it.
+const trainingOnly = { es: 'Solo en formación', en: 'Training only' };
+const technologiesByUsage = usageOrder.map((usage) => ({
+  label: usage === 'training' ? trainingOnly[lang] : usageLabels[usage][lang],
+  items: technologyGroupsToList
+    .flatMap((group) => group.items)
+    .filter((item) => item.usage[0] === usage)
+    .map((item) => technologyName(item, lang)),
+}));
+
+const [featuredProject, ...otherProjects] = projects;
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <title>CV | {siteConfig.fullName}</title>
+  </head>
+  <body>
+    <main class="cv">
+      <header class="cv__header">
+        <div>
+          <h1>{siteConfig.fullName}</h1>
+          <p class="cv__role">{text.role}</p>
+          <ul class="cv__contacts">
+            {contacts.map((contact) => (
+              <li><a href={contact.href}>{contact.label}</a></li>
+            ))}
+          </ul>
+          <p class="cv__location">{text.location} · {availability[lang]}</p>
+        </div>
+        {profilePhoto && (
+          <div class="cv__photo-frame">
+            <Image class="cv__photo" src={profilePhoto} alt="" width={240} />
+          </div>
+        )}
+      </header>
+
+      <p class="cv__summary">{text.summary}</p>
+
+      <div class="cv__columns">
+        <div class="cv__main">
+          <section>
+            <h2>{text.experience}</h2>
+            {experienceCompanies.map((company) =>
+              company.roles.map((role) => (
+                <article class="cv-entry">
+                  <header>
+                    <h3>{role.role[lang]}</h3>
+                    <p class="cv-entry__period">{formatPeriod(role.startDate, role.endDate, lang)}</p>
+                  </header>
+                  <p class="cv-entry__place">{company.company[lang]} · {role.description[lang]}</p>
+                  <ul>
+                    {role.highlights.map((highlight) => <li>{highlight[lang]}</li>)}
+                  </ul>
+                </article>
+              )),
+            )}
+          </section>
+
+          <section>
+            <h2>{text.projects}</h2>
+            <article class="cv-entry">
+              <header>
+                <h3>{featuredProject.title[lang]}</h3>
+                <p class="cv-entry__period">{formatPeriod(featuredProject.startDate, featuredProject.endDate, lang)}</p>
+              </header>
+              <p class="cv-entry__place">
+                {featuredProject.kind[lang]} ·{' '}
+                <a href={featuredProject.links[0].href}>{stripProtocol(featuredProject.links[0].href)}</a>
+              </p>
+              <p>{featuredProject.summary[lang]}</p>
+              <ul>
+                {featuredProject.highlights.slice(0, 3).map((highlight) => <li>{highlight[lang]}</li>)}
+              </ul>
+              <p class="cv-entry__tech">{featuredProject.technologies.join(' · ')}</p>
+            </article>
+
+            <ul class="cv-more">
+              {otherProjects.map((project) => (
+                <li>
+                  <strong>{project.title[lang]}</strong> · {project.kind[lang]}
+                  {project.links[0] && (
+                    <>
+                      {' · '}
+                      <a href={project.links[0].href}>{stripProtocol(project.links[0].href)}</a>
+                    </>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
+        </div>
+
+        <aside class="cv__aside">
+          <section>
+            <h2>Stack</h2>
+            {technologiesByUsage.map((group) => (
+              <div class="cv-stack">
+                <h3>{group.label}</h3>
+                <p>{group.items.join(' · ')}</p>
+              </div>
+            ))}
+            {practices && (
+              <div class="cv-stack">
+                <h3>{practices.label[lang]}</h3>
+                <p>{practices.items.map((item) => technologyName(item, lang)).join(' · ')}</p>
+              </div>
+            )}
+          </section>
+
+          <section>
+            <h2>{text.education}</h2>
+            {education.map((item) => (
+              <div class="cv-stack cv-stack--title">
+                <h3>{item.title[lang]}</h3>
+                <p>{item.school} · {item.period}</p>
+              </div>
+            ))}
+          </section>
+
+          <section>
+            <h2>{text.languages}</h2>
+            <ul class="cv-plain">
+              {languages.map((language) => <li>{language.name[lang]} · {language.level[lang]}</li>)}
+            </ul>
+          </section>
+
+          <section>
+            <h2>{text.more}</h2>
+            <ul class="cv-plain">
+              {extras.map((extra) => <li>{extra[lang]}</li>)}
+            </ul>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </body>
+</html>
+
+<style is:global>
+  /* Same world as the site: graphite band, lime accents, Rajdhani, Chakra Petch and JetBrains Mono.
+     The body stays white so it prints well and any ATS reads it. */
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    --ink: #121417;
+    --soft: #545a62;
+    --line: #dde0e3;
+    --lime: #c6ff3d;
+    --lime-ink: #4a7a0c;
+    --graphite: #0d0e10;
+
+    background: #2b2f36;
+    color: var(--ink);
+    font-family: 'Chakra Petch', 'Segoe UI', sans-serif;
+    font-size: 8.4pt;
+    line-height: 1.38;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body {
+    margin: 0;
+  }
+
+  h1,
+  h2,
+  h3,
+  p,
+  ul {
+    margin: 0;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .cv {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 2rem auto;
+    background: #ffffff;
+    box-shadow: 0 0.5rem 2rem rgb(0 0 0 / 0.3);
+  }
+
+  /* No positioned boxes around text: they change the order a PDF reader or an ATS extracts it in. */
+  .cv__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8mm;
+    padding: 8mm 12mm 7mm;
+    background-color: var(--graphite);
+    background-image:
+      linear-gradient(rgb(238 241 244 / 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(238 241 244 / 0.05) 1px, transparent 1px);
+    background-size: 6mm 6mm;
+    border-bottom: 1.2mm solid var(--lime);
+    color: #eef1f4;
+  }
+
+  .cv__header h1 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 27pt;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    line-height: 0.95;
+    text-transform: uppercase;
+  }
+
+  .cv__role {
+    display: inline-block;
+    margin-top: 2.5mm;
+    padding: 0.8mm 3mm;
+    background: linear-gradient(315deg, transparent 1.1mm, var(--lime) 1.1mm);
+    color: var(--graphite);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 11pt;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .cv__contacts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1mm 5mm;
+    margin-top: 3mm;
+    padding: 0;
+    color: #c9ced6;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 7.6pt;
+    list-style: none;
+  }
+
+  .cv__location {
+    margin-top: 1.2mm;
+    color: #8b939e;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 7.6pt;
+  }
+
+  .cv__photo-frame {
+    position: relative;
+    flex: none;
+    padding: 1.2mm;
+  }
+
+  .cv__photo-frame::before,
+  .cv__photo-frame::after {
+    position: absolute;
+    width: 5mm;
+    height: 5mm;
+    border: 0.6mm solid var(--lime);
+    content: '';
+  }
+
+  .cv__photo-frame::before {
+    top: 0;
+    left: 0;
+    border-right: 0;
+    border-bottom: 0;
+  }
+
+  .cv__photo-frame::after {
+    right: 0;
+    bottom: 0;
+    border-top: 0;
+    border-left: 0;
+  }
+
+  .cv__photo {
+    display: block;
+    width: 27mm;
+    height: 27mm;
+    object-fit: cover;
+    object-position: top;
+  }
+
+  .cv__summary {
+    margin: 5mm 12mm 0;
+    padding-left: 3mm;
+    border-left: 0.8mm solid var(--lime);
+    font-size: 9pt;
+  }
+
+  .cv__columns {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 55mm;
+    gap: 8mm;
+    margin-top: 5mm;
+    padding: 0 12mm 8mm;
+  }
+
+  .cv section + section {
+    margin-top: 4.5mm;
+  }
+
+  .cv h2 {
+    display: flex;
+    align-items: center;
+    gap: 2mm;
+    margin-bottom: 2.5mm;
+    padding-bottom: 1mm;
+    break-after: avoid;
+    border-bottom: 1px solid var(--line);
+    color: var(--ink);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 11pt;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .cv h2::before {
+    width: 2mm;
+    height: 2mm;
+    background: var(--lime);
+    box-shadow: 0 0 0 0.35mm var(--lime-ink);
+    content: '';
+  }
+
+  .cv-entry {
+    break-inside: avoid;
+  }
+
+  .cv-entry + .cv-entry {
+    margin-top: 3.2mm;
+  }
+
+  .cv-entry header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4mm;
+  }
+
+  .cv-entry h3 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 11pt;
+    font-weight: 700;
+    line-height: 1.15;
+  }
+
+  .cv-entry__period {
+    flex: none;
+    color: var(--lime-ink);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 7.4pt;
+    font-weight: 700;
+  }
+
+  .cv-entry__place {
+    margin-bottom: 1.2mm;
+    color: var(--soft);
+  }
+
+  .cv-entry__place a,
+  .cv-entry p a,
+  .cv-more a {
+    color: var(--lime-ink);
+    font-weight: 600;
+  }
+
+  .cv-entry ul {
+    padding: 0;
+    list-style: none;
+  }
+
+  .cv-entry li {
+    padding-left: 3.5mm;
+    background: linear-gradient(var(--lime-ink), var(--lime-ink)) 0 0.62em / 1.8mm 0.45mm no-repeat;
+  }
+
+  .cv-entry li + li {
+    margin-top: 0.4mm;
+  }
+
+  .cv-entry__tech {
+    margin-top: 1.5mm;
+    color: var(--soft);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 7.2pt;
+  }
+
+  .cv-more {
+    display: grid;
+    gap: 0.8mm;
+    margin-top: 3mm;
+    padding: 0;
+    color: var(--soft);
+    list-style: none;
+  }
+
+  .cv-more strong {
+    color: var(--ink);
+  }
+
+  .cv-stack {
+    break-inside: avoid;
+  }
+
+  .cv-stack + .cv-stack {
+    margin-top: 2.6mm;
+  }
+
+  .cv-stack h3 {
+    margin-bottom: 0.4mm;
+    color: var(--lime-ink);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 7.4pt;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .cv__aside .cv-stack h3 + p {
+    color: var(--ink);
+  }
+
+  .cv-stack--title h3 {
+    color: var(--ink);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 10pt;
+    letter-spacing: 0;
+    line-height: 1.15;
+    text-transform: none;
+  }
+
+  .cv-stack--title p {
+    color: var(--soft);
+  }
+
+  .cv-plain {
+    padding: 0;
+    list-style: none;
+  }
+
+  @media print {
+    html {
+      background: none;
+    }
+
+    .cv {
+      width: auto;
+      min-height: 0;
+      margin: 0;
+      box-shadow: none;
+    }
+  }
+</style>
