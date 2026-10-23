@@ -1,4 +1,5 @@
 ---
+import TechList from '../ui/TechList.astro';
 import Container from '../ui/Container.astro';
 import SectionHeader from '../ui/SectionHeader.astro';
 import ButtonLink from '../ui/ButtonLink.astro';
@@ -25,7 +26,7 @@ const copy = {
     profileLabel: 'Perfil de mi trayectoria: prácticas, banca e inmobiliario hasta hoy, y la siguiente etapa en tu equipo.',
     highlights: 'Qué hice',
     technologies: 'Tecnologías',
-    summitText: 'Busco un puesto full-stack, backend o frontend. En Badajoz, Madrid o en remoto.',
+    summitText: 'Busco un puesto como desarrollador full-stack o .NET, o en soporte y mantenimiento de aplicaciones. En Badajoz, Madrid o en remoto.',
     steps: 'Etapas',
     summitShort: 'Tu equipo',
     next: 'Siguiente etapa',
@@ -42,7 +43,7 @@ const copy = {
     profileLabel: 'Profile of my career: placement, banking and real estate up to today, and the next stage in your team.',
     highlights: 'What I did',
     technologies: 'Technologies',
-    summitText: 'I am looking for a full-stack, backend or frontend role. In Badajoz, Madrid or remote.',
+    summitText: 'I am looking for a role as a full-stack or .NET developer, or in application support and maintenance. In Badajoz, Madrid or remote.',
     steps: 'Stages',
     summitShort: 'Your team',
     next: 'Next stage',
@@ -161,8 +162,8 @@ const cardAt = (role: ExperienceEntry, index: number) =>
             <rect x="0" y="0" width={width} height={height} data-profile-reveal></rect>
           </clipPath>
           <linearGradient id="profile-fill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="var(--lime-ink)" stop-opacity="0.3"></stop>
-            <stop offset="1" stop-color="var(--lime-ink)" stop-opacity="0.02"></stop>
+            <stop offset="0" stop-color="var(--lime)" stop-opacity="0.4"></stop>
+            <stop offset="1" stop-color="var(--lime)" stop-opacity="0.03"></stop>
           </linearGradient>
         </defs>
         <line class="profile__axis" x1={x(0)} y1={base} x2={x(span)} y2={base}></line>
@@ -230,7 +231,7 @@ const cardAt = (role: ExperienceEntry, index: number) =>
 
       <div class="stages">
         {chronological.map((role, index) => (
-          <article class="stage" data-stage-card={cardAt(role, index).toFixed(3)}>
+          <article class:list={['stage', { 'is-active': index === 0 }]} data-stage-card={cardAt(role, index).toFixed(3)}>
             <div class="stage__meta">
               <span class="label">{formatPeriod(role.startDate, role.endDate, lang)} · {role.sector[lang]}</span>
               <h4>{role.role[lang]}</h4>
@@ -242,9 +243,9 @@ const cardAt = (role: ExperienceEntry, index: number) =>
                 {role.highlights.map((highlight) => <li>{highlight[lang]}</li>)}
               </ul>
               {role.technologies.length > 0 && (
-                <ul class="stage__tech" aria-label={text.technologies}>
-                  {role.technologies.map((technology) => <li>{technology}</li>)}
-                </ul>
+                <div class="stage__tech">
+                  <TechList items={role.technologies} label={text.technologies} size="sm" />
+                </div>
               )}
             </div>
           </article>
@@ -389,6 +390,9 @@ const cardAt = (role: ExperienceEntry, index: number) =>
 
   .profile__summit path {
     fill: var(--lime);
+    stroke: var(--mark-edge);
+    stroke-width: 1.5;
+    stroke-linejoin: round;
   }
 
   .profile__summit text {
@@ -402,6 +406,8 @@ const cardAt = (role: ExperienceEntry, index: number) =>
 
   .profile__runner circle {
     fill: var(--lime);
+    stroke: var(--mark-edge);
+    stroke-width: 1.5;
   }
 
   .profile__runner-ring {
@@ -428,6 +434,8 @@ const cardAt = (role: ExperienceEntry, index: number) =>
 
   .profile__today-tag {
     fill: var(--lime);
+    stroke: var(--mark-edge);
+    stroke-width: 1.5;
   }
 
   .profile__stop--today .profile__title,
@@ -518,22 +526,7 @@ const cardAt = (role: ExperienceEntry, index: number) =>
   }
 
   .stage__tech {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-    margin: var(--space-3) 0 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .stage__tech li {
-    padding: 0.2rem 0.5rem;
-    border: 1px solid var(--line);
-    color: var(--soft);
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
+    margin-top: var(--space-3);
   }
 
   .stage--summit .stage__body {
@@ -563,20 +556,23 @@ const cardAt = (role: ExperienceEntry, index: number) =>
      plays out. It is exactly one screen tall, so nothing can spill out of it. */
   @media (min-width: 60rem) and (min-height: 48rem) and (prefers-reduced-motion: no-preference) {
     .climb-track {
-      height: 300vh;
+      height: 260vh;
       margin-top: var(--space-8);
     }
 
+    /* Capped and centred on tall screens, so the drawing fills the panel instead of floating in it. */
     .climb {
       position: sticky;
-      top: 5.5rem;
+      top: max(5.5rem, calc(50svh - 20.75rem));
       display: grid;
-      height: calc(100svh - 6.5rem);
+      height: min(calc(100svh - 6.5rem), 46rem);
       grid-template-columns: minmax(0, 1fr) 25rem;
       grid-template-rows: auto minmax(0, 1fr) auto;
       gap: var(--space-4) var(--space-6);
       margin-top: 0;
       padding: var(--space-5) var(--space-6);
+      /* See-through, so the background ridges still show behind the pinned climb. */
+      --panel-fill: color-mix(in srgb, var(--panel) 60%, transparent);
     }
 
     .climb__head {
