@@ -1,0 +1,73 @@
+---
+import { techIconFor } from '../../utils/tech-icons';
+
+// One look for every list of technologies on the site: name plus its logo in a quiet outlined tag.
+// The Stack section keeps its own chips, whose fill says where each one was used.
+interface Props {
+  items: readonly string[];
+  label: string;
+  size?: 'md' | 'sm';
+}
+
+const { items, label, size = 'md' } = Astro.props;
+---
+
+<ul class:list={['tech-list', `tech-list--${size}`]} aria-label={label}>
+  {items.map((item) => {
+    const icon = techIconFor(item);
+    return (
+      <li>
+        {icon && <svg viewBox={icon.viewBox} aria-hidden="true" set:html={icon.body} />}
+        {item}
+      </li>
+    );
+  })}
+</ul>
+
+<style>
+  .tech-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .tech-list li {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.35rem 0.65rem;
+    border: 1px solid var(--line);
+    background: var(--panel-2);
+    color: var(--ink);
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  .tech-list--sm li {
+    gap: 0.35rem;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.78rem;
+  }
+
+  .tech-list svg {
+    width: 0.95rem;
+    height: 0.95rem;
+    flex: none;
+    color: var(--lime-ink);
+  }
+
+  .tech-list--sm svg {
+    width: 0.85rem;
+    height: 0.85rem;
+  }
+
+  /* Every logo in one colour, whatever its source file says. */
+  .tech-list svg :global(*) {
+    fill: currentColor !important;
+    stroke: none !important;
+  }
+</style>
