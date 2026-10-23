@@ -41,9 +41,13 @@
   --lime: #c6ff3d;
   --lime-ink: #c6ff3d;
   --on-lime: #0d0e10;
+  /* Outline for accent marks (dots, flags), for any theme whose fill lacks contrast with the page. */
+  --mark-edge: var(--lime);
   --grid: rgb(238 241 244 / 0.035);
-  --ridge-1: rgb(238 241 244 / 0.035);
-  --ridge-2: rgb(238 241 244 / 0.055);
+  --ridge-1: rgb(238 241 244 / 0.025);
+  --ridge-2: rgb(238 241 244 / 0.04);
+  --ridge-edge: rgb(238 241 244 / 0.06);
+  --ridge-line: rgb(198 255 61 / 0.18);
   --glow: rgb(198 255 61 / 0.08);
   --shadow-elevated: 0 1.5rem 4rem rgb(0 0 0 / 0.45);
 
@@ -74,13 +78,18 @@
   --line: #d9dcd3;
   --ink: #121417;
   --soft: #5b6169;
+  /* Same lime as the dark theme. On paper lime cannot carry text or thin lines (about 1:1), so here it is
+     only a fill, like a highlighter, and the accent text, lines and outlines are graphite ink. */
   --lime: #c6ff3d;
-  --lime-ink: #4a7a0c;
+  --lime-ink: #121417;
   --on-lime: #121417;
+  --mark-edge: #121417;
   --grid: rgb(18 20 23 / 0.045);
   --ridge-1: rgb(18 20 23 / 0.035);
   --ridge-2: rgb(18 20 23 / 0.05);
-  --glow: rgb(74 122 12 / 0.08);
+  --ridge-edge: rgb(18 20 23 / 0.07);
+  --ridge-line: rgb(110 160 0 / 0.35);
+  --glow: rgb(198 255 61 / 0.22);
   --shadow-elevated: 0 1.5rem 4rem rgb(18 20 23 / 0.1);
 }
 
@@ -93,13 +102,18 @@
     --line: #d9dcd3;
     --ink: #121417;
     --soft: #5b6169;
+    /* Same lime as the dark theme. On paper lime cannot carry text or thin lines (about 1:1), so here it is
+       only a fill, like a highlighter, and the accent text, lines and outlines are graphite ink. */
     --lime: #c6ff3d;
-    --lime-ink: #4a7a0c;
+    --lime-ink: #121417;
     --on-lime: #121417;
+    --mark-edge: #121417;
     --grid: rgb(18 20 23 / 0.045);
     --ridge-1: rgb(18 20 23 / 0.035);
     --ridge-2: rgb(18 20 23 / 0.05);
-    --glow: rgb(74 122 12 / 0.08);
+    --ridge-edge: rgb(18 20 23 / 0.07);
+    --ridge-line: rgb(110 160 0 / 0.35);
+    --glow: rgb(198 255 61 / 0.22);
     --shadow-elevated: 0 1.5rem 4rem rgb(18 20 23 / 0.1);
   }
 }
