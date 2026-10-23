@@ -1,0 +1,49 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Hero from '../sections/Hero.astro';
+import Projects from '../sections/Projects.astro';
+import Experience from '../sections/Experience.astro';
+import Stack from '../sections/Stack.astro';
+import About from '../sections/About.astro';
+import Contact from '../sections/Contact.astro';
+import { siteConfig, type SupportedLocale } from '../../config/site';
+import { education } from '../../data/profile';
+import { technologyGroups } from '../../data/technologies';
+import { routes } from '../../utils/i18n';
+
+interface Props {
+  lang: SupportedLocale;
+}
+
+const { lang } = Astro.props;
+
+const person = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: siteConfig.fullName,
+  alternateName: siteConfig.name,
+  jobTitle: lang === 'en' ? 'Full-stack developer' : 'Desarrollador full-stack',
+  url: new URL(routes.home[lang], siteConfig.url).href,
+  email: `mailto:${siteConfig.email[lang]}`,
+  address: { '@type': 'PostalAddress', addressLocality: 'Badajoz', addressCountry: 'ES' },
+  alumniOf: { '@type': 'EducationalOrganization', name: education[0].school.split(' · ')[0] },
+  sameAs: [siteConfig.linkedinUrl, siteConfig.githubUrl],
+  knowsAbout: technologyGroups
+    .filter((group) => group.id !== 'practices')
+    .flatMap((group) => group.items)
+    .filter((item) => !item.usage.includes('training'))
+    .map((item) => item.name),
+};
+---
+
+<BaseLayout lang={lang} alternates={routes.home}>
+  <script slot="head" type="application/ld+json" set:html={JSON.stringify(person)} />
+  <main id="main-content">
+    <Hero lang={lang} />
+    <Projects lang={lang} />
+    <Experience lang={lang} />
+    <Stack lang={lang} />
+    <About lang={lang} />
+    <Contact lang={lang} />
+  </main>
+</BaseLayout>
