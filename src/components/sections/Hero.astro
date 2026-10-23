@@ -1,10 +1,12 @@
 ---
+import TechList from '../ui/TechList.astro';
 import { Image } from 'astro:assets';
 import Container from '../ui/Container.astro';
 import ButtonLink from '../ui/ButtonLink.astro';
 import { siteConfig, type SupportedLocale } from '../../config/site';
 import { experiences } from '../../data/experience';
 import { projects } from '../../data/projects';
+import { languages } from '../../data/profile';
 import { toMonthIndex } from '../../utils/dates';
 import { profilePhoto } from '../../utils/profile-photo';
 import type { ExperienceEntry } from '../../types';
@@ -26,7 +28,7 @@ const copy = {
     status: 'Buscando empleo',
     where: 'Badajoz, Madrid o remoto',
     photoAlt: `Foto de ${siteConfig.name}`,
-    stats: { years: 'años en NTT DATA', months: 'meses de experiencia', projects: 'proyectos propios', sectors: 'sectores' },
+    stats: { years: 'años en NTT DATA', months: 'meses de experiencia', projects: 'proyectos propios', english: 'nivel de inglés' },
     stack: 'Stack principal',
   },
   en: {
@@ -39,7 +41,7 @@ const copy = {
     status: 'Open to work',
     where: 'Badajoz, Madrid or remote',
     photoAlt: `Photo of ${siteConfig.name}`,
-    stats: { years: 'years at NTT DATA', months: 'months of experience', projects: 'own projects', sectors: 'sectors' },
+    stats: { years: 'years at NTT DATA', months: 'months of experience', projects: 'own projects', english: 'English level' },
     stack: 'Main stack',
   },
 } as const;
@@ -51,16 +53,16 @@ const mainStack = ['C# · .NET', 'ASP.NET Web API', 'Java · Spring Boot', 'SQL 
 
 // Every figure is computed from the data files, nothing typed by hand.
 const roles: ExperienceEntry[] = [...experiences];
+const english = languages.find((language) => language.name.en === 'English');
 const months = roles.reduce(
   (sum, role) => sum + toMonthIndex(role.endDate ?? role.startDate) - toMonthIndex(role.startDate) + 1,
   0,
 );
-const sectors = new Set(roles.map((role) => role.sector.es)).size;
 const stats = [
   { value: Math.floor(months / 12), label: text.stats.years },
   { value: months, label: text.stats.months },
   { value: projects.length, label: text.stats.projects },
-  { value: sectors, label: text.stats.sectors },
+  { value: english?.level.en ?? '', label: text.stats.english },
 ];
 ---
 
@@ -74,9 +76,9 @@ const stats = [
         </h1>
         <p class="hero__role cut">{text.role}</p>
         <p class="hero__lead">{text.lead}</p>
-        <ul class="hero__stack" aria-label={text.stack}>
-          {mainStack.map((item) => <li>{item}</li>)}
-        </ul>
+        <div class="hero__stack">
+          <TechList items={mainStack} label={text.stack} />
+        </div>
 
         <div class="hero__actions">
           <ButtonLink href="#projects">{text.projects}</ButtonLink>
@@ -98,7 +100,7 @@ const stats = [
         <dl class="player__stats">
           {stats.map((stat) => (
             <div>
-              <dd data-count={stat.value}>{stat.value}</dd>
+              <dd data-count={typeof stat.value === 'number' ? stat.value : undefined}>{stat.value}</dd>
               <dt class="label">{stat.label}</dt>
             </div>
           ))}
@@ -157,23 +159,8 @@ const stats = [
   }
 
   .hero__stack {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
     max-width: 38rem;
-    margin: var(--space-5) 0 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .hero__stack li {
-    padding: 0.3rem 0.65rem;
-    border: 1px solid var(--line);
-    background: var(--panel);
-    color: var(--ink);
-    font-family: var(--font-mono);
-    font-size: 0.78rem;
-    letter-spacing: 0.04em;
+    margin-top: var(--space-5);
   }
 
   .hero__actions {
