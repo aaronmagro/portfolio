@@ -1,0 +1,244 @@
+---
+import Container from '../ui/Container.astro';
+import SectionHeader from '../ui/SectionHeader.astro';
+import { technologyGroups, technologyName, usageLabels } from '../../data/technologies';
+import { siteConfig, type SupportedLocale } from '../../config/site';
+import type { TechnologyUsage } from '../../types';
+
+interface Props {
+  lang?: SupportedLocale;
+}
+
+const { lang = siteConfig.defaultLocale } = Astro.props;
+
+const copy = {
+  es: {
+    title: 'Stack',
+    label: 'Por capas · según dónde lo he usado',
+    legend: 'Leyenda',
+    subtitles: {
+      frontend: 'Lo que ve el usuario',
+      backend: 'APIs y lógica',
+      data: 'Dónde vive la información',
+      tooling: 'Pruebas y despliegue',
+      practices: 'Cómo trabajo',
+    },
+  },
+  en: {
+    title: 'Stack',
+    label: 'In layers · by where I used it',
+    legend: 'Legend',
+    subtitles: {
+      frontend: 'What users see',
+      backend: 'APIs and logic',
+      data: 'Where data lives',
+      tooling: 'Testing and deployment',
+      practices: 'How I work',
+    },
+  },
+} as const;
+
+const text = copy[lang];
+const order = ['frontend', 'backend', 'data', 'tooling', 'practices'] as const;
+const layers = order.flatMap((id) => technologyGroups.filter((group) => group.id === id));
+const usages = Object.keys(usageLabels) as TechnologyUsage[];
+// Most to least relevant: professional, then project, then training. The sort keeps the data order within each.
+const rank = (usage: TechnologyUsage) => usages.indexOf(usage);
+---
+
+<section class="stack" id="stack" aria-labelledby="stack-title">
+  <Container>
+    <SectionHeader title={text.title} label={text.label} headingId="stack-title" />
+
+    <div class="stack__body">
+      <div class="layers">
+        {layers.map((group) => (
+          <div class="layer panel-cut">
+            <h3>
+              {group.label[lang]}
+              <small>{text.subtitles[group.id as keyof typeof text.subtitles]}</small>
+            </h3>
+            <ul class="layer__chips">
+              {[...group.items].sort((a, b) => rank(a.usage[0]) - rank(b.usage[0])).map((item) => (
+                <li class:list={['chip', `chip--${item.usage[0]}`]}>
+                  {technologyName(item, lang)}
+                  <span class="visually-hidden"> ({item.usage.map((usage) => usageLabels[usage][lang]).join(', ')})</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+
+      <div class="bracket" aria-hidden="true">
+        <svg viewBox="0 0 40 100" preserveAspectRatio="none">
+          <path d="M4 0.5 H24 V99.5 H4" vector-effect="non-scaling-stroke"></path>
+          <path class="bracket__tick" d="M24 50 H36" vector-effect="non-scaling-stroke"></path>
+        </svg>
+        <span class="label">Full-stack</span>
+      </div>
+    </div>
+
+    <ul class="legend" aria-label={text.legend}>
+      {usages.map((usage) => (
+        <li><span class:list={['legend__swatch', `chip--${usage}`]} aria-hidden="true"></span>{usageLabels[usage][lang]}</li>
+      ))}
+    </ul>
+  </Container>
+</section>
+
+<style>
+  .stack {
+    padding-block: clamp(var(--space-9), 10vw, var(--space-10));
+    scroll-margin-top: 4.5rem;
+  }
+
+  .stack__body {
+    display: grid;
+    gap: var(--space-5);
+    margin-top: var(--space-8);
+  }
+
+  .layers {
+    display: grid;
+    gap: var(--space-3);
+  }
+
+  .layer {
+    --cut: 0.9rem;
+    display: grid;
+    gap: var(--space-3) var(--space-5);
+    padding: var(--space-5) var(--space-6);
+  }
+
+  .layer:hover {
+    --panel-line: var(--lime-ink);
+  }
+
+  .layer h3 {
+    font-size: 1.7rem;
+    text-transform: uppercase;
+  }
+
+  .layer h3 small {
+    display: block;
+    margin-top: var(--space-1);
+    color: var(--soft);
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    font-weight: 400;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .layer__chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: center;
+    gap: var(--space-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .chip {
+    padding: 0.45rem 0.8rem;
+    border: 1px solid var(--ink);
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+
+  .chip--professional {
+    background: var(--ink);
+    color: var(--bg);
+  }
+
+  .chip--project {
+    color: var(--ink);
+  }
+
+  .chip--training {
+    border-style: dashed;
+    border-color: var(--soft);
+    color: var(--soft);
+    font-weight: 500;
+  }
+
+  .bracket {
+    display: none;
+  }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3) var(--space-6);
+    margin: var(--space-5) 0 0;
+    padding: 0;
+    color: var(--soft);
+    font-size: 0.9rem;
+    list-style: none;
+  }
+
+  .legend li {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .legend__swatch {
+    width: 1.6rem;
+    height: 0.9rem;
+    border: 1px solid var(--ink);
+  }
+
+  .legend__swatch.chip--training {
+    border-style: dashed;
+    border-color: var(--soft);
+  }
+
+  @media (min-width: 60rem) {
+    .stack__body {
+      grid-template-columns: minmax(0, 1fr) 5rem;
+      gap: var(--space-4);
+    }
+
+    .layer {
+      grid-template-columns: 15rem minmax(0, 1fr);
+      align-items: center;
+    }
+
+    .bracket {
+      position: relative;
+      display: block;
+    }
+
+    .bracket svg {
+      position: absolute;
+      inset: 0;
+      width: 2.5rem;
+      height: 100%;
+      overflow: visible;
+    }
+
+    .bracket path {
+      fill: none;
+      stroke: var(--ink);
+      stroke-width: 1.5;
+    }
+
+    .bracket .bracket__tick {
+      stroke: var(--lime-ink);
+      stroke-width: 3;
+    }
+
+    .bracket .label {
+      position: absolute;
+      top: 50%;
+      left: 2.6rem;
+      color: var(--lime-ink);
+      font-weight: 700;
+      transform: translateY(-50%);
+      writing-mode: vertical-rl;
+    }
+  }
+</style>
