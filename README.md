@@ -23,7 +23,7 @@ Requiere Node 22.12 o superior.
 | Proyectos | `src/data/projects.ts` (miniaturas en `src/assets/projects/`) |
 | Caso de estudio de Francis | `src/components/pages/CaseStudyFrancis.astro` |
 | Experiencia | `src/data/experience.ts` |
-| Stack | `src/data/technologies.ts` |
+| Stack | `src/data/technologies.ts` (logos en `src/utils/tech-icons.ts`) |
 | Formación, idiomas, disponibilidad | `src/data/profile.ts` |
 | Foto de perfil | cualquier imagen en `src/assets/profile/` |
 | CV | `src/components/pages/CvPage.astro` → `npm run cv` |
