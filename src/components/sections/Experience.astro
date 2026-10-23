@@ -1,0 +1,730 @@
+---
+import TechList from '../ui/TechList.astro';
+import Container from '../ui/Container.astro';
+import SectionHeader from '../ui/SectionHeader.astro';
+import ButtonLink from '../ui/ButtonLink.astro';
+import { experienceCompanies, experiences } from '../../data/experience';
+import { siteConfig, type SupportedLocale } from '../../config/site';
+import { formatDuration, formatPeriod, formatYearMonth, toMonthIndex } from '../../utils/dates';
+import type { ExperienceEntry, YearMonth } from '../../types';
+
+interface Props {
+  lang?: SupportedLocale;
+}
+
+const { lang = siteConfig.defaultLocale } = Astro.props;
+
+const copy = {
+  es: {
+    title: 'Experiencia',
+    climb: 'La subida hasta aquí',
+    months: 'meses de subida',
+    swipe: 'Desliza →',
+    scrollLabel: 'Gráfico de la subida, desplazable',
+    start: 'Salida',
+    today: 'Hoy',
+    summit: 'Siguiente etapa: tu equipo',
+    profileLabel: 'Perfil de mi trayectoria: prácticas, banca e inmobiliario hasta hoy, y la siguiente etapa en tu equipo.',
+    highlights: 'Qué hice',
+    technologies: 'Tecnologías',
+    summitText: 'Busco un puesto como desarrollador full-stack o .NET, o en soporte y mantenimiento de aplicaciones. En Badajoz, Madrid o en remoto.',
+    steps: 'Etapas',
+    summitShort: 'Tu equipo',
+    next: 'Siguiente etapa',
+    contact: 'Hablemos',
+  },
+  en: {
+    title: 'Experience',
+    climb: 'The climb so far',
+    months: 'months climbing',
+    swipe: 'Swipe →',
+    scrollLabel: 'Climb chart, scrollable',
+    start: 'Start',
+    today: 'Today',
+    summit: 'Next stage: your team',
+    profileLabel: 'Profile of my career: placement, banking and real estate up to today, and the next stage in your team.',
+    highlights: 'What I did',
+    technologies: 'Technologies',
+    summitText: 'I am looking for a role as a full-stack or .NET developer, or in application support and maintenance. In Badajoz, Madrid or remote.',
+    steps: 'Stages',
+    summitShort: 'Your team',
+    next: 'Next stage',
+    contact: 'Let’s talk',
+  },
+} as const;
+
+const text = copy[lang];
+const company = experienceCompanies[0];
+const chronological: ExperienceEntry[] = [...experiences].sort((a, b) => toMonthIndex(a.startDate) - toMonthIndex(b.startDate));
+const latest = chronological[chronological.length - 1];
+const lastEnd: YearMonth = latest.endDate ?? latest.startDate;
+const totalMonths = chronological.reduce(
+  (sum, role) => sum + toMonthIndex(role.endDate ?? role.startDate) - toMonthIndex(role.startDate) + 1,
+  0,
+);
+
+// Mountain profile. X follows the real calendar; the height only grows with each role, it measures nothing.
+const width = 1200;
+const height = 620;
+const base = 560;
+const top = 90;
+const left = 24;
+const right = 56;
+const origin = toMonthIndex(chronological[0].startDate);
+const span = toMonthIndex(lastEnd) - origin + 3;
+const x = (month: number) => left + (month / span) * (width - left - right);
+const y = (h: number) => base - h * (base - top);
+const monthOf = (value: YearMonth) => toMonthIndex(value) - origin;
+
+const keys: [number, number][] = [];
+chronological.forEach((role, index) => {
+  const peak = 0.36 + (index / Math.max(chronological.length - 1, 1)) * 0.42;
+  const start = monthOf(role.startDate);
+  const end = monthOf(role.endDate ?? lastEnd);
+  if (index === 0) keys.push([start, 0.14]);
+  else {
+    const gap = start - keys[keys.length - 1][0];
+    const previousPeak = keys[keys.length - 1][1];
+    // A real gap between jobs becomes a valley; back-to-back roles get a small dip.
+    if (gap > 1) keys.push([start - 0.5, previousPeak - 0.13]);
+    else keys.push([start + 0.6, previousPeak - 0.07]);
+  }
+  keys.push([end, peak]);
+});
+keys.push([span - 1.6, keys[keys.length - 1][1] - 0.08]);
+keys.push([span, 1]);
+
+const heightAt = (month: number) => {
+  let index = keys.findIndex((key, i) => keys[i + 1] && month >= key[0] && month <= keys[i + 1][0]);
+  if (index < 0) index = keys.length - 2;
+  const [m0, h0] = keys[index];
+  const [m1, h1] = keys[index + 1];
+  const t = (month - m0) / (m1 - m0 || 1);
+  const smooth = t * t * (3 - 2 * t);
+  const ridge = month > 0.3 && month < span - 0.2 ? Math.abs(Math.sin(month * 3.1)) * 0.022 + Math.sin(month * 7.7) * 0.01 : 0;
+  return h0 + (h1 - h0) * smooth + ridge;
+};
+
+const points: string[] = [];
+for (let month = 0; month <= span + 0.001; month += 0.2) {
+  points.push(`${x(month).toFixed(1)} ${y(heightAt(month)).toFixed(1)}`);
+}
+const line = `M${points.join(' L')}`;
+const area = `${line} L${x(span).toFixed(1)} ${base} L${x(0).toFixed(1)} ${base} Z`;
+
+const stop = (month: number, title: string, label: string, place: 'above' | 'below' | 'high' = 'above') => ({
+  x: x(month),
+  y: y(heightAt(month)),
+  fraction: (x(month) - x(0)) / (x(span) - x(0)),
+  title,
+  label,
+  place,
+});
+
+const stops = [
+  stop(0, text.start, formatYearMonth(chronological[0].startDate, lang), 'high'),
+  ...chronological.slice(1).map((role) => stop(monthOf(role.startDate), role.sector[lang], formatYearMonth(role.startDate, lang))),
+  stop(monthOf(lastEnd), text.today, formatYearMonth(lastEnd, lang), 'below'),
+];
+
+const years = Array.from({ length: Math.floor((origin + span) / 12) - Math.floor(origin / 12) + 1 }, (_, i) => {
+  const year = Math.floor(origin / 12) + i;
+  const month = Math.max(year * 12 - origin, 0);
+  return { year, x: x(month), anchor: month === 0 ? 'start' : 'middle' };
+}).filter((tick) => tick.x <= x(span));
+
+const summit = { x: x(span), y: y(heightAt(span)) };
+const todayStop = stops[stops.length - 1];
+
+// Each card shows up when the runner reaches the start of its role; the last one at "today".
+const cardAt = (role: ExperienceEntry, index: number) =>
+  index === 0 ? 0 : (x(monthOf(role.startDate)) - x(0)) / (x(span) - x(0));
+---
+
+<section class="experience" id="experience" aria-labelledby="experience-title">
+  <Container>
+    <SectionHeader
+      title={text.title}
+      label={`${company.company[lang]} · ${company.location[lang]} · ${formatPeriod(company.startDate, company.endDate, lang)}`}
+      headingId="experience-title"
+    />
+
+    <div class="climb-track" data-profile-track>
+    <div class="climb panel-cut">
+      <div class="climb__head">
+        <h3>{text.climb}</h3>
+        <p class="climb__stat"><b data-count={totalMonths}>{totalMonths}</b><span class="label">{text.months}</span></p>
+      </div>
+
+      <p class="climb__swipe label" aria-hidden="true">{text.swipe}</p>
+      <div class="profile-scroll" data-profile-scroll data-label={text.scrollLabel}>
+      <svg class="profile" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={text.profileLabel} data-profile>
+        <defs>
+          <clipPath id="profile-reveal">
+            <rect x="0" y="0" width={width} height={height} data-profile-reveal></rect>
+          </clipPath>
+          <linearGradient id="profile-fill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="var(--lime)" stop-opacity="0.4"></stop>
+            <stop offset="1" stop-color="var(--lime)" stop-opacity="0.03"></stop>
+          </linearGradient>
+        </defs>
+        <line class="profile__axis" x1={x(0)} y1={base} x2={x(span)} y2={base}></line>
+        {years.map((tick) => (
+          <g class="profile__year">
+            <line x1={tick.x} y1={base} x2={tick.x} y2={base + 8}></line>
+            <text x={tick.x} y={base + 30} text-anchor={tick.anchor}>{tick.year}</text>
+          </g>
+        ))}
+        <path class="profile__ghost-area" d={area}></path>
+        <path class="profile__ghost" d={line}></path>
+        <path class="profile__area" d={area} clip-path="url(#profile-reveal)"></path>
+        <path class="profile__line" d={line} data-profile-line></path>
+
+        {stops.map((item) => {
+          const today = item.place === 'below';
+          const labelY = today ? item.y + 74 : item.y - (item.place === 'high' ? 120 : 70);
+          const tagWidth = Math.max(item.title.length * 16, item.label.length * 10) + 30;
+          return (
+            <g class:list={['profile__stop', { 'profile__stop--today': today }]} data-profile-stop={item.fraction.toFixed(3)} aria-hidden="true">
+              <line
+                class="profile__leader"
+                x1={item.x}
+                y1={today ? item.y + 10 : item.y - 10}
+                x2={item.x}
+                y2={today ? labelY - 34 : labelY + 10}
+              ></line>
+              {today && <rect class="profile__today-tag" x={item.x - tagWidth + 22} y={labelY - 34} width={tagWidth} height="62"></rect>}
+              <text class="profile__title" x={today ? item.x + 8 : item.x + 4} y={labelY - 6} text-anchor={today ? 'end' : 'start'}>{item.title}</text>
+              <text class="profile__label" x={today ? item.x + 8 : item.x + 4} y={labelY + 16} text-anchor={today ? 'end' : 'start'}>{item.label.toUpperCase()}</text>
+              <circle class="profile__point" cx={item.x} cy={item.y} r="8"></circle>
+            </g>
+          );
+        })}
+
+        <g class="profile__summit" transform={`translate(${summit.x} ${summit.y})`} aria-hidden="true">
+          <line x1="0" y1="0" x2="0" y2="-42"></line>
+          <path d="M0 -42 L30 -32 L0 -22 Z"></path>
+          <text x="-14" y="-16" text-anchor="end">{text.summit}</text>
+        </g>
+
+        <g class="profile__runner" data-profile-runner transform={`translate(${summit.x} ${summit.y})`} aria-hidden="true">
+          <circle r="14" class="profile__runner-ring"></circle>
+          <circle r="6"></circle>
+        </g>
+      </svg>
+      </div>
+
+      <ol class="climb__steps" aria-label={text.steps}>
+        {chronological.map((role, index) => (
+          <li>
+            <button type="button" data-stage-jump={index}>
+              <span class="climb__step-role">{role.role[lang].split(' · ').pop()}</span>
+              <span class="label">{formatPeriod(role.startDate, role.endDate, lang)}</span>
+            </button>
+          </li>
+        ))}
+        <li>
+          <button type="button" data-stage-jump={chronological.length}>
+            <span class="climb__step-role">{text.summitShort}</span>
+            <span class="label">{text.next}</span>
+          </button>
+        </li>
+      </ol>
+
+      <div class="stages">
+        {chronological.map((role, index) => (
+          <article class:list={['stage', { 'is-active': index === 0 }]} data-stage-card={cardAt(role, index).toFixed(3)}>
+            <div class="stage__meta">
+              <span class="label">{formatPeriod(role.startDate, role.endDate, lang)} · {role.sector[lang]}</span>
+              <h4>{role.role[lang]}</h4>
+              <span class="stage__duration">{formatDuration(role.startDate, role.endDate, lang)}</span>
+            </div>
+            <div class="stage__body">
+              <p>{role.description[lang]}</p>
+              <ul class="stage__highlights" aria-label={text.highlights}>
+                {role.highlights.map((highlight) => <li>{highlight[lang]}</li>)}
+              </ul>
+              {role.technologies.length > 0 && (
+                <div class="stage__tech">
+                  <TechList items={role.technologies} label={text.technologies} size="sm" />
+                </div>
+              )}
+            </div>
+          </article>
+        ))}
+        <article class="stage stage--summit" data-stage-card={todayStop.fraction.toFixed(3)}>
+          <div class="stage__meta">
+            <span class="label">{text.today} · {formatYearMonth(lastEnd, lang)} →</span>
+            <h4>{text.summit}</h4>
+          </div>
+          <div class="stage__body">
+            <p>{text.summitText}</p>
+            <ButtonLink href="#contact">{text.contact}</ButtonLink>
+          </div>
+        </article>
+      </div>
+    </div>
+    </div>
+  </Container>
+</section>
+
+<script>
+  // On narrow screens the chart scrolls sideways. Keyboard users need to reach it then, but on wide screens it
+  // fits, and a focus stop there would only get in the way.
+  for (const box of document.querySelectorAll<HTMLElement>('[data-profile-scroll]')) {
+    const sync = () => {
+      if (box.scrollWidth > box.clientWidth + 1) {
+        box.tabIndex = 0;
+        box.setAttribute('role', 'region');
+        box.setAttribute('aria-label', box.dataset.label ?? '');
+      } else {
+        box.removeAttribute('tabindex');
+        box.removeAttribute('role');
+        box.removeAttribute('aria-label');
+      }
+    };
+    sync();
+    new ResizeObserver(sync).observe(box);
+  }
+</script>
+
+<style>
+  .experience {
+    padding-block: clamp(var(--space-9), 10vw, var(--space-10));
+    scroll-margin-top: 4.5rem;
+  }
+
+  .climb {
+    --cut: 1.25rem;
+    margin-top: var(--space-8);
+    padding: var(--space-6) var(--space-6) var(--space-4);
+  }
+
+  .climb__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    justify-content: space-between;
+    gap: var(--space-4);
+  }
+
+  .climb__head h3 {
+    font-size: clamp(1.8rem, 3.4vw, 2.6rem);
+    text-transform: uppercase;
+  }
+
+  .climb__stat {
+    display: grid;
+    justify-items: end;
+  }
+
+  .climb__stat b {
+    color: var(--lime-ink);
+    font-family: var(--font-display);
+    font-size: clamp(2.8rem, 5vw, 4rem);
+    line-height: 0.9;
+  }
+
+  .profile {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin-top: var(--space-4);
+    overflow: visible;
+  }
+
+  .profile__axis,
+  .profile__year line {
+    stroke: var(--line);
+  }
+
+  .profile__year text,
+  .profile__label {
+    fill: var(--soft);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    letter-spacing: 0.1em;
+  }
+
+  .profile__ghost-area {
+    fill: var(--ink);
+    opacity: 0.05;
+  }
+
+  .profile__ghost {
+    fill: none;
+    stroke: var(--soft);
+    stroke-dasharray: 6 7;
+    stroke-width: 2;
+    opacity: 0.55;
+  }
+
+  .profile__area {
+    fill: url(#profile-fill);
+  }
+
+  .profile__line {
+    fill: none;
+    stroke: var(--lime-ink);
+    stroke-linejoin: round;
+    stroke-width: 3;
+  }
+
+  .profile__leader {
+    stroke: var(--soft);
+    stroke-dasharray: 2 3;
+  }
+
+  .profile__title,
+  .profile__label,
+  .profile__summit text {
+    paint-order: stroke;
+    stroke: var(--panel);
+    stroke-linejoin: round;
+    stroke-width: 7px;
+  }
+
+  .profile__title {
+    fill: var(--ink);
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .profile__point {
+    fill: var(--panel);
+    stroke: var(--soft);
+    stroke-width: 2.5;
+    transition: fill 300ms ease, stroke 300ms ease;
+  }
+
+  .profile__stop.is-reached .profile__point {
+    fill: var(--lime);
+    stroke: var(--lime-ink);
+  }
+
+  .profile__summit line {
+    stroke: var(--ink);
+    stroke-width: 2;
+  }
+
+  .profile__summit path {
+    fill: var(--lime);
+    stroke: var(--mark-edge);
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+  }
+
+  .profile__summit text {
+    fill: var(--lime-ink);
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .profile__runner circle {
+    fill: var(--lime);
+    stroke: var(--mark-edge);
+    stroke-width: 1.5;
+  }
+
+  .profile__runner-ring {
+    fill: none !important;
+    stroke: var(--lime-ink);
+    stroke-width: 1.5;
+    animation: ring 1.8s ease-out infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  @keyframes ring {
+    from {
+      opacity: 0.9;
+      transform: scale(0.5);
+    }
+
+    to {
+      opacity: 0;
+      transform: scale(1.4);
+    }
+  }
+
+
+  .profile__today-tag {
+    fill: var(--lime);
+    stroke: var(--mark-edge);
+    stroke-width: 1.5;
+  }
+
+  .profile__stop--today .profile__title,
+  .profile__stop--today .profile__label {
+    fill: var(--on-lime);
+    stroke: none;
+  }
+
+  .profile__stop--today .profile__label {
+    font-weight: 700;
+  }
+
+  .climb__steps {
+    display: none;
+  }
+
+  .stages {
+    display: grid;
+    gap: var(--space-4);
+    margin-top: var(--space-5);
+  }
+
+  .stage {
+    position: relative;
+    display: grid;
+    align-content: start;
+    gap: var(--space-4);
+    padding: var(--space-5);
+    background: var(--panel-2);
+  }
+
+  .stage::before {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1.25rem;
+    height: 1.25rem;
+    border-top: 2px solid var(--lime-ink);
+    border-left: 2px solid var(--lime-ink);
+    content: '';
+  }
+
+  .stage__meta {
+    display: grid;
+    gap: var(--space-2);
+    align-content: start;
+  }
+
+  .stage h4 {
+    font-size: clamp(1.4rem, 2.2vw, 1.9rem);
+    text-transform: uppercase;
+  }
+
+  .stage__duration {
+    color: var(--lime-ink);
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .stage__body > p {
+    color: var(--soft);
+  }
+
+  .stage__highlights {
+    display: grid;
+    gap: var(--space-2);
+    margin: var(--space-3) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .stage__highlights li {
+    position: relative;
+    padding-left: var(--space-5);
+    font-size: 0.93rem;
+  }
+
+  .stage__highlights li::before {
+    position: absolute;
+    top: 0.65em;
+    left: 0;
+    width: 0.6rem;
+    height: 2px;
+    background: var(--lime-ink);
+    content: '';
+  }
+
+  .stage__tech {
+    margin-top: var(--space-3);
+  }
+
+  .stage--summit .stage__body {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-4);
+  }
+
+  .stage--summit h4 {
+    color: var(--lime-ink);
+  }
+
+  @media (min-width: 60rem) {
+    .stage {
+      grid-template-columns: 17rem minmax(0, 1fr);
+      gap: var(--space-6);
+    }
+
+    .stage__highlights {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: var(--space-6);
+    }
+  }
+
+  /* Desktop with motion and enough height: the panel stays pinned while the page scrolls and the climb
+     plays out. It is exactly one screen tall, so nothing can spill out of it. */
+  @media (min-width: 60rem) and (min-height: 48rem) and (prefers-reduced-motion: no-preference) {
+    .climb-track {
+      height: 260vh;
+      margin-top: var(--space-8);
+    }
+
+    /* Capped and centred on tall screens, so the drawing fills the panel instead of floating in it. */
+    .climb {
+      position: sticky;
+      top: max(5.5rem, calc(50svh - 20.75rem));
+      display: grid;
+      height: min(calc(100svh - 6.5rem), 46rem);
+      grid-template-columns: minmax(0, 1fr) 25rem;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      gap: var(--space-4) var(--space-6);
+      margin-top: 0;
+      padding: var(--space-5) var(--space-6);
+      /* See-through, so the background ridges still show behind the pinned climb. */
+      --panel-fill: color-mix(in srgb, var(--panel) 60%, transparent);
+    }
+
+    .climb__head {
+      grid-column: 1;
+      grid-row: 1;
+    }
+
+    .profile-scroll {
+      grid-column: 1;
+      grid-row: 2;
+      min-height: 0;
+    }
+
+    .profile {
+      width: 100%;
+      height: 100%;
+      margin-top: 0;
+    }
+
+    .climb__steps {
+      display: grid;
+      grid-column: 1;
+      grid-row: 3;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--space-2);
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .climb__steps button {
+      display: grid;
+      width: 100%;
+      height: 100%;
+      align-content: start;
+      gap: var(--space-1);
+      padding: var(--space-3);
+      border: 0;
+      border-top: 2px solid var(--line);
+      background: var(--panel-2);
+      color: var(--soft);
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+      transition: border-color var(--transition-fast), color var(--transition-fast);
+    }
+
+    .climb__steps button:hover,
+    .climb__steps button[aria-current] {
+      border-top-color: var(--lime-ink);
+      color: var(--ink);
+    }
+
+    .climb__step-role {
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 700;
+      line-height: 1.1;
+      text-transform: uppercase;
+    }
+
+    .stages {
+      display: grid;
+      grid-column: 2;
+      grid-row: 1 / -1;
+      align-content: safe center;
+      min-height: 0;
+      margin-top: 0;
+      overflow-y: auto;
+      scrollbar-width: thin;
+    }
+
+    .stage {
+      grid-area: 1 / 1;
+      align-self: center;
+      gap: var(--space-3);
+      padding: var(--space-4) var(--space-5);
+      opacity: 0;
+      visibility: hidden;
+      /* Fade only: a sliding card puts its text between pixels and it reads blurry until it stops. */
+      transition: opacity 180ms ease, visibility 180ms;
+    }
+
+    .stage.is-active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .stage,
+    .stage__highlights {
+      grid-template-columns: 1fr;
+    }
+
+    .stage h4 {
+      font-size: 1.6rem;
+    }
+
+    .stage__highlights {
+      gap: var(--space-1);
+    }
+
+    .stage__highlights li {
+      font-size: 0.9rem;
+    }
+  }
+
+  .climb__swipe {
+    display: none;
+  }
+
+  @media (max-width: 48rem) {
+    .climb {
+      padding-inline: var(--space-4);
+    }
+
+    .climb__swipe {
+      display: block;
+      margin-top: var(--space-3);
+      text-align: right;
+    }
+
+    .profile-scroll {
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scrollbar-width: thin;
+    }
+
+    .profile {
+      min-width: 46rem;
+      padding-right: var(--space-4);
+    }
+  }
+</style>
