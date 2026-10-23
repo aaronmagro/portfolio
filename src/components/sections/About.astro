@@ -2,7 +2,7 @@
 import Container from '../ui/Container.astro';
 import SectionHeader from '../ui/SectionHeader.astro';
 import { siteConfig, type SupportedLocale } from '../../config/site';
-import { availability, education, languages, lookingFor } from '../../data/profile';
+import { education, languages, lookingFor, workModes, workPlaces } from '../../data/profile';
 
 interface Props {
   lang?: SupportedLocale;
@@ -19,7 +19,7 @@ const copy = {
       'En NTT DATA estuve casi dos años en remoto con clientes de banca e inmobiliario. Mantuve APIs .NET de las que dependían la app móvil y otros sistemas del banco, automaticé sus pruebas y resolví incidencias en distintos entornos. Ahí aprendí a trabajar con cuidado sobre código de otros y a coordinarme con varios equipos.',
       'Por mi cuenta hice la web de Calzado Francis, un taller de Leganés, de principio a fin: diseño, CMS propio, despliegue en Cloudflare, SEO y copias de seguridad. Está pensada para que el dueño la actualice sin depender de mí.',
       'Fuera del trabajo sigo programando: hice erensito.com, mi web personal, y estoy desarrollando Vhaerynd, un RPG 2D para navegador con Phaser y TypeScript. Llevo años compitiendo en videojuegos a nivel nacional, y es de donde más he aprendido a trabajar en equipo: comunicarme bajo presión, revisar en qué fallo y entender que los resultados son de todos. Para desconectar, hago deporte, viajo siempre que puedo y me escapo a la naturaleza.',
-      'Ahora busco un equipo en el que aportar en backend, en frontend o en ambos. Me adapto bien a proyectos que ya están en marcha y también me ocupo de la parte menos vistosa: incidencias, datos y pruebas.',
+      'Ahora busco un equipo en el que aportar lo que sé y seguir aprendiendo. Me adapto bien a proyectos que ya están en marcha y también me ocupo de la parte menos vistosa: incidencias, datos y pruebas.',
     ],
     labels: { base: 'Base', lookingFor: 'Busco', mode: 'Modalidad', education: 'Formación', languages: 'Idiomas' },
     base: 'Badajoz',
@@ -32,7 +32,7 @@ const copy = {
       'At NTT DATA I spent almost two years working remotely for banking and real-estate clients. I maintained .NET APIs the bank’s mobile app and other systems depended on, automated their tests and solved incidents across environments. That taught me to work carefully on other people’s code and to coordinate with several teams.',
       'On my own I built the Calzado Francis website, for a workshop in Leganés, end to end: design, custom CMS, Cloudflare deployment, SEO and backups. It is designed so the owner can update it without depending on me.',
       'Outside work I keep coding: I built erensito.com, my personal site, and I am developing Vhaerynd, a 2D browser RPG with Phaser and TypeScript. I have competed in video games at national level for years, and it is where I have learned most about teamwork: communicating under pressure, reviewing what I get wrong and understanding that results belong to everyone. To switch off, I do sport, travel whenever I can and get out into nature.',
-      'Now I am looking for a team where I can contribute on the backend, the frontend or both. I adapt well to projects already under way and I also take care of the less glamorous part: incidents, data and tests.',
+      'Now I am looking for a team where I can put what I know to work and keep learning. I adapt well to projects already under way and I also take care of the less glamorous part: incidents, data and tests.',
     ],
     labels: { base: 'Based in', lookingFor: 'Looking for', mode: 'Work mode', education: 'Education', languages: 'Languages' },
     base: 'Badajoz, Spain',
@@ -42,16 +42,14 @@ const copy = {
 const text = copy[lang];
 const [mainEducation] = education;
 
-const facts = [
-  { label: text.labels.base, value: text.base },
-  { label: text.labels.lookingFor, value: lookingFor[lang] },
-  { label: text.labels.mode, value: availability[lang] },
-  { label: text.labels.education, value: `${mainEducation.title[lang]} · ${mainEducation.school} (${mainEducation.period})` },
-  {
-    label: text.labels.languages,
-    value: languages.map((language) => `${language.name[lang]} ${language.level[lang]}`).join(' · '),
-  },
-];
+// Line glyphs on a 24px grid, same stroke as the stack layers.
+const glyph = {
+  base: ['M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z', 'M12 12.2a2.6 2.6 0 1 0 0-5.2 2.6 2.6 0 0 0 0 5.2z'],
+  lookingFor: ['M4 8h16v11H4z', 'M9 8V5h6v3', 'M4 13h16'],
+  mode: ['M3 12h4l3-7 4 14 3-7h4'],
+  education: ['M2 9l10-5 10 5-10 5z', 'M6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5', 'M22 9v6'],
+  languages: ['M4 5h12v9H9l-4 3v-3H4z', 'M16 9h4v8h-1v3l-3-3h-5v-3'],
+};
 ---
 
 <section class="about" id="about" aria-labelledby="about-title">
@@ -61,12 +59,64 @@ const facts = [
     <div class="about__layout">
       <aside class="about__card">
         <dl class="about__facts panel-cut">
-          {facts.map((fact) => (
-            <div class="about__fact">
-              <dt class="label">{fact.label}</dt>
-              <dd>{fact.value}</dd>
-            </div>
-          ))}
+          <div class="about__fact">
+            <dt>
+              <svg class="about__glyph" viewBox="0 0 24 24" aria-hidden="true">{glyph.base.map((d) => <path d={d}></path>)}</svg>
+              <span class="label">{text.labels.base}</span>
+            </dt>
+            <dd>{text.base}</dd>
+          </div>
+          <div class="about__fact">
+            <dt>
+              <svg class="about__glyph" viewBox="0 0 24 24" aria-hidden="true">{glyph.lookingFor.map((d) => <path d={d}></path>)}</svg>
+              <span class="label">{text.labels.lookingFor}</span>
+            </dt>
+            <dd>
+              <ul class="about__tags about__tags--strong">
+                {lookingFor.map((role) => <li>{role[lang]}</li>)}
+              </ul>
+            </dd>
+          </div>
+          <div class="about__fact">
+            <dt>
+              <svg class="about__glyph" viewBox="0 0 24 24" aria-hidden="true">{glyph.mode.map((d) => <path d={d}></path>)}</svg>
+              <span class="label">{text.labels.mode}</span>
+            </dt>
+            <dd>
+              <ul class="about__tags">
+                {workModes.map((mode) => <li>{mode[lang]}</li>)}
+              </ul>
+              <p class="about__places">{workPlaces.join(' · ')}</p>
+            </dd>
+          </div>
+          <div class="about__fact">
+            <dt>
+              <svg class="about__glyph" viewBox="0 0 24 24" aria-hidden="true">{glyph.education.map((d) => <path d={d}></path>)}</svg>
+              <span class="label">{text.labels.education}</span>
+            </dt>
+            <dd>
+              {mainEducation.short[lang]}
+              <span class="about__detail">{mainEducation.title[lang]}</span>
+            </dd>
+          </div>
+          <div class="about__fact">
+            <dt>
+              <svg class="about__glyph" viewBox="0 0 24 24" aria-hidden="true">{glyph.languages.map((d) => <path d={d}></path>)}</svg>
+              <span class="label">{text.labels.languages}</span>
+            </dt>
+            <dd>
+              <ul class="about__languages">
+                {languages.map((language) => (
+                  <li>
+                    <span class="about__language">{language.name[lang]} <b>{language.level[lang]}</b></span>
+                    <span class="about__scale" aria-hidden="true">
+                      {Array.from({ length: 6 }, (_, step) => <i class:list={{ 'is-on': step < language.steps }}></i>)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </dd>
+          </div>
         </dl>
       </aside>
 
@@ -102,19 +152,111 @@ const facts = [
     padding: var(--space-2) var(--space-5);
   }
 
+  /* Icon on the left, label and value stacked on the right. */
   .about__fact {
     display: grid;
-    gap: var(--space-1);
-    padding-block: var(--space-3);
+    grid-template-columns: 2.4rem minmax(0, 1fr);
+    gap: var(--space-1) var(--space-4);
+    align-items: start;
+    padding-block: var(--space-4);
   }
 
   .about__fact + .about__fact {
     border-top: 1px solid var(--line);
   }
 
+  .about__glyph {
+    grid-row: span 2;
+    width: 2.4rem;
+    height: 2.4rem;
+    padding: 0.5rem;
+    border: 1px solid var(--line);
+    background: var(--panel-2);
+    fill: none;
+    stroke: var(--lime-ink);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.75;
+  }
+
+  /* The icon lives inside the <dt>; its contents join the row's grid. */
+  .about__fact dt {
+    display: contents;
+  }
+
+  .about__fact .label {
+    align-self: end;
+  }
+
   .about__fact dd {
     margin: 0;
     font-weight: 600;
+  }
+
+  .about__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin: var(--space-1) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .about__tags li {
+    padding: 0.2rem 0.6rem;
+    border: 1px solid var(--line);
+    font-size: 0.85rem;
+  }
+
+  .about__tags--strong li {
+    border-color: var(--lime-ink);
+    background: color-mix(in srgb, var(--lime) 10%, transparent);
+  }
+
+  .about__places,
+  .about__detail {
+    display: block;
+    margin-top: var(--space-2);
+    color: var(--soft);
+    font-size: 0.85rem;
+    font-weight: 400;
+  }
+
+  .about__languages {
+    display: grid;
+    gap: var(--space-2);
+    margin: var(--space-1) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .about__languages li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+
+  .about__language b {
+    margin-left: var(--space-1);
+    color: var(--lime-ink);
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+  }
+
+  .about__scale {
+    display: inline-flex;
+    gap: 3px;
+  }
+
+  .about__scale i {
+    width: 0.9rem;
+    height: 0.45rem;
+    background: var(--line);
+  }
+
+  .about__scale i.is-on {
+    background: var(--lime-ink);
   }
 
   .about__copy {

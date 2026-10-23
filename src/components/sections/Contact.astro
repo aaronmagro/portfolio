@@ -12,13 +12,13 @@ const { lang = siteConfig.defaultLocale } = Astro.props;
 const copy = {
   es: {
     title: 'Escríbeme',
-    description: 'Busco un puesto full-stack, backend o frontend. Al correo o por LinkedIn, como te venga mejor.',
+    description: 'Busco un puesto como desarrollador full-stack o .NET, o en soporte y mantenimiento de aplicaciones. Al correo o por LinkedIn, como te venga mejor.',
     cv: 'Descargar CV',
     next: 'Siguiente etapa: tu equipo',
   },
   en: {
     title: 'Get in touch',
-    description: 'I am looking for a full-stack, backend or frontend role. Email or LinkedIn, whichever suits you.',
+    description: 'I am looking for a role as a full-stack or .NET developer, or in application support and maintenance. Email or LinkedIn, whichever suits you.',
     cv: 'Download CV',
     next: 'Next stage: your team',
   },
@@ -34,8 +34,8 @@ const [emailUser, emailDomain] = siteConfig.email.split('@');
       <svg class="contact__summit" viewBox="0 0 520 340" aria-hidden="true">
         <defs>
           <linearGradient id="summit-fill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="var(--lime-ink)" stop-opacity="0.22"></stop>
-            <stop offset="1" stop-color="var(--lime-ink)" stop-opacity="0"></stop>
+            <stop offset="0" stop-color="var(--lime)" stop-opacity="0.35"></stop>
+            <stop offset="1" stop-color="var(--lime)" stop-opacity="0"></stop>
           </linearGradient>
         </defs>
         <path class="contact__summit-area" d="M0 300 C 60 292 92 252 140 262 S 228 232 280 204 S 352 176 398 124 S 452 70 478 44 L 478 340 L 0 340 Z"></path>
@@ -96,7 +96,9 @@ const [emailUser, emailDomain] = siteConfig.email.split('@');
 
   .contact__next .contact__flag {
     fill: var(--lime);
-    stroke: none;
+    stroke: var(--mark-edge);
+    stroke-width: 1;
+    stroke-linejoin: round;
   }
 
   .contact h2 {
@@ -165,6 +167,8 @@ const [emailUser, emailDomain] = siteConfig.email.split('@');
 
     .contact__summit circle {
       fill: var(--lime);
+      stroke: var(--mark-edge);
+      stroke-width: 2;
     }
 
     .contact__summit line {
@@ -174,6 +178,9 @@ const [emailUser, emailDomain] = siteConfig.email.split('@');
 
     .contact__summit-flag {
       fill: var(--lime);
+      stroke: var(--mark-edge);
+      stroke-width: 2;
+      stroke-linejoin: round;
     }
   }
 </style>
