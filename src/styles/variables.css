@@ -1,8 +1,12 @@
 :root {
   color-scheme: dark;
-  --font-sans: "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --container-max: 80rem;
-  --container-padding: clamp(1.25rem, 4vw, 3rem);
+
+  --font-display: 'Rajdhani', 'Segoe UI', sans-serif;
+  --font-sans: 'Chakra Petch', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --container-max: 82rem;
+  --container-padding: clamp(1.25rem, 4vw, 3.5rem);
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
@@ -17,70 +21,85 @@
   --text-base: 1rem;
   --text-lg: clamp(1.0625rem, 1vw, 1.125rem);
   --text-xl: clamp(1.25rem, 1.8vw, 1.5rem);
-  --text-2xl: clamp(2rem, 4vw, 3.75rem);
-  --text-display: clamp(3rem, 8vw, 7rem);
-  --radius-sm: 0.5rem;
-  --radius-md: 0.875rem;
-  --radius-lg: 1.25rem;
+  --text-2xl: clamp(2.5rem, 5vw, 4.5rem);
+  --text-display: clamp(4rem, 11vw, 10.5rem);
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
   --radius-pill: 999px;
+  --cut: 0.75rem;
   --transition-fast: 160ms ease;
   --transition-base: 240ms ease;
-  --color-background: #06131c;
-  --color-background-subtle: #081923;
-  --color-surface: #0b1d29;
-  --color-surface-elevated: #102735;
-  --color-heading: #f7fafc;
-  --color-text: #e8eef2;
-  --color-text-muted: #9fb1be;
-  --color-border: rgb(255 255 255 / 0.1);
-  --color-brand: #004b70;
-  --color-brand-strong: #003552;
-  --color-accent: #4bb4e6;
-  --color-link: #68c2ea;
-  --color-focus: #86d4f4;
-  --color-selection-background: #0f597d;
-  --color-selection-text: #ffffff;
-  --shadow-elevated: 0 1.5rem 4rem rgb(0 0 0 / 0.24);
+
+  /* HUD palette, dark */
+  --bg: #0d0e10;
+  --panel: #15171b;
+  --panel-2: #1b1e23;
+  --line: #2b2f36;
+  --ink: #eef1f4;
+  --soft: #8b939e;
+  --lime: #c6ff3d;
+  --lime-ink: #c6ff3d;
+  --on-lime: #0d0e10;
+  --grid: rgb(238 241 244 / 0.035);
+  --ridge-1: rgb(238 241 244 / 0.035);
+  --ridge-2: rgb(238 241 244 / 0.055);
+  --glow: rgb(198 255 61 / 0.08);
+  --shadow-elevated: 0 1.5rem 4rem rgb(0 0 0 / 0.45);
+
+  /* Older names, kept as aliases while sections migrate. */
+  --color-background: var(--bg);
+  --color-background-subtle: var(--panel);
+  --color-surface: var(--panel);
+  --color-surface-elevated: var(--panel-2);
+  --color-heading: var(--ink);
+  --color-text: var(--ink);
+  --color-text-muted: var(--soft);
+  --color-border: var(--line);
+  --color-brand: var(--lime);
+  --color-brand-strong: var(--lime);
+  --color-accent: var(--lime-ink);
+  --color-link: var(--lime-ink);
+  --color-focus: var(--lime-ink);
+  --color-positive: var(--lime-ink);
+  --color-selection-background: var(--lime);
+  --color-selection-text: var(--on-lime);
 }
 
-[data-theme="light"] {
+[data-theme='light'] {
   color-scheme: light;
-  --color-background: #f4f8fa;
-  --color-background-subtle: #edf4f7;
-  --color-surface: #ffffff;
-  --color-surface-elevated: #f8fbfc;
-  --color-heading: #081720;
-  --color-text: #13252f;
-  --color-text-muted: #526773;
-  --color-border: #d8e4ea;
-  --color-brand: #005b86;
-  --color-brand-strong: #003b5c;
-  --color-accent: #006a9c;
-  --color-link: #005c89;
-  --color-focus: #006a9c;
-  --color-selection-background: #b9e4f5;
-  --color-selection-text: #081720;
-  --shadow-elevated: 0 1.5rem 4rem rgb(22 53 69 / 0.12);
+  --bg: #f2f3ef;
+  --panel: #ffffff;
+  --panel-2: #f8f9f5;
+  --line: #d9dcd3;
+  --ink: #121417;
+  --soft: #5b6169;
+  --lime: #c6ff3d;
+  --lime-ink: #4a7a0c;
+  --on-lime: #121417;
+  --grid: rgb(18 20 23 / 0.045);
+  --ridge-1: rgb(18 20 23 / 0.035);
+  --ridge-2: rgb(18 20 23 / 0.05);
+  --glow: rgb(74 122 12 / 0.08);
+  --shadow-elevated: 0 1.5rem 4rem rgb(18 20 23 / 0.1);
 }
 
 @media (prefers-color-scheme: light) {
   :root:not([data-theme]) {
     color-scheme: light;
-    --color-background: #f4f8fa;
-    --color-background-subtle: #edf4f7;
-    --color-surface: #ffffff;
-    --color-surface-elevated: #f8fbfc;
-    --color-heading: #081720;
-    --color-text: #13252f;
-    --color-text-muted: #526773;
-    --color-border: #d8e4ea;
-    --color-brand: #005b86;
-    --color-brand-strong: #003b5c;
-    --color-accent: #006a9c;
-    --color-link: #005c89;
-    --color-focus: #006a9c;
-    --color-selection-background: #b9e4f5;
-    --color-selection-text: #081720;
-    --shadow-elevated: 0 1.5rem 4rem rgb(22 53 69 / 0.12);
+    --bg: #f2f3ef;
+    --panel: #ffffff;
+    --panel-2: #f8f9f5;
+    --line: #d9dcd3;
+    --ink: #121417;
+    --soft: #5b6169;
+    --lime: #c6ff3d;
+    --lime-ink: #4a7a0c;
+    --on-lime: #121417;
+    --grid: rgb(18 20 23 / 0.045);
+    --ridge-1: rgb(18 20 23 / 0.035);
+    --ridge-2: rgb(18 20 23 / 0.05);
+    --glow: rgb(74 122 12 / 0.08);
+    --shadow-elevated: 0 1.5rem 4rem rgb(18 20 23 / 0.1);
   }
 }

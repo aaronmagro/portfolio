@@ -1,0 +1,98 @@
+---
+// Fixed background behind every page: HUD grid plus two mountain ridges that drift with the scroll.
+const width = 1600;
+const height = 400;
+
+const ridge = (seed: number, base: number, amplitude: number) => {
+  let d = `M0 ${height}`;
+  for (let x = 0; x <= width; x += 20) {
+    const t = x / width;
+    const y =
+      base -
+      amplitude *
+        (0.55 * Math.sin(t * Math.PI * 2 + seed) +
+          0.3 * Math.abs(Math.sin(t * Math.PI * 7 + seed * 2)) +
+          0.15 * Math.sin(t * Math.PI * 17 + seed * 3));
+    d += ` L${x} ${y.toFixed(1)}`;
+  }
+  return `${d} L${width} ${height} Z`;
+};
+
+const far = ridge(1.3, 230, 90);
+const near = ridge(4.1, 300, 70);
+---
+
+<div class="backdrop" aria-hidden="true">
+  <div class="backdrop__grid"></div>
+  <div class="backdrop__glow"></div>
+  <svg class="backdrop__ridge backdrop__ridge--far" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
+    <path d={far}></path>
+  </svg>
+  <svg class="backdrop__ridge backdrop__ridge--near" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
+    <path d={near}></path>
+  </svg>
+</div>
+<div class="scroll-progress" aria-hidden="true"></div>
+
+<style>
+  .backdrop {
+    position: fixed;
+    z-index: 0;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .backdrop__grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    background-position: 0 calc(var(--scroll, 0) * -0.25px);
+    background-size: 3rem 3rem;
+  }
+
+  .backdrop__glow {
+    position: absolute;
+    top: -20vh;
+    right: -10vw;
+    width: 70vw;
+    height: 70vh;
+    background: radial-gradient(closest-side, var(--glow), transparent);
+    transform: translate3d(0, calc(var(--progress, 0) * 30vh), 0);
+  }
+
+  .backdrop__ridge {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 42vh;
+  }
+
+  .backdrop__ridge--far {
+    fill: var(--ridge-1);
+    transform: translate3d(calc(var(--progress, 0) * -4vw), calc(var(--progress, 0) * 6vh), 0) scaleX(1.1);
+  }
+
+  .backdrop__ridge--near {
+    fill: var(--ridge-2);
+    transform: translate3d(calc(var(--progress, 0) * 6vw), calc(var(--progress, 0) * 12vh), 0) scaleX(1.15);
+  }
+
+  .scroll-progress {
+    position: fixed;
+    z-index: 200;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: var(--lime);
+    transform: scaleX(var(--progress, 0));
+    transform-origin: left;
+    pointer-events: none;
+  }
+
+</style>

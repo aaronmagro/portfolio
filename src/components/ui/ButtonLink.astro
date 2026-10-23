@@ -1,15 +1,17 @@
 ---
+import type { HTMLAttributes } from 'astro/types';
+
 type Variant = 'primary' | 'secondary';
 
-interface Props {
+interface Props extends HTMLAttributes<'a'> {
   href: string;
   variant?: Variant;
 }
 
-const { href, variant = 'primary' } = Astro.props;
+const { href, variant = 'primary', ...attributes } = Astro.props;
 ---
 
-<a class:list={['button-link', `button-link--${variant}`]} href={href}>
+<a class:list={['button-link', `button-link--${variant}`]} href={href} {...attributes}>
   <slot />
 </a>
 
@@ -19,13 +21,16 @@ const { href, variant = 'primary' } = Astro.props;
     min-height: 3rem;
     align-items: center;
     justify-content: center;
+    gap: var(--space-2);
     padding-inline: var(--space-5);
-    border: 1px solid transparent;
-    border-radius: var(--radius-pill);
-    font-size: var(--text-sm);
+    border: 1px solid var(--ink);
+    font-family: var(--font-display);
+    font-size: 1.05rem;
     font-weight: 700;
+    letter-spacing: 0.08em;
     line-height: 1;
     text-decoration: none;
+    text-transform: uppercase;
     transition:
       background-color var(--transition-fast),
       border-color var(--transition-fast),
@@ -38,23 +43,20 @@ const { href, variant = 'primary' } = Astro.props;
   }
 
   .button-link--primary {
-    background: var(--color-brand);
-    color: #ffffff;
-  }
-
-  .button-link--primary:hover {
-    background: var(--color-brand-strong);
+    border-color: var(--lime);
+    background: var(--lime);
+    color: var(--on-lime);
+    clip-path: polygon(0.6rem 0, 100% 0, 100% calc(100% - 0.6rem), calc(100% - 0.6rem) 100%, 0 100%, 0 0.6rem);
   }
 
   .button-link--secondary {
-    border-color: var(--color-border);
-    background: var(--color-surface);
-    color: var(--color-heading);
+    background: transparent;
+    color: var(--ink);
   }
 
   .button-link--secondary:hover {
-    border-color: var(--color-accent);
-    background: var(--color-surface-elevated);
+    border-color: var(--lime-ink);
+    color: var(--lime-ink);
   }
 
   @media (prefers-reduced-motion: reduce) {
