@@ -1,0 +1,265 @@
+---
+import TechList from '../ui/TechList.astro';
+import { Image } from 'astro:assets';
+import Container from '../ui/Container.astro';
+import ButtonLink from '../ui/ButtonLink.astro';
+import { siteConfig, type SupportedLocale } from '../../config/site';
+import { experiences } from '../../data/experience';
+import { projects } from '../../data/projects';
+import { languages } from '../../data/profile';
+import { toMonthIndex } from '../../utils/dates';
+import { profilePhoto } from '../../utils/profile-photo';
+import type { ExperienceEntry } from '../../types';
+
+interface Props {
+  lang?: SupportedLocale;
+}
+
+const { lang = siteConfig.defaultLocale } = Astro.props;
+
+const copy = {
+  es: {
+    role: 'Desarrollador full-stack',
+    lead: 'Desarrollo APIs en .NET y webs con Astro y TypeScript. Pasé dos años en NTT DATA trabajando para clientes de banca e inmobiliario, y ahora tengo en producción una web con CMS propio para un negocio real.',
+    projects: 'Ver proyectos',
+    cv: 'Descargar CV',
+    contact: 'Contactar',
+    card: 'Ficha',
+    status: 'Buscando empleo',
+    where: 'Badajoz, Madrid o remoto',
+    photoAlt: `Foto de ${siteConfig.name}`,
+    stats: { years: 'años en NTT DATA', months: 'meses de experiencia', projects: 'proyectos propios', english: 'nivel de inglés' },
+    stack: 'Stack principal',
+  },
+  en: {
+    role: 'Full-stack developer',
+    lead: 'I build APIs with .NET and websites with Astro and TypeScript. I spent two years at NTT DATA working for banking and real-estate clients, and I now have a website with its own CMS live for a real business.',
+    projects: 'See projects',
+    cv: 'Download CV',
+    contact: 'Get in touch',
+    card: 'Profile',
+    status: 'Open to work',
+    where: 'Badajoz, Madrid or remote',
+    photoAlt: `Photo of ${siteConfig.name}`,
+    stats: { years: 'years at NTT DATA', months: 'months of experience', projects: 'own projects', english: 'English level' },
+    stack: 'Main stack',
+  },
+} as const;
+
+const text = copy[lang];
+
+// What a recruiter searches for first: the professional backend stack, then the web stack of my projects.
+const mainStack = ['C# · .NET', 'ASP.NET Web API', 'Java · Spring Boot', 'SQL Server', 'TypeScript', 'Astro'];
+
+// Every figure is computed from the data files, nothing typed by hand.
+const roles: ExperienceEntry[] = [...experiences];
+const english = languages.find((language) => language.name.en === 'English');
+const months = roles.reduce(
+  (sum, role) => sum + toMonthIndex(role.endDate ?? role.startDate) - toMonthIndex(role.startDate) + 1,
+  0,
+);
+const stats = [
+  { value: Math.floor(months / 12), label: text.stats.years },
+  { value: months, label: text.stats.months },
+  { value: projects.length, label: text.stats.projects },
+  { value: english?.level.en ?? '', label: text.stats.english },
+];
+---
+
+<section class="hero" aria-labelledby="hero-title">
+  <Container>
+    <div class="hero__layout">
+      <div class="hero__content">
+        <h1 id="hero-title" class="hero__name">
+          <span>Aarón</span>
+          <span class="hero__name-outline">Magro</span>
+        </h1>
+        <p class="hero__role cut">{text.role}</p>
+        <p class="hero__lead">{text.lead}</p>
+        <div class="hero__stack">
+          <TechList items={mainStack} label={text.stack} />
+        </div>
+
+        <div class="hero__actions">
+          <ButtonLink href="#projects">{text.projects}</ButtonLink>
+          <ButtonLink href={siteConfig.cvPath[lang]} variant="secondary" download>{text.cv}</ButtonLink>
+          <ButtonLink href="#contact" variant="secondary">{text.contact}</ButtonLink>
+        </div>
+      </div>
+
+      <aside class="player panel-cut" aria-label={text.card} data-tilt="inner">
+        {profilePhoto && (
+          <figure class="player__photo brackets" data-tilt-part>
+            <Image src={profilePhoto} alt={text.photoAlt} width={640} loading="eager" fetchpriority="high" />
+          </figure>
+        )}
+        <div class="player__status">
+          <span class="label player__live"><span class="player__dot" aria-hidden="true"></span>{text.status}</span>
+          <span class="label">{text.where}</span>
+        </div>
+        <dl class="player__stats">
+          {stats.map((stat) => (
+            <div>
+              <dd data-count={typeof stat.value === 'number' ? stat.value : undefined}>{stat.value}</dd>
+              <dt class="label">{stat.label}</dt>
+            </div>
+          ))}
+        </dl>
+      </aside>
+    </div>
+  </Container>
+</section>
+
+<style>
+  .hero {
+    display: grid;
+    min-height: calc(100svh - 4.5rem);
+    align-items: center;
+    padding-block: clamp(var(--space-8), 8vh, var(--space-10));
+  }
+
+  .hero__layout {
+    display: grid;
+    align-items: center;
+    gap: clamp(var(--space-7), 6vw, var(--space-9));
+  }
+
+  .hero__name {
+    display: grid;
+    font-size: var(--text-display);
+    line-height: 0.82;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+  }
+
+  .hero__name-outline {
+    color: transparent;
+    -webkit-text-stroke: 2px var(--ink);
+  }
+
+  .hero__role {
+    display: inline-block;
+    margin-top: var(--space-6);
+    padding: 0.55rem 1.1rem;
+    background: var(--lime);
+    color: var(--on-lime);
+    font-family: var(--font-display);
+    font-size: clamp(1.25rem, 2.2vw, 1.7rem);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    line-height: 1.1;
+    text-transform: uppercase;
+  }
+
+  .hero__lead {
+    max-width: 38rem;
+    margin-top: var(--space-5);
+    color: var(--soft);
+    font-size: var(--text-lg);
+  }
+
+  .hero__stack {
+    max-width: 38rem;
+    margin-top: var(--space-5);
+  }
+
+  .hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
+  }
+
+  .player {
+    --cut: 1.1rem;
+    display: grid;
+    gap: var(--space-4);
+    width: min(100%, 27rem);
+    justify-self: center;
+    padding: var(--space-4);
+  }
+
+  .player__photo {
+    margin: 0;
+  }
+
+  .player__photo :global(img) {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+    object-fit: cover;
+    object-position: top;
+  }
+
+  .player__status {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-2);
+    padding-inline: var(--space-1);
+  }
+
+  .player__live {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--lime-ink);
+    font-weight: 700;
+  }
+
+  .player__dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--lime-ink);
+    box-shadow: 0 0 0.6rem var(--lime);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    50% {
+      opacity: 0.35;
+    }
+  }
+
+  .player__stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-2);
+    margin: 0;
+  }
+
+  .player__stats div {
+    display: flex;
+    flex-direction: column-reverse;
+    justify-content: flex-end;
+    gap: var(--space-1);
+    padding: var(--space-3) var(--space-4);
+    background: var(--panel-2);
+  }
+
+  .player__stats dd {
+    margin: 0;
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-size: 2.6rem;
+    font-weight: 700;
+    line-height: 0.9;
+  }
+
+  .player__stats div:nth-child(2) dd {
+    color: var(--lime-ink);
+  }
+
+  @media (min-width: 68rem) {
+    .hero__layout {
+      grid-template-columns: minmax(0, 1.25fr) minmax(22rem, 0.85fr);
+    }
+
+    .player {
+      justify-self: end;
+    }
+  }
+
+</style>
