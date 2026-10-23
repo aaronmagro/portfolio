@@ -1,0 +1,61 @@
+---
+import Container from '../ui/Container.astro';
+import { siteConfig, type SupportedLocale } from '../../config/site';
+
+interface Props {
+  lang?: SupportedLocale;
+}
+
+const { lang = siteConfig.defaultLocale } = Astro.props;
+
+const copy = {
+  es: { builtWith: 'Hecho con Astro', source: 'Código fuente' },
+  en: { builtWith: 'Built with Astro', source: 'Source code' },
+} as const;
+
+const text = copy[lang];
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <Container>
+    <div class="site-footer__content">
+      <p>© {year} {siteConfig.fullName}</p>
+      <p>
+        {text.builtWith}
+        {' · '}
+        <a href={siteConfig.repositoryUrl} target="_blank" rel="noopener">{text.source}</a>
+      </p>
+    </div>
+  </Container>
+</footer>
+
+<style>
+  .site-footer {
+    position: relative;
+    z-index: 1;
+    padding-block: var(--space-6);
+    border-top: 1px solid var(--line);
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    color: var(--soft);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .site-footer__content {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+
+  .site-footer a {
+    color: inherit;
+  }
+
+  .site-footer a:hover {
+    color: var(--lime-ink);
+  }
+</style>

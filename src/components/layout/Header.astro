@@ -1,0 +1,451 @@
+---
+import Container from '../ui/Container.astro';
+import { navigationItems } from '../../data/navigation';
+import { siteConfig, type SupportedLocale } from '../../config/site';
+import { routes, sectionHref as localSectionHref, type Alternates } from '../../utils/i18n';
+
+interface Props {
+  lang?: SupportedLocale;
+  alternates?: Alternates;
+}
+
+const { lang = siteConfig.defaultLocale, alternates } = Astro.props;
+
+const labels = {
+  es: {
+    // Voice control users say what they see, so each name starts with the visible text.
+    home: 'Aarón Magro, inicio',
+    navigation: 'Navegación principal',
+    mobileNavigation: 'Navegación móvil',
+    openMenu: 'Abrir menú',
+    closeMenu: 'Cerrar menú',
+    status: 'Buscando empleo',
+    toLight: 'Cambiar a modo claro',
+    toDark: 'Cambiar a modo oscuro',
+    switchLanguage: 'EN, read in English',
+  },
+  en: {
+    home: 'Aarón Magro, home',
+    navigation: 'Primary navigation',
+    mobileNavigation: 'Mobile navigation',
+    openMenu: 'Open menu',
+    closeMenu: 'Close menu',
+    status: 'Open to work',
+    toLight: 'Switch to light mode',
+    toDark: 'Switch to dark mode',
+    switchLanguage: 'ES, ver en español',
+  },
+} as const;
+
+const copy = labels[lang];
+const sectionHref = (href: string) => localSectionHref(href, lang, Astro.url.pathname);
+const otherLang: SupportedLocale = lang === 'es' ? 'en' : 'es';
+// Pages that only exist in one language switch to the other home page.
+const otherLangHref = alternates?.[otherLang] ?? routes.home[otherLang];
+---
+
+<header class="site-header" data-header>
+  <Container>
+    <div class="site-header__content">
+      <a class="site-header__brand" href={routes.home[lang]} aria-label={copy.home}>
+        <span class="site-header__tag cut" aria-hidden="true">AM</span>
+        <span class="site-header__name">{siteConfig.name}</span>
+      </a>
+
+      <nav class="site-header__desktop-nav" aria-label={copy.navigation}>
+        <ul>
+          {navigationItems.map((item) => (
+            <li>
+              <a href={sectionHref(item.href)} data-section-link>{item.label[lang]}</a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
+      <div class="site-header__actions">
+        <span class="site-header__status label"><span class="site-header__dot" aria-hidden="true"></span>{copy.status}</span>
+        <a
+          class="site-header__lang"
+          href={otherLangHref}
+          hreflang={otherLang}
+          lang={otherLang}
+          aria-label={copy.switchLanguage}
+          data-lang-switch={otherLang}
+        >{otherLang.toUpperCase()}</a>
+        <button
+          class="site-header__theme-toggle"
+          type="button"
+          aria-label={copy.toLight}
+          data-theme-toggle
+          data-label-light={copy.toLight}
+          data-label-dark={copy.toDark}
+        >
+          <svg class="site-header__icon site-header__icon--sun" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+          </svg>
+          <svg class="site-header__icon site-header__icon--moon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M20.5 14.5A8.5 8.5 0 1 1 9.5 3.5a7 7 0 0 0 11 11Z"></path>
+          </svg>
+        </button>
+
+        <button
+          class="site-header__menu-toggle"
+          type="button"
+          aria-expanded="false"
+          aria-controls="mobile-navigation"
+          aria-label={copy.openMenu}
+          data-menu-toggle
+          data-open-label={copy.openMenu}
+          data-close-label={copy.closeMenu}
+        >
+          <span aria-hidden="true"></span>
+          <span aria-hidden="true"></span>
+        </button>
+      </div>
+
+      <div class="site-header__mobile" id="mobile-navigation" data-mobile-menu hidden>
+        <nav aria-label={copy.mobileNavigation}>
+          <ul>
+            {navigationItems.map((item) => (
+              <li>
+                <a href={sectionHref(item.href)} data-mobile-link data-section-link>{item.label[lang]}</a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </Container>
+</header>
+
+<script>
+  const root = document.documentElement;
+  const themeToggles = document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]');
+
+  const syncThemeToggle = (button: HTMLButtonElement) => {
+    const isLight = root.dataset.theme === 'light';
+    button.setAttribute('aria-label', (isLight ? button.dataset.labelDark : button.dataset.labelLight) ?? '');
+  };
+
+  // The language picked by hand wins over the browser's from then on.
+  document.querySelectorAll<HTMLAnchorElement>('[data-lang-switch]').forEach((link) => {
+    link.addEventListener('click', () => {
+      try {
+        localStorage.setItem('lang', link.dataset.langSwitch ?? '');
+      } catch {
+        // Blocked storage: the link still works for this visit.
+      }
+    });
+  });
+
+  // The theme can also change on its own when the system switches.
+  new MutationObserver(() => themeToggles.forEach(syncThemeToggle)).observe(root, { attributeFilter: ['data-theme'] });
+
+  for (const button of themeToggles) {
+    syncThemeToggle(button);
+    button.addEventListener('click', () => {
+      const nextTheme = root.dataset.theme === 'light' ? 'dark' : 'light';
+      root.dataset.theme = nextTheme;
+      try {
+        localStorage.setItem('theme', nextTheme);
+      } catch {
+        // Private mode or blocked storage: the change still applies to this visit.
+      }
+      syncThemeToggle(button);
+    });
+  }
+
+  const headers = document.querySelectorAll<HTMLElement>('[data-header]');
+
+  for (const header of headers) {
+    const toggle = header.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+    const menu = header.querySelector<HTMLElement>('[data-mobile-menu]');
+    const links = header.querySelectorAll<HTMLAnchorElement>('[data-mobile-link]');
+
+    if (!toggle || !menu) continue;
+
+    const setMenuState = (open: boolean) => {
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.setAttribute(
+        'aria-label',
+        open ? toggle.dataset.closeLabel ?? '' : toggle.dataset.openLabel ?? '',
+      );
+      menu.hidden = !open;
+      header.dataset.menuOpen = String(open);
+    };
+
+    toggle.addEventListener('click', () => {
+      setMenuState(toggle.getAttribute('aria-expanded') !== 'true');
+    });
+
+    for (const link of links) {
+      link.addEventListener('click', () => setMenuState(false));
+    }
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') {
+        setMenuState(false);
+        toggle.focus();
+      }
+    });
+
+    window.matchMedia('(min-width: 52rem)').addEventListener('change', (event) => {
+      if (event.matches) setMenuState(false);
+    });
+  }
+</script>
+
+<style>
+  .site-header {
+    position: sticky;
+    z-index: 100;
+    top: 0;
+    border-bottom: 1px solid var(--line);
+    /* Solid instead of a blur: a backdrop blur is recomputed on every scrolled frame. */
+    background: color-mix(in srgb, var(--bg) 96%, transparent);
+  }
+
+  .site-header__content {
+    position: relative;
+    display: flex;
+    min-height: 4.5rem;
+    align-items: center;
+    gap: var(--space-6);
+  }
+
+  .site-header__brand {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .site-header__tag {
+    --cut: 0.4rem;
+    padding: 0.3rem 0.55rem;
+    background: var(--lime);
+    color: var(--on-lime);
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    line-height: 1;
+  }
+
+  .site-header__name {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .site-header__desktop-nav {
+    display: none;
+    margin-left: auto;
+  }
+
+  .site-header__desktop-nav ul,
+  .site-header__mobile ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .site-header__desktop-nav ul {
+    display: flex;
+    gap: var(--space-6);
+  }
+
+  .site-header__desktop-nav a {
+    position: relative;
+    display: block;
+    padding-block: 0.4rem;
+    color: var(--soft);
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-decoration: none;
+    text-transform: uppercase;
+    transition: color var(--transition-fast);
+  }
+
+  .site-header__desktop-nav a::after {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    background: var(--lime-ink);
+    content: '';
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform var(--transition-base);
+  }
+
+  .site-header__desktop-nav a:hover,
+  .site-header__desktop-nav a[aria-current] {
+    color: var(--ink);
+  }
+
+  .site-header__desktop-nav a[aria-current]::after {
+    transform: scaleX(1);
+  }
+
+  .site-header__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-left: auto;
+  }
+
+  .site-header__status {
+    display: none;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .site-header__dot {
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--lime-ink);
+    box-shadow: 0 0 0.6rem var(--lime);
+    animation: pulse 2.4s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    50% {
+      opacity: 0.35;
+    }
+  }
+
+  .site-header__lang,
+  .site-header__theme-toggle,
+  .site-header__menu-toggle {
+    display: inline-grid;
+    width: 2.6rem;
+    height: 2.6rem;
+    place-content: center;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--ink);
+    cursor: pointer;
+    transition: border-color var(--transition-fast);
+  }
+
+  .site-header__lang {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-decoration: none;
+  }
+
+  .site-header__lang:hover,
+  .site-header__theme-toggle:hover,
+  .site-header__menu-toggle:hover {
+    border-color: var(--lime-ink);
+  }
+
+  .site-header__icon {
+    width: 1.1rem;
+    height: 1.1rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+  }
+
+  .site-header__icon--moon,
+  :global([data-theme='light']) .site-header__icon--sun {
+    display: none;
+  }
+
+  :global([data-theme='light']) .site-header__icon--moon {
+    display: block;
+  }
+
+  .site-header__menu-toggle {
+    gap: 0.35rem;
+  }
+
+  .site-header__menu-toggle span {
+    display: block;
+    width: 1.15rem;
+    height: 2px;
+    background: currentColor;
+    transition: transform var(--transition-fast);
+  }
+
+  [data-menu-open='true'] .site-header__menu-toggle span:first-child {
+    transform: translateY(0.225rem) rotate(45deg);
+  }
+
+  [data-menu-open='true'] .site-header__menu-toggle span:last-child {
+    transform: translateY(-0.225rem) rotate(-45deg);
+  }
+
+  .site-header__mobile {
+    position: absolute;
+    top: calc(100% + 1px);
+    right: 0;
+    left: 0;
+    padding: var(--space-3);
+    border: 1px solid var(--line);
+    border-top: 0;
+    background: var(--panel);
+    box-shadow: var(--shadow-elevated);
+  }
+
+  .site-header__mobile[hidden] {
+    display: none;
+  }
+
+  .site-header__mobile a {
+    display: block;
+    padding: var(--space-4);
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-decoration: none;
+    text-transform: uppercase;
+  }
+
+  .site-header__mobile a[aria-current] {
+    color: var(--lime-ink);
+  }
+
+  @media (min-width: 52rem) {
+    .site-header__desktop-nav {
+      display: block;
+    }
+
+    .site-header__actions {
+      margin-left: var(--space-4);
+    }
+
+    .site-header__menu-toggle,
+    .site-header__mobile {
+      display: none;
+    }
+  }
+
+  @media (min-width: 72rem) {
+    .site-header__status {
+      display: inline-flex;
+    }
+  }
+
+  @media (max-width: 30rem) {
+    .site-header__name {
+      display: none;
+    }
+  }
+</style>
