@@ -1,11 +1,11 @@
 ---
 import Container from '../ui/Container.astro';
-import SectionHeading from '../ui/SectionHeading.astro';
-import { experienceCompanies } from '../../data/experience';
-import { siteConfig } from '../../config/site';
-import type { YearMonth } from '../../types';
-
-type SupportedLocale = (typeof siteConfig.locales)[number];
+import SectionHeader from '../ui/SectionHeader.astro';
+import ButtonLink from '../ui/ButtonLink.astro';
+import { experienceCompanies, experiences } from '../../data/experience';
+import { siteConfig, type SupportedLocale } from '../../config/site';
+import { formatDuration, formatPeriod, formatYearMonth, toMonthIndex } from '../../utils/dates';
+import type { ExperienceEntry, YearMonth } from '../../types';
 
 interface Props {
   lang?: SupportedLocale;
@@ -15,1119 +15,698 @@ const { lang = siteConfig.defaultLocale } = Astro.props;
 
 const copy = {
   es: {
-    eyebrow: 'Trayectoria profesional',
     title: 'Experiencia',
-    description:
-      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer vitae lorem at sapien tincidunt luctus eget sed arcu.',
-    stages: 'Etapas dentro de',
-    highlights: 'Aspectos destacados',
+    climb: 'La subida hasta aquí',
+    months: 'meses de subida',
+    swipe: 'Desliza →',
+    start: 'Salida',
+    today: 'Hoy',
+    summit: 'Siguiente etapa: tu equipo',
+    profileLabel: 'Perfil de mi trayectoria: prácticas, banca e inmobiliario hasta hoy, y la siguiente etapa en tu equipo.',
+    highlights: 'Qué hice',
     technologies: 'Tecnologías',
-    timeline: 'Cronología profesional',
-    explore: 'Explora por meses',
+    summitText: 'Busco un puesto full-stack, backend o frontend. En Badajoz, Madrid o en remoto.',
+    steps: 'Etapas',
+    summitShort: 'Tu equipo',
+    next: 'Siguiente etapa',
+    contact: 'Hablemos',
   },
   en: {
-    eyebrow: 'Professional background',
     title: 'Experience',
-    description:
-      'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer vitae lorem at sapien tincidunt luctus eget sed arcu.',
-    stages: 'Roles at',
-    highlights: 'Highlights',
+    climb: 'The climb so far',
+    months: 'months climbing',
+    swipe: 'Swipe →',
+    start: 'Start',
+    today: 'Today',
+    summit: 'Next stage: your team',
+    profileLabel: 'Profile of my career: placement, banking and real estate up to today, and the next stage in your team.',
+    highlights: 'What I did',
     technologies: 'Technologies',
-    timeline: 'Professional timeline',
-    explore: 'Explore by month',
+    summitText: 'I am looking for a full-stack, backend or frontend role. In Badajoz, Madrid or remote.',
+    steps: 'Stages',
+    summitShort: 'Your team',
+    next: 'Next stage',
+    contact: 'Let’s talk',
   },
 } as const;
 
-const monthLabels = {
-  es: ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEPT', 'OCT', 'NOV', 'DIC'],
-  en: ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'],
-} as const;
-
-const toMonthIndex = (value: YearMonth) => {
-  const [year, month] = value.split('-').map(Number);
-  return year * 12 + month - 1;
-};
-
-const currentDate = new Date();
-const currentYearMonth =
-  `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}` as YearMonth;
-
-const orderedExperienceCompanies = experienceCompanies.map((company) => ({
-  ...company,
-  roles: [...company.roles].sort(
-    (a, b) => toMonthIndex(a.startDate) - toMonthIndex(b.startDate),
-  ),
-}));
-
-const rawOverviewRoles = orderedExperienceCompanies
-  .flatMap((company) =>
-    company.roles.map((role) => ({
-      key: `${company.id}-${role.id}`,
-      role: role.role[lang],
-      startDate: role.startDate,
-      endDate: role.endDate ?? currentYearMonth,
-    })),
-  )
-  .sort((a, b) => toMonthIndex(a.startDate) - toMonthIndex(b.startDate));
-
-const earliestExperienceMonth = rawOverviewRoles.length
-  ? Math.min(...rawOverviewRoles.map((role) => toMonthIndex(role.startDate)))
-  : toMonthIndex(currentYearMonth);
-const latestExperienceMonth = rawOverviewRoles.length
-  ? Math.max(...rawOverviewRoles.map((role) => toMonthIndex(role.endDate)))
-  : earliestExperienceMonth;
-
-const timelineStartYear = Math.floor(earliestExperienceMonth / 12);
-const timelineEndYear = Math.floor(latestExperienceMonth / 12);
-const timelineStartMonth = timelineStartYear * 12;
-const timelineEndMonth = timelineEndYear * 12 + 11;
-const timelineMonthCount = Math.max(timelineEndMonth - timelineStartMonth + 1, 12);
-const timelineStartDate = `${timelineStartYear}-01` as YearMonth;
-const yearCount = timelineEndYear - timelineStartYear + 1;
-
-const formatYearRange = (startDate: YearMonth, endDate: YearMonth) => {
-  const startYear = Number(startDate.slice(0, 4));
-  const endYear = Number(endDate.slice(0, 4));
-  return startYear === endYear ? String(startYear) : `${startYear} — ${endYear}`;
-};
-
-const stageNumberByKey = new Map(
-  rawOverviewRoles.map((role, index) => [role.key, String(index + 1).padStart(2, '0')]),
-);
-
-const overviewRoles = rawOverviewRoles.map((role, index) => {
-  const startOffset = toMonthIndex(role.startDate) - timelineStartMonth;
-  const endOffset = toMonthIndex(role.endDate) - timelineStartMonth;
-
-  return {
-    ...role,
-    index,
-    startOffset,
-    endOffset,
-    period: formatYearRange(role.startDate, role.endDate),
-    left: (startOffset / timelineMonthCount) * 100,
-    width: ((endOffset - startOffset + 1) / timelineMonthCount) * 100,
-    markerPosition: ((startOffset + 0.5) / timelineMonthCount) * 100,
-    stageNumber: stageNumberByKey.get(role.key) ?? String(index + 1).padStart(2, '0'),
-  };
-});
-
-const yearMarkers = Array.from({ length: yearCount }, (_, index) => ({
-  year: timelineStartYear + index,
-  labelPosition: (((index * 12) + 6) / timelineMonthCount) * 100,
-}));
-
-const yearBoundaries = Array.from({ length: Math.max(yearCount - 1, 0) }, (_, index) => ({
-  position: (((index + 1) * 12) / timelineMonthCount) * 100,
-}));
-
-const timelineMonths = Array.from({ length: timelineMonthCount }, (_, index) => {
-  const absoluteMonth = timelineStartMonth + index;
-  const month = (absoluteMonth % 12) + 1;
-  const stage = overviewRoles.find((role) => role.startOffset === index);
-
-  return {
-    index,
-    label: monthLabels[lang][month - 1],
-    stageNumber: stage?.stageNumber,
-    hasExperience: overviewRoles.some((role) => index >= role.startOffset && index <= role.endOffset),
-  };
-});
-
-const getCompanyPeriod = (roles: (typeof orderedExperienceCompanies)[number]['roles']) => {
-  if (roles.length === 0) return '';
-  const start = roles[0].startDate;
-  const end = roles.reduce(
-    (latest, role) => {
-      const roleEnd = role.endDate ?? currentYearMonth;
-      return toMonthIndex(roleEnd) > toMonthIndex(latest) ? roleEnd : latest;
-    },
-    roles[0].endDate ?? currentYearMonth,
-  );
-  return formatYearRange(start, end);
-};
-
-const overviewInitialIndex = Math.max(overviewRoles.length - 1, 0);
-const initialExploreMonthIndex = Math.max(
+const text = copy[lang];
+const company = experienceCompanies[0];
+const chronological: ExperienceEntry[] = [...experiences].sort((a, b) => toMonthIndex(a.startDate) - toMonthIndex(b.startDate));
+const latest = chronological[chronological.length - 1];
+const lastEnd: YearMonth = latest.endDate ?? latest.startDate;
+const totalMonths = chronological.reduce(
+  (sum, role) => sum + toMonthIndex(role.endDate ?? role.startDate) - toMonthIndex(role.startDate) + 1,
   0,
-  Math.min(latestExperienceMonth - timelineStartMonth, timelineMonthCount - 1),
 );
-const initialExploreAbsoluteMonth = timelineStartMonth + initialExploreMonthIndex;
-const initialExploreYear = Math.floor(initialExploreAbsoluteMonth / 12);
-const initialExploreMonth = (initialExploreAbsoluteMonth % 12) + 1;
-const initialExploreLabel = `${monthLabels[lang][initialExploreMonth - 1]} ${initialExploreYear}`;
+
+// Mountain profile. X follows the real calendar; the height only grows with each role, it measures nothing.
+const width = 1200;
+const height = 620;
+const base = 560;
+const top = 90;
+const left = 24;
+const right = 56;
+const origin = toMonthIndex(chronological[0].startDate);
+const span = toMonthIndex(lastEnd) - origin + 3;
+const x = (month: number) => left + (month / span) * (width - left - right);
+const y = (h: number) => base - h * (base - top);
+const monthOf = (value: YearMonth) => toMonthIndex(value) - origin;
+
+const keys: [number, number][] = [];
+chronological.forEach((role, index) => {
+  const peak = 0.36 + (index / Math.max(chronological.length - 1, 1)) * 0.42;
+  const start = monthOf(role.startDate);
+  const end = monthOf(role.endDate ?? lastEnd);
+  if (index === 0) keys.push([start, 0.14]);
+  else {
+    const gap = start - keys[keys.length - 1][0];
+    const previousPeak = keys[keys.length - 1][1];
+    // A real gap between jobs becomes a valley; back-to-back roles get a small dip.
+    if (gap > 1) keys.push([start - 0.5, previousPeak - 0.13]);
+    else keys.push([start + 0.6, previousPeak - 0.07]);
+  }
+  keys.push([end, peak]);
+});
+keys.push([span - 1.6, keys[keys.length - 1][1] - 0.08]);
+keys.push([span, 1]);
+
+const heightAt = (month: number) => {
+  let index = keys.findIndex((key, i) => keys[i + 1] && month >= key[0] && month <= keys[i + 1][0]);
+  if (index < 0) index = keys.length - 2;
+  const [m0, h0] = keys[index];
+  const [m1, h1] = keys[index + 1];
+  const t = (month - m0) / (m1 - m0 || 1);
+  const smooth = t * t * (3 - 2 * t);
+  const ridge = month > 0.3 && month < span - 0.2 ? Math.abs(Math.sin(month * 3.1)) * 0.022 + Math.sin(month * 7.7) * 0.01 : 0;
+  return h0 + (h1 - h0) * smooth + ridge;
+};
+
+const points: string[] = [];
+for (let month = 0; month <= span + 0.001; month += 0.2) {
+  points.push(`${x(month).toFixed(1)} ${y(heightAt(month)).toFixed(1)}`);
+}
+const line = `M${points.join(' L')}`;
+const area = `${line} L${x(span).toFixed(1)} ${base} L${x(0).toFixed(1)} ${base} Z`;
+
+const stop = (month: number, title: string, label: string, place: 'above' | 'below' | 'high' = 'above') => ({
+  x: x(month),
+  y: y(heightAt(month)),
+  fraction: (x(month) - x(0)) / (x(span) - x(0)),
+  title,
+  label,
+  place,
+});
+
+const stops = [
+  stop(0, text.start, formatYearMonth(chronological[0].startDate, lang), 'high'),
+  ...chronological.slice(1).map((role) => stop(monthOf(role.startDate), role.sector[lang], formatYearMonth(role.startDate, lang))),
+  stop(monthOf(lastEnd), text.today, formatYearMonth(lastEnd, lang), 'below'),
+];
+
+const years = Array.from({ length: Math.floor((origin + span) / 12) - Math.floor(origin / 12) + 1 }, (_, i) => {
+  const year = Math.floor(origin / 12) + i;
+  const month = Math.max(year * 12 - origin, 0);
+  return { year, x: x(month), anchor: month === 0 ? 'start' : 'middle' };
+}).filter((tick) => tick.x <= x(span));
+
+const summit = { x: x(span), y: y(heightAt(span)) };
+const todayStop = stops[stops.length - 1];
+
+// Each card shows up when the runner reaches the start of its role; the last one at "today".
+const cardAt = (role: ExperienceEntry, index: number) =>
+  index === 0 ? 0 : (x(monthOf(role.startDate)) - x(0)) / (x(span) - x(0));
 ---
 
-<section class="experience" id="experience" aria-labelledby="experience-title" data-experience-section>
+<section class="experience" id="experience" aria-labelledby="experience-title">
   <Container>
-    <SectionHeading
-      index="02"
-      eyebrow={copy[lang].eyebrow}
-      title={copy[lang].title}
-      description={copy[lang].description}
+    <SectionHeader
+      title={text.title}
+      label={`${company.company[lang]} · ${company.location[lang]} · ${formatPeriod(company.startDate, company.endDate, lang)}`}
       headingId="experience-title"
-    >
-      <div
-        slot="aside"
-        class="career-map"
-        data-career-map
-        data-timeline-start={timelineStartDate}
-        data-timeline-months={timelineMonthCount}
-        aria-label={copy[lang].timeline}
-      >
-        <div class="career-map__header">
-          <span>{copy[lang].timeline}</span>
-          <span>{copy[lang].explore}</span>
-        </div>
+    />
 
-        <div class="career-map__axis">
-          <div class="career-map__plot">
-            <div class="career-map__years" aria-hidden="true">
-              {yearMarkers.map((marker) => (
-                <span class="career-map__year" style={`--year-position: ${marker.labelPosition}%`}>
-                  {marker.year}
-                </span>
-              ))}
-            </div>
-
-            <span class="career-map__baseline" aria-hidden="true"></span>
-
-            {yearBoundaries.map((boundary) => (
-              <span
-                class="career-map__year-tick"
-                style={`--year-position: ${boundary.position}%`}
-                aria-hidden="true"
-              ></span>
-            ))}
-
-            {overviewRoles.map((role, index) => (
-              <span
-                class:list={['career-map__segment', { 'is-active': index === overviewInitialIndex }]}
-                style={`--segment-left: ${role.left}%; --segment-width: ${role.width}%`}
-                data-overview-role={role.key}
-                data-start-index={role.startOffset}
-                data-end-index={role.endOffset}
-                aria-hidden="true"
-              ></span>
-            ))}
-
-            <div
-              class="career-map__scrubber"
-              data-career-scrubber
-              role="slider"
-              tabindex="0"
-              aria-label={`${copy[lang].timeline}. ${copy[lang].explore}`}
-              aria-orientation="horizontal"
-              aria-valuemin="1"
-              aria-valuemax={timelineMonthCount}
-              aria-valuenow={initialExploreMonthIndex + 1}
-              aria-valuetext={initialExploreLabel}
-            ></div>
-
-            {overviewRoles.map((role, index) => (
-              <span
-                class:list={['career-map__stage-marker', { 'is-active': index === overviewInitialIndex }]}
-                style={`--stage-position: ${role.markerPosition}%`}
-                data-stage-marker={role.key}
-                aria-hidden="true"
-              >
-                <span>{role.stageNumber}</span>
-              </span>
-            ))}
-
-            <span class="career-map__cursor" data-career-cursor hidden aria-hidden="true"></span>
-          </div>
-
-          <div class="career-map__lens" data-career-lens hidden aria-hidden="true">
-            <span class="career-map__lens-date" data-career-month></span>
-            <div class="career-map__lens-window" data-career-lens-window>
-              <div class="career-map__lens-track" data-career-month-track>
-                {timelineMonths.map((month) => (
-                  <span
-                    class:list={[
-                      'career-map__lens-month',
-                      {
-                        'has-experience': month.hasExperience,
-                        'is-stage-start': Boolean(month.stageNumber),
-                      },
-                    ]}
-                    data-lens-month={month.index}
-                  >
-                    <span class="career-map__lens-stage">{month.stageNumber ?? ''}</span>
-                    <span class="career-map__lens-label">{month.label}</span>
-                    <span class="career-map__lens-mark"></span>
-                  </span>
-                ))}
-              </div>
-              <span class="career-map__lens-center"></span>
-            </div>
-            <span class="career-map__pointer-dot" data-career-pointer hidden aria-hidden="true"></span>
-          </div>
-        </div>
+    <div class="climb-track" data-profile-track>
+    <div class="climb panel-cut">
+      <div class="climb__head">
+        <h3>{text.climb}</h3>
+        <p class="climb__stat"><b data-count={totalMonths}>{totalMonths}</b><span class="label">{text.months}</span></p>
       </div>
-    </SectionHeading>
 
-    <div class="experience__companies">
-      {orderedExperienceCompanies.map((company) => {
-        const initialIndex = company.roles.length - 1;
-        const companyPeriod = getCompanyPeriod(company.roles);
+      <p class="climb__swipe label" aria-hidden="true">{text.swipe}</p>
+      <div class="profile-scroll">
+      <svg class="profile" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={text.profileLabel} data-profile>
+        <defs>
+          <clipPath id="profile-reveal">
+            <rect x="0" y="0" width={width} height={height} data-profile-reveal></rect>
+          </clipPath>
+          <linearGradient id="profile-fill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="var(--lime-ink)" stop-opacity="0.3"></stop>
+            <stop offset="1" stop-color="var(--lime-ink)" stop-opacity="0.02"></stop>
+          </linearGradient>
+        </defs>
+        <line class="profile__axis" x1={x(0)} y1={base} x2={x(span)} y2={base}></line>
+        {years.map((tick) => (
+          <g class="profile__year">
+            <line x1={tick.x} y1={base} x2={tick.x} y2={base + 8}></line>
+            <text x={tick.x} y={base + 30} text-anchor={tick.anchor}>{tick.year}</text>
+          </g>
+        ))}
+        <path class="profile__ghost-area" d={area}></path>
+        <path class="profile__ghost" d={line}></path>
+        <path class="profile__area" d={area} clip-path="url(#profile-reveal)"></path>
+        <path class="profile__line" d={line} data-profile-line></path>
 
-        return (
-          <article class="experience-company" data-experience-group>
-            <header class="experience-company__header">
-              <div class="experience-company__identity">
-                <h3>{company.company[lang]}</h3>
-                <p class="experience-company__location">{company.location[lang]}</p>
-              </div>
-              <p class="experience-company__period">{companyPeriod}</p>
-            </header>
+        {stops.map((item) => {
+          const today = item.place === 'below';
+          const labelY = today ? item.y + 74 : item.y - (item.place === 'high' ? 120 : 70);
+          const tagWidth = Math.max(item.title.length * 16, item.label.length * 10) + 30;
+          return (
+            <g class:list={['profile__stop', { 'profile__stop--today': today }]} data-profile-stop={item.fraction.toFixed(3)} aria-hidden="true">
+              <line
+                class="profile__leader"
+                x1={item.x}
+                y1={today ? item.y + 10 : item.y - 10}
+                x2={item.x}
+                y2={today ? labelY - 34 : labelY + 10}
+              ></line>
+              {today && <rect class="profile__today-tag" x={item.x - tagWidth + 22} y={labelY - 34} width={tagWidth} height="62"></rect>}
+              <text class="profile__title" x={today ? item.x + 8 : item.x + 4} y={labelY - 6} text-anchor={today ? 'end' : 'start'}>{item.title}</text>
+              <text class="profile__label" x={today ? item.x + 8 : item.x + 4} y={labelY + 16} text-anchor={today ? 'end' : 'start'}>{item.label.toUpperCase()}</text>
+              <circle class="profile__point" cx={item.x} cy={item.y} r="8"></circle>
+            </g>
+          );
+        })}
 
-            <div class="experience-company__workspace">
-              <div
-                class="experience-track"
-                role="tablist"
-                aria-label={`${copy[lang].stages} ${company.company[lang]}`}
-              >
-                <span class="experience-track__rail" aria-hidden="true">
-                  <span class="experience-track__progress" data-track-progress></span>
-                </span>
+        <g class="profile__summit" transform={`translate(${summit.x} ${summit.y})`} aria-hidden="true">
+          <line x1="0" y1="0" x2="0" y2="-42"></line>
+          <path d="M0 -42 L30 -32 L0 -22 Z"></path>
+          <text x="-14" y="-16" text-anchor="end">{text.summit}</text>
+        </g>
 
-                {company.roles.map((role, index) => {
-                  const tabId = `${company.id}-${role.id}-tab`;
-                  const panelId = `${company.id}-${role.id}-panel`;
-                  const roleKey = `${company.id}-${role.id}`;
-                  const roleEndDate = role.endDate ?? currentYearMonth;
-                  const rolePeriod = formatYearRange(role.startDate, roleEndDate);
-                  const stageNumber = stageNumberByKey.get(roleKey) ?? String(index + 1).padStart(2, '0');
-                  const isInitial = index === initialIndex;
+        <g class="profile__runner" data-profile-runner transform={`translate(${summit.x} ${summit.y})`} aria-hidden="true">
+          <circle r="14" class="profile__runner-ring"></circle>
+          <circle r="6"></circle>
+        </g>
+      </svg>
+      </div>
 
-                  return (
-                    <button
-                      class:list={['experience-stage', { 'is-active': isInitial }]}
-                      type="button"
-                      role="tab"
-                      id={tabId}
-                      aria-selected={isInitial ? 'true' : 'false'}
-                      aria-controls={panelId}
-                      tabindex={isInitial ? 0 : -1}
-                      data-stage-tab
-                      data-stage-index={index}
-                      data-role-key={roleKey}
-                    >
-                      <span class="experience-stage__index" aria-hidden="true">{stageNumber}</span>
-                      <span class="experience-stage__body">
-                        <span class="experience-stage__period">{rolePeriod}</span>
-                        <span class="experience-stage__role">{role.role[lang]}</span>
-                      </span>
-                      <span class="experience-stage__signal" aria-hidden="true"></span>
-                    </button>
-                  );
-                })}
-              </div>
+      <ol class="climb__steps" aria-label={text.steps}>
+        {chronological.map((role, index) => (
+          <li>
+            <button type="button" data-stage-jump={index}>
+              <span class="climb__step-role">{role.role[lang].split(' · ').pop()}</span>
+              <span class="label">{formatPeriod(role.startDate, role.endDate, lang)}</span>
+            </button>
+          </li>
+        ))}
+        <li>
+          <button type="button" data-stage-jump={chronological.length}>
+            <span class="climb__step-role">{text.summitShort}</span>
+            <span class="label">{text.next}</span>
+          </button>
+        </li>
+      </ol>
 
-              <div class="experience-details" data-detail-host>
-                {company.roles.map((role, index) => {
-                  const tabId = `${company.id}-${role.id}-tab`;
-                  const panelId = `${company.id}-${role.id}-panel`;
-                  const roleKey = `${company.id}-${role.id}`;
-                  const roleEndDate = role.endDate ?? currentYearMonth;
-                  const rolePeriod = formatYearRange(role.startDate, roleEndDate);
-                  const stageNumber = stageNumberByKey.get(roleKey) ?? String(index + 1).padStart(2, '0');
-                  const isInitial = index === initialIndex;
-
-                  return (
-                    <div
-                      class:list={['experience-detail', { 'is-active': isInitial }]}
-                      role="tabpanel"
-                      id={panelId}
-                      aria-labelledby={tabId}
-                      hidden={!isInitial}
-                      data-stage-panel
-                    >
-                      <span class="experience-detail__watermark" aria-hidden="true">{stageNumber}</span>
-
-                      <div class="experience-detail__meta">
-                        <span>{stageNumber}</span>
-                        <span>{rolePeriod}</span>
-                      </div>
-
-                      <h4>{role.role[lang]}</h4>
-                      <p class="experience-detail__company">{company.company[lang]}</p>
-                      <p class="experience-detail__description">{role.description[lang]}</p>
-
-                      <ul class="experience-detail__highlights" aria-label={copy[lang].highlights}>
-                        {role.highlights.map((highlight) => (
-                          <li>{highlight[lang]}</li>
-                        ))}
-                      </ul>
-
-                      {role.technologies.length > 0 && (
-                        <ul class="experience-detail__technologies" aria-label={copy[lang].technologies}>
-                          {role.technologies.map((technology) => (
-                            <li>{technology}</li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+      <div class="stages">
+        {chronological.map((role, index) => (
+          <article class="stage" data-stage-card={cardAt(role, index).toFixed(3)}>
+            <div class="stage__meta">
+              <span class="label">{formatPeriod(role.startDate, role.endDate, lang)} · {role.sector[lang]}</span>
+              <h4>{role.role[lang]}</h4>
+              <span class="stage__duration">{formatDuration(role.startDate, role.endDate, lang)}</span>
+            </div>
+            <div class="stage__body">
+              <p>{role.description[lang]}</p>
+              <ul class="stage__highlights" aria-label={text.highlights}>
+                {role.highlights.map((highlight) => <li>{highlight[lang]}</li>)}
+              </ul>
+              {role.technologies.length > 0 && (
+                <ul class="stage__tech" aria-label={text.technologies}>
+                  {role.technologies.map((technology) => <li>{technology}</li>)}
+                </ul>
+              )}
             </div>
           </article>
-        );
-      })}
+        ))}
+        <article class="stage stage--summit" data-stage-card={todayStop.fraction.toFixed(3)}>
+          <div class="stage__meta">
+            <span class="label">{text.today} · {formatYearMonth(lastEnd, lang)} →</span>
+            <h4>{text.summit}</h4>
+          </div>
+          <div class="stage__body">
+            <p>{text.summitText}</p>
+            <ButtonLink href="#contact">{text.contact}</ButtonLink>
+          </div>
+        </article>
+      </div>
+    </div>
     </div>
   </Container>
 </section>
 
 <style>
   .experience {
-    --section-layout-columns: minmax(17rem, 0.42fr) minmax(0, 1fr);
-    --section-layout-gap: clamp(var(--space-7), 7vw, var(--space-10));
-    padding-block: clamp(var(--space-9), 12vw, var(--space-10));
-    border-top: 1px solid var(--color-border);
+    padding-block: clamp(var(--space-9), 10vw, var(--space-10));
     scroll-margin-top: 4.5rem;
   }
 
-  .career-map {
-    display: grid;
-    gap: var(--space-3);
-    width: min(100%, 30rem);
-    margin-left: auto;
+  .climb {
+    --cut: 1.25rem;
+    margin-top: var(--space-8);
+    padding: var(--space-6) var(--space-6) var(--space-4);
   }
 
-  .career-map__header {
+  .climb__head {
     display: flex;
+    flex-wrap: wrap;
+    align-items: end;
     justify-content: space-between;
     gap: var(--space-4);
-    color: var(--color-text-muted);
-    font-size: 0.65rem;
-    font-weight: 800;
-    letter-spacing: 0.11em;
+  }
+
+  .climb__head h3 {
+    font-size: clamp(1.8rem, 3.4vw, 2.6rem);
     text-transform: uppercase;
   }
 
-  .career-map__header span:last-child { opacity: 0.62; }
-  .career-map__axis { position: relative; height: 5.4rem; isolation: isolate; }
-  .career-map__plot { position: absolute; inset: 0 1.6rem; }
-
-  .career-map__years {
-    position: absolute;
-    inset: 0 0 auto;
-    height: 1rem;
-    color: var(--color-text-muted);
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    pointer-events: none;
+  .climb__stat {
+    display: grid;
+    justify-items: end;
   }
 
-  .career-map__year {
-    position: absolute;
-    left: var(--year-position);
-    transform: translateX(-50%);
-    white-space: nowrap;
+  .climb__stat b {
+    color: var(--lime-ink);
+    font-family: var(--font-display);
+    font-size: clamp(2.8rem, 5vw, 4rem);
+    line-height: 0.9;
   }
 
-  .career-map__baseline {
-    position: absolute;
-    top: 2.3rem;
-    right: 0;
-    left: 0;
-    height: 1px;
-    background: var(--color-border);
-    pointer-events: none;
-  }
-
-  .career-map__year-tick {
-    position: absolute;
-    z-index: 2;
-    top: 2.02rem;
-    left: var(--year-position);
-    width: 1px;
-    height: 0.56rem;
-    background: var(--color-text-muted);
-    opacity: 0.28;
-    transform: translateX(-50%);
-    pointer-events: none;
-  }
-
-  .career-map__segment {
-    position: absolute;
-    z-index: 1;
-    top: 2.24rem;
-    left: var(--segment-left);
-    width: max(var(--segment-width), 0.35rem);
-    height: 0.16rem;
-    border-radius: var(--radius-pill);
-    background: var(--color-accent);
-    opacity: 0.3;
-    pointer-events: none;
-    transition: opacity var(--transition-fast);
-  }
-
-  .career-map__segment.is-active { opacity: 0.48; }
-
-  .career-map__scrubber {
-    position: absolute;
-    z-index: 4;
-    top: 0.3rem;
-    right: 0;
-    left: 0;
-    height: 4rem;
-    border-radius: var(--radius-pill);
-    cursor: pointer;
-    touch-action: none;
-    user-select: none;
-  }
-
-  .career-map__scrubber::before {
-    position: absolute;
-    top: 50%;
-    right: 0;
-    left: 0;
-    height: 0.18rem;
-    border-radius: var(--radius-pill);
-    background: var(--color-accent);
-    content: '';
-    opacity: 0;
-    transform: translateY(-50%);
-    transition: opacity var(--transition-fast);
-  }
-
-  .career-map__scrubber:is(:hover, :focus-visible)::before,
-  .career-map__scrubber.is-dragging::before { opacity: 0.12; }
-
-  .career-map__scrubber:focus-visible { outline: none; }
-
-  .career-map__scrubber:focus-visible::before {
-    box-shadow:
-      0 0 0 2px var(--color-background),
-      0 0 0 4px var(--color-focus);
-    opacity: 0.2;
-  }
-
-  .career-map__stage-marker {
-    position: absolute;
-    z-index: 3;
-    top: 1.56rem;
-    left: var(--stage-position);
-    width: 2rem;
-    height: 2.9rem;
-    color: var(--color-text-muted);
-    font-size: 0.6rem;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    line-height: 1;
-    transform: translateX(-50%);
-    pointer-events: none;
-    transition: color var(--transition-fast);
-  }
-
-  .career-map__stage-marker::before {
-    position: absolute;
-    top: 0.1rem;
-    left: 50%;
-    width: 1px;
-    height: 1.35rem;
-    border-radius: var(--radius-pill);
-    background: var(--color-text-muted);
-    content: '';
-    opacity: 0.62;
-    transform: translateX(-50%);
-    transition: background-color var(--transition-fast), opacity var(--transition-fast), width var(--transition-fast);
-  }
-
-  .career-map__stage-marker span {
-    position: absolute;
-    top: 1.78rem;
-    left: 50%;
-    transform: translateX(-50%);
-  }
-
-  .career-map__stage-marker.is-active { color: var(--color-accent); }
-  .career-map__stage-marker.is-active::before {
-    width: 2px;
-    background: var(--color-accent);
-    opacity: 1;
-  }
-
-  .career-map__cursor {
-    position: absolute;
-    z-index: 5;
-    top: 1.46rem;
-    left: var(--cursor-position, 0%);
-    width: 2px;
-    height: 1.7rem;
-    border-radius: var(--radius-pill);
-    background: var(--color-accent);
-    opacity: 0.95;
-    transform: translateX(-50%);
-    pointer-events: none;
-  }
-
-  .career-map__cursor[hidden],
-  .career-map__lens[hidden],
-  .career-map__pointer-dot[hidden] { display: none; }
-
-  .career-map__lens {
-    --lens-cell-width: 2.45rem;
-    position: absolute;
-    z-index: 6;
-    top: -0.2rem;
-    left: var(--lens-left, 0px);
-    width: min(17.5rem, calc(100% - 2.5rem));
-    padding: 0.6rem 0.75rem 0.7rem;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    background: var(--color-surface-elevated);
-    box-shadow: var(--shadow-elevated);
-    pointer-events: none;
-    will-change: left;
-  }
-
-  .career-map__lens-date {
+  .profile {
     display: block;
-    margin-bottom: 0.5rem;
-    color: var(--color-heading);
-    font-size: 0.68rem;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    text-align: center;
-    text-transform: uppercase;
-  }
-
-  .career-map__lens-window { position: relative; overflow: hidden; width: 100%; padding-block: 0.1rem 0.2rem; }
-  .career-map__lens-track { display: flex; width: max-content; transform: translate3d(var(--lens-track-x, 0px), 0, 0); will-change: transform; }
-
-  .career-map__lens-month {
-    position: relative;
-    display: grid;
-    flex: 0 0 var(--lens-cell-width);
-    grid-template-rows: 0.9rem 0.8rem 0.55rem;
-    gap: 0.12rem;
-    justify-items: center;
-    color: var(--color-text-muted);
-    font-size: 0.56rem;
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
-
-  .career-map__lens-stage {
-    position: relative;
-    min-width: 1rem;
-    color: var(--color-accent);
-    font-size: 0.5rem;
-    font-weight: 800;
-    line-height: 1;
-  }
-
-  .career-map__lens-month.is-stage-start .career-map__lens-stage::after {
-    position: absolute;
-    top: 0.62rem;
-    left: 50%;
-    width: 1px;
-    height: 0.24rem;
-    background: var(--color-accent);
-    content: '';
-    transform: translateX(-50%);
-  }
-
-  .career-map__lens-label { line-height: 0.8rem; }
-  .career-map__lens-mark { width: 68%; height: 1px; margin-top: 0.12rem; background: var(--color-border); }
-  .career-map__lens-month.has-experience .career-map__lens-mark { height: 2px; background: var(--color-accent); opacity: 0.42; }
-  .career-map__lens-month.is-stage-start .career-map__lens-stage { color: var(--color-accent); }
-  .career-map__lens-month.is-stage-start .career-map__lens-mark { opacity: 0.82; }
-
-  .career-map__lens-center {
-    position: absolute;
-    bottom: 0.12rem;
-    left: var(--lens-focus-x, 50%);
-    width: 1px;
-    height: 0.58rem;
-    background: var(--color-accent);
-    opacity: 0.72;
-    transform: translateX(-50%);
-    pointer-events: none;
-  }
-
-  .career-map__pointer-dot {
-    position: fixed;
-    z-index: 7;
-    top: var(--pointer-dot-y, 0px);
-    left: var(--pointer-dot-x, 0px);
-    width: 0.2rem;
-    height: 0.2rem;
-    border-radius: 50%;
-    background: var(--color-accent);
-    opacity: 0.28;
-    transform: translate(-50%, -50%);
-    pointer-events: none;
-  }
-
-  .experience__companies { display: grid; gap: var(--space-10); margin-top: clamp(var(--space-8), 7vw, var(--space-9)); }
-  .experience-company + .experience-company { padding-top: var(--space-9); border-top: 1px solid var(--color-border); }
-  .experience-company__header { display: flex; align-items: end; justify-content: space-between; gap: var(--space-6); margin-bottom: clamp(var(--space-7), 5vw, var(--space-8)); }
-  .experience-company__identity { min-width: 0; }
-  .experience-company h3 { font-size: clamp(1.6rem, 2.8vw, 2.2rem); letter-spacing: -0.035em; }
-  .experience-company__location { margin-top: var(--space-2); color: var(--color-text-muted); }
-  .experience-company__period { flex: none; padding-bottom: 0.2rem; color: var(--color-accent); font-size: var(--text-sm); font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; }
-  .experience-company__workspace { display: grid; gap: var(--space-8); }
-  .experience-track { position: relative; display: grid; align-content: start; align-self: start; }
-  .experience-track__rail { position: absolute; top: 2.375rem; bottom: 2.375rem; left: 1.34rem; width: 1px; overflow: hidden; background: var(--color-border); pointer-events: none; }
-  .experience-track__progress { display: block; width: 100%; height: var(--track-progress, 0%); background: var(--color-accent); transition: height 280ms ease; }
-
-  .experience-stage {
-    position: relative;
-    display: grid;
-    grid-template-columns: 2.75rem minmax(0, 1fr) 1rem;
-    align-items: center;
-    gap: var(--space-4);
     width: 100%;
-    padding: var(--space-4) 0;
-    border: 0;
-    background: transparent;
-    color: inherit;
-    font: inherit;
-    text-align: left;
-    cursor: pointer;
+    height: auto;
+    margin-top: var(--space-4);
+    overflow: visible;
   }
 
-  .experience-stage__index { position: relative; z-index: 1; display: grid; width: 2.75rem; height: 2.75rem; place-items: center; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-background); color: var(--color-text-muted); font-size: 0.75rem; font-weight: 800; letter-spacing: 0.08em; transition: border-color var(--transition-fast), background-color var(--transition-fast), color var(--transition-fast); }
-  .experience-stage__body { display: grid; gap: 0.2rem; min-width: 0; }
-  .experience-stage__period { color: var(--color-text-muted); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
-  .experience-stage__role { color: var(--color-text-muted); font-weight: 700; line-height: 1.35; transition: color var(--transition-fast); }
-  .experience-stage__signal { width: 0.7rem; height: 0.7rem; border: 1px solid var(--color-border); border-radius: 50%; transition: border-color var(--transition-fast), background-color var(--transition-fast), transform var(--transition-fast); }
-  .experience-stage:is(:hover, :focus-visible) .experience-stage__role, .experience-stage.is-active .experience-stage__role { color: var(--color-heading); }
-  .experience-stage.is-active .experience-stage__index { border-color: var(--color-accent); background: var(--color-surface-elevated); color: var(--color-accent); }
-  .experience-stage.is-active .experience-stage__signal { border-color: var(--color-accent); background-color: var(--color-accent); transform: scale(1.15); }
-
-  .experience-details { min-width: 0; }
-  .experience-detail { position: relative; min-height: 24rem; overflow: hidden; padding-top: var(--space-3); }
-  .experience-detail[hidden] { display: none; }
-  .experience-detail.is-entering { animation: experience-detail-in 220ms ease both; }
-  .experience-detail__watermark { position: absolute; z-index: 0; top: -1.5rem; right: 0; color: var(--color-border); font-size: clamp(5rem, 12vw, 9rem); font-weight: 800; line-height: 1; letter-spacing: -0.08em; opacity: 0.5; pointer-events: none; user-select: none; }
-  .experience-detail > :not(.experience-detail__watermark) { position: relative; z-index: 1; }
-  .experience-detail__meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-3); max-width: 46rem; color: var(--color-accent); font-size: var(--text-sm); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
-  .experience-detail h4 { max-width: 24ch; margin-top: var(--space-5); font-size: clamp(1.8rem, 4vw, 3rem); letter-spacing: -0.04em; }
-  .experience-detail__company { margin-top: var(--space-2); color: var(--color-text-muted); font-weight: 700; }
-  .experience-detail__description { max-width: 46rem; margin-top: var(--space-5); color: var(--color-text-muted); font-size: var(--text-lg); }
-  .experience-detail__highlights { display: grid; gap: var(--space-3); max-width: 46rem; margin: var(--space-6) 0 0; padding: 0; list-style: none; }
-  .experience-detail__highlights li { position: relative; padding-left: var(--space-5); }
-  .experience-detail__highlights li::before { position: absolute; top: 0.7em; left: 0; width: 0.35rem; height: 0.35rem; border-radius: 50%; background: var(--color-accent); content: ''; }
-  .experience-detail__technologies { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: var(--space-6) 0 0; padding: 0; list-style: none; }
-  .experience-detail__technologies li { padding: 0.35rem 0.7rem; border: 1px solid var(--color-border); border-radius: var(--radius-pill); color: var(--color-text-muted); font-size: 0.78rem; font-weight: 600; }
-
-  @keyframes experience-detail-in { from { opacity: 0; transform: translateY(0.4rem); } to { opacity: 1; transform: translateY(0); } }
-
-  @media (min-width: 68rem) {
-    .experience-company__workspace { grid-template-columns: var(--section-layout-columns); column-gap: var(--section-layout-gap); }
-    .experience-track { padding-right: var(--space-4); }
-    .experience-details { position: sticky; top: 7rem; align-self: start; }
+  .profile__axis,
+  .profile__year line {
+    stroke: var(--line);
   }
 
-  :global(html.is-career-exploring),
-  :global(html.is-career-exploring *) {
-    cursor: none !important;
+  .profile__year text,
+  .profile__label {
+    fill: var(--soft);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    letter-spacing: 0.1em;
   }
 
-  @media (max-width: 47.99rem) { .career-map { display: none; } }
-
-  @media (max-width: 40rem) {
-    .experience__companies { margin-top: var(--space-8); }
-    .experience-company__header { align-items: start; flex-direction: column; margin-bottom: var(--space-7); }
-    .experience-company__period { order: -1; padding-bottom: 0; }
-    .experience-stage { grid-template-columns: 2.75rem minmax(0, 1fr); }
-    .experience-stage__signal { display: none; }
-    .experience-detail { min-height: 0; padding-top: var(--space-5); border-top: 1px solid var(--color-border); }
-    .experience-detail__watermark { top: 0.75rem; font-size: clamp(4rem, 22vw, 6rem); }
+  .profile__ghost-area {
+    fill: var(--ink);
+    opacity: 0.05;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .career-map__segment,
-    .career-map__scrubber::before,
-    .career-map__stage-marker,
-    .career-map__stage-marker::before,
-    .experience-track__progress,
-    .experience-stage__index,
-    .experience-stage__role,
-    .experience-stage__signal { transition: none; }
-    .experience-detail.is-entering { animation: none; }
+  .profile__ghost {
+    fill: none;
+    stroke: var(--soft);
+    stroke-dasharray: 6 7;
+    stroke-width: 2;
+    opacity: 0.55;
   }
-</style>
 
-<script>
-  const careerMap = document.querySelector<HTMLElement>('[data-career-map]');
-  const careerAxisContainer = careerMap?.querySelector<HTMLElement>('.career-map__axis');
-  const careerScrubber = careerMap?.querySelector<HTMLElement>('[data-career-scrubber]');
-  const careerCursor = careerMap?.querySelector<HTMLElement>('[data-career-cursor]');
-  const careerLens = careerMap?.querySelector<HTMLElement>('[data-career-lens]');
-  const careerMonth = careerMap?.querySelector<HTMLElement>('[data-career-month]');
-  const careerLensWindow = careerMap?.querySelector<HTMLElement>('[data-career-lens-window]');
-  const careerMonthTrack = careerMap?.querySelector<HTMLElement>('[data-career-month-track]');
-  const careerPointer = careerMap?.querySelector<HTMLElement>('[data-career-pointer]');
-  const overviewSegments = careerMap
-    ? Array.from(careerMap.querySelectorAll<HTMLElement>('[data-overview-role]'))
-    : [];
-  const stageMarkers = careerMap
-    ? Array.from(careerMap.querySelectorAll<HTMLElement>('[data-stage-marker]'))
-    : [];
+  .profile__area {
+    fill: url(#profile-fill);
+  }
 
-  const updateOverview = (roleKey: string | undefined) => {
-    if (!roleKey) return;
-    overviewSegments.forEach((segment) => {
-      segment.classList.toggle('is-active', segment.dataset.overviewRole === roleKey);
-    });
-    stageMarkers.forEach((marker) => {
-      marker.classList.toggle('is-active', marker.dataset.stageMarker === roleKey);
-    });
-  };
+  .profile__line {
+    fill: none;
+    stroke: var(--lime-ink);
+    stroke-linejoin: round;
+    stroke-width: 3;
+  }
 
-  const groups = document.querySelectorAll<HTMLElement>('[data-experience-group]');
+  .profile__leader {
+    stroke: var(--soft);
+    stroke-dasharray: 2 3;
+  }
 
-  groups.forEach((group) => {
-    const tabs = Array.from(group.querySelectorAll<HTMLButtonElement>('[data-stage-tab]'));
-    const panels = Array.from(group.querySelectorAll<HTMLElement>('[data-stage-panel]'));
-    const progress = group.querySelector<HTMLElement>('[data-track-progress]');
+  .profile__title,
+  .profile__label,
+  .profile__summit text {
+    paint-order: stroke;
+    stroke: var(--panel);
+    stroke-linejoin: round;
+    stroke-width: 7px;
+  }
 
-    const activate = (nextIndex: number, moveFocus = false) => {
-      const index = Math.max(0, Math.min(nextIndex, tabs.length - 1));
-      tabs.forEach((tab, tabIndex) => {
-        const active = tabIndex === index;
-        tab.classList.toggle('is-active', active);
-        tab.setAttribute('aria-selected', String(active));
-        tab.tabIndex = active ? 0 : -1;
-      });
-      panels.forEach((panel, panelIndex) => {
-        const active = panelIndex === index;
-        panel.hidden = !active;
-        panel.classList.toggle('is-active', active);
-        if (active) {
-          panel.classList.remove('is-entering');
-          requestAnimationFrame(() => panel.classList.add('is-entering'));
-        }
-      });
-      if (progress) {
-        const percentage = tabs.length <= 1 ? 100 : (index / (tabs.length - 1)) * 100;
-        progress.style.setProperty('--track-progress', `${percentage}%`);
-      }
-      updateOverview(tabs[index]?.dataset.roleKey);
-      if (moveFocus) tabs[index]?.focus();
-    };
+  .profile__title {
+    fill: var(--ink);
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
 
-    tabs.forEach((tab, index) => {
-      tab.addEventListener('click', () => activate(index));
-      tab.addEventListener('keydown', (event) => {
-        let nextIndex: number | null = null;
-        if (event.key === 'ArrowDown' || event.key === 'ArrowRight') nextIndex = (index + 1) % tabs.length;
-        if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') nextIndex = (index - 1 + tabs.length) % tabs.length;
-        if (event.key === 'Home') nextIndex = 0;
-        if (event.key === 'End') nextIndex = tabs.length - 1;
-        if (nextIndex !== null) {
-          event.preventDefault();
-          activate(nextIndex, true);
-        }
-      });
-    });
-    activate(tabs.length - 1);
-  });
+  .profile__point {
+    fill: var(--panel);
+    stroke: var(--soft);
+    stroke-width: 2.5;
+    transition: fill 300ms ease, stroke 300ms ease;
+  }
 
-  if (
-    careerMap &&
-    careerAxisContainer &&
-    careerScrubber &&
-    careerCursor &&
-    careerLens &&
-    careerMonth &&
-    careerLensWindow &&
-    careerMonthTrack &&
-    careerPointer
-  ) {
-    const startDate = careerMap.dataset.timelineStart;
-    const monthCount = Number(careerMap.dataset.timelineMonths ?? 0);
+  .profile__stop.is-reached .profile__point {
+    fill: var(--lime);
+    stroke: var(--lime-ink);
+  }
 
-    if (startDate && monthCount > 0) {
-      const [startYear, startMonth] = startDate.split('-').map(Number);
-      const startAbsoluteMonth = startYear * 12 + startMonth - 1;
-      const locale = document.documentElement.lang || 'es';
-      const dateFormatter = new Intl.DateTimeFormat(locale, {
-        month: 'short',
-        year: 'numeric',
-        timeZone: 'UTC',
-      });
-      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const initialMonthIndex = Math.max(
-        0,
-        Math.min(
-          overviewSegments.reduce((latest, segment) => {
-            const end = Number(segment.dataset.endIndex);
-            return Number.isFinite(end) ? Math.max(latest, end) : latest;
-          }, 0),
-          monthCount - 1,
-        ),
-      );
+  .profile__summit line {
+    stroke: var(--ink);
+    stroke-width: 2;
+  }
 
-      let keyboardMonthIndex = initialMonthIndex;
-      let targetRatio = (initialMonthIndex + 0.5) / monthCount;
-      let renderedRatio = targetRatio;
-      let targetLensLeft = 0;
-      let renderedLensLeft = 0;
-      let frameId: number | null = null;
-      let isDragging = false;
-      let isPointerExploring = false;
-      let lastPointerX: number | null = null;
+  .profile__summit path {
+    fill: var(--lime);
+  }
 
-      const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(value, max));
+  .profile__summit text {
+    fill: var(--lime-ink);
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
 
-      const setPointerExploring = (active: boolean) => {
-        isPointerExploring = active;
-        if (!active) lastPointerX = null;
-        document.documentElement.classList.toggle('is-career-exploring', active);
-      };
+  .profile__runner circle {
+    fill: var(--lime);
+  }
 
-      const getDateForMonth = (monthIndex: number) => {
-        const absoluteMonth = startAbsoluteMonth + monthIndex;
-        const year = Math.floor(absoluteMonth / 12);
-        const month = (absoluteMonth % 12) + 1;
-        return new Date(Date.UTC(year, month - 1, 1));
-      };
+  .profile__runner-ring {
+    fill: none !important;
+    stroke: var(--lime-ink);
+    stroke-width: 1.5;
+    animation: ring 1.8s ease-out infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
 
-      const requestRender = () => {
-        if (frameId === null) frameId = requestAnimationFrame(render);
-      };
+  @keyframes ring {
+    from {
+      opacity: 0.9;
+      transform: scale(0.5);
+    }
 
-      const render = () => {
-        const smoothing = reducedMotion ? 1 : 0.18;
-        renderedRatio += (targetRatio - renderedRatio) * smoothing;
-        renderedLensLeft += (targetLensLeft - renderedLensLeft) * smoothing;
-
-        const monthFloat = clamp(renderedRatio * monthCount, 0, monthCount - 0.001);
-        const monthIndex = clamp(Math.floor(monthFloat), 0, monthCount - 1);
-        const date = getDateForMonth(monthIndex);
-        const firstMonth = careerMonthTrack.querySelector<HTMLElement>('[data-lens-month]');
-        const cellWidth = firstMonth?.getBoundingClientRect().width ?? 39.2;
-        const windowWidth = careerLensWindow.clientWidth;
-        const trackWidth = monthCount * cellWidth;
-        const idealTrackOffset = windowWidth / 2 - (monthFloat + 0.5) * cellWidth;
-        const minTrackOffset = Math.min(0, windowWidth - trackWidth);
-        const trackOffset = clamp(idealTrackOffset, minTrackOffset, 0);
-        const focusX = clamp(
-          (monthFloat + 0.5) * cellWidth + trackOffset,
-          cellWidth / 2,
-          windowWidth - cellWidth / 2,
-        );
-        const formattedDate = dateFormatter.format(date).replace('.', '').toUpperCase();
-
-        careerLens.style.setProperty('--lens-left', `${renderedLensLeft}px`);
-        careerMonthTrack.style.setProperty('--lens-track-x', `${trackOffset}px`);
-        careerLensWindow.style.setProperty('--lens-focus-x', `${focusX}px`);
-        careerMonth.textContent = formattedDate;
-        careerScrubber.setAttribute('aria-valuenow', String(monthIndex + 1));
-        careerScrubber.setAttribute('aria-valuetext', formattedDate);
-        keyboardMonthIndex = monthIndex;
-
-        const settled =
-          Math.abs(targetRatio - renderedRatio) < 0.0005 &&
-          Math.abs(targetLensLeft - renderedLensLeft) < 0.15;
-
-        if (!settled) frameId = requestAnimationFrame(render);
-        else frameId = null;
-      };
-
-      const setTargetRatio = (ratio: number, snap = false) => {
-        const scrubberBounds = careerScrubber.getBoundingClientRect();
-        const axisBounds = careerAxisContainer.getBoundingClientRect();
-        const wasHidden = careerLens.hidden;
-
-        targetRatio = clamp(ratio, 0, 1);
-        careerCursor.style.setProperty('--cursor-position', `${targetRatio * 100}%`);
-        careerCursor.hidden = false;
-        careerLens.hidden = false;
-
-        const lensWidth = careerLens.offsetWidth;
-        const cursorX =
-          scrubberBounds.left - axisBounds.left + targetRatio * scrubberBounds.width;
-        const lensMargin = 18;
-        targetLensLeft = clamp(
-          cursorX - lensWidth / 2,
-          lensMargin,
-          Math.max(lensMargin, axisBounds.width - lensWidth - lensMargin),
-        );
-
-        if (wasHidden || snap || reducedMotion) {
-          renderedRatio = targetRatio;
-          renderedLensLeft = targetLensLeft;
-        }
-
-        requestRender();
-      };
-
-      const setTargetFromClientX = (clientX: number, snap = false) => {
-        const bounds = careerScrubber.getBoundingClientRect();
-        const ratio = clamp((clientX - bounds.left) / bounds.width, 0, 1);
-        setTargetRatio(ratio, snap);
-      };
-
-      const updatePointerFeedback = (event: PointerEvent) => {
-        if (event.pointerType !== 'mouse' && event.pointerType !== 'pen') {
-          careerPointer.hidden = true;
-          return;
-        }
-
-        careerPointer.style.setProperty('--pointer-dot-x', `${event.clientX}px`);
-        careerPointer.style.setProperty('--pointer-dot-y', `${event.clientY}px`);
-        careerPointer.hidden = false;
-      };
-
-      const isPointInsideLens = (clientX: number, clientY: number) => {
-        const lensBounds = careerLens.getBoundingClientRect();
-        return (
-          clientX >= lensBounds.left &&
-          clientX <= lensBounds.right &&
-          clientY >= lensBounds.top &&
-          clientY <= lensBounds.bottom
-        );
-      };
-
-      const setTargetFromMonth = (monthIndex: number, snap = false) => {
-        const nextMonthIndex = clamp(monthIndex, 0, monthCount - 1);
-        keyboardMonthIndex = nextMonthIndex;
-        setTargetRatio((nextMonthIndex + 0.5) / monthCount, snap);
-      };
-
-      const hideExplorer = () => {
-        if (frameId !== null) cancelAnimationFrame(frameId);
-        frameId = null;
-        setPointerExploring(false);
-        careerCursor.hidden = true;
-        careerLens.hidden = true;
-        careerPointer.hidden = true;
-      };
-
-      careerScrubber.addEventListener('pointerenter', (event) => {
-        if ((event.pointerType === 'mouse' || event.pointerType === 'pen') && !isDragging) {
-          setPointerExploring(true);
-          lastPointerX = event.clientX;
-          setTargetFromClientX(event.clientX, true);
-          updatePointerFeedback(event);
-        }
-      });
-
-      careerScrubber.addEventListener('pointermove', (event) => {
-        const isHoverPointer = event.pointerType === 'mouse' || event.pointerType === 'pen';
-        if (!isHoverPointer && !isDragging) return;
-        if (isHoverPointer) {
-          setPointerExploring(true);
-          lastPointerX = event.clientX;
-        }
-        setTargetFromClientX(event.clientX);
-        updatePointerFeedback(event);
-      });
-
-      careerScrubber.addEventListener('pointerdown', (event) => {
-        if (event.pointerType === 'mouse' && event.button !== 0) return;
-        event.preventDefault();
-        isDragging = true;
-        setPointerExploring(event.pointerType === 'mouse' || event.pointerType === 'pen');
-        lastPointerX = event.clientX;
-        careerScrubber.classList.add('is-dragging');
-        careerScrubber.setPointerCapture(event.pointerId);
-        setTargetFromClientX(event.clientX, true);
-        updatePointerFeedback(event);
-      });
-
-      careerScrubber.addEventListener('pointerup', (event) => {
-        if (!isDragging) return;
-        setTargetFromClientX(event.clientX);
-        updatePointerFeedback(event);
-        lastPointerX = event.clientX;
-
-        isDragging = false;
-        careerScrubber.classList.remove('is-dragging');
-        if (careerScrubber.hasPointerCapture(event.pointerId)) {
-          careerScrubber.releasePointerCapture(event.pointerId);
-        }
-        if (isPointerExploring && !isPointInsideLens(event.clientX, event.clientY)) {
-          hideExplorer();
-        }
-      });
-
-      careerScrubber.addEventListener('pointercancel', (event) => {
-        isDragging = false;
-        careerScrubber.classList.remove('is-dragging');
-        if (careerScrubber.hasPointerCapture(event.pointerId)) {
-          careerScrubber.releasePointerCapture(event.pointerId);
-        }
-        hideExplorer();
-      });
-
-      document.addEventListener('pointermove', (event) => {
-        if (!isPointerExploring || isDragging || careerLens.hidden) return;
-        if (event.pointerType !== 'mouse' && event.pointerType !== 'pen') return;
-
-        updatePointerFeedback(event);
-
-        if (event.composedPath().includes(careerScrubber)) {
-          lastPointerX = event.clientX;
-          return;
-        }
-
-        if (!isPointInsideLens(event.clientX, event.clientY)) {
-          hideExplorer();
-          return;
-        }
-
-        if (lastPointerX === null) {
-          lastPointerX = event.clientX;
-          return;
-        }
-
-        const deltaX = event.clientX - lastPointerX;
-        lastPointerX = event.clientX;
-        if (deltaX === 0) return;
-
-        const scrubberWidth = careerScrubber.getBoundingClientRect().width;
-        if (scrubberWidth > 0) {
-          setTargetRatio(targetRatio + deltaX / scrubberWidth);
-        }
-      });
-
-      window.addEventListener('blur', hideExplorer);
-
-      careerScrubber.addEventListener('focus', () => {
-        setTargetFromMonth(keyboardMonthIndex, true);
-      });
-
-      careerScrubber.addEventListener('blur', () => {
-        if (!isDragging && !isPointerExploring) hideExplorer();
-      });
-
-      careerScrubber.addEventListener('keydown', (event) => {
-        let nextMonthIndex: number | null = null;
-
-        if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
-          nextMonthIndex = keyboardMonthIndex + 1;
-        }
-        if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
-          nextMonthIndex = keyboardMonthIndex - 1;
-        }
-        if (event.key === 'PageDown') nextMonthIndex = keyboardMonthIndex + 6;
-        if (event.key === 'PageUp') nextMonthIndex = keyboardMonthIndex - 6;
-        if (event.key === 'Home') nextMonthIndex = 0;
-        if (event.key === 'End') nextMonthIndex = monthCount - 1;
-
-        if (nextMonthIndex !== null) {
-          event.preventDefault();
-          setTargetFromMonth(nextMonthIndex);
-          return;
-        }
-
-        if (event.key === 'Escape') {
-          event.preventDefault();
-          hideExplorer();
-        }
-      });
+    to {
+      opacity: 0;
+      transform: scale(1.4);
     }
   }
-</script>
+
+
+  .profile__today-tag {
+    fill: var(--lime);
+  }
+
+  .profile__stop--today .profile__title,
+  .profile__stop--today .profile__label {
+    fill: var(--on-lime);
+    stroke: none;
+  }
+
+  .profile__stop--today .profile__label {
+    font-weight: 700;
+  }
+
+  .climb__steps {
+    display: none;
+  }
+
+  .stages {
+    display: grid;
+    gap: var(--space-4);
+    margin-top: var(--space-5);
+  }
+
+  .stage {
+    position: relative;
+    display: grid;
+    align-content: start;
+    gap: var(--space-4);
+    padding: var(--space-5);
+    background: var(--panel-2);
+  }
+
+  .stage::before {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1.25rem;
+    height: 1.25rem;
+    border-top: 2px solid var(--lime-ink);
+    border-left: 2px solid var(--lime-ink);
+    content: '';
+  }
+
+  .stage__meta {
+    display: grid;
+    gap: var(--space-2);
+    align-content: start;
+  }
+
+  .stage h4 {
+    font-size: clamp(1.4rem, 2.2vw, 1.9rem);
+    text-transform: uppercase;
+  }
+
+  .stage__duration {
+    color: var(--lime-ink);
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .stage__body > p {
+    color: var(--soft);
+  }
+
+  .stage__highlights {
+    display: grid;
+    gap: var(--space-2);
+    margin: var(--space-3) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .stage__highlights li {
+    position: relative;
+    padding-left: var(--space-5);
+    font-size: 0.93rem;
+  }
+
+  .stage__highlights li::before {
+    position: absolute;
+    top: 0.65em;
+    left: 0;
+    width: 0.6rem;
+    height: 2px;
+    background: var(--lime-ink);
+    content: '';
+  }
+
+  .stage__tech {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin: var(--space-3) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .stage__tech li {
+    padding: 0.2rem 0.5rem;
+    border: 1px solid var(--line);
+    color: var(--soft);
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .stage--summit .stage__body {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-4);
+  }
+
+  .stage--summit h4 {
+    color: var(--lime-ink);
+  }
+
+  @media (min-width: 60rem) {
+    .stage {
+      grid-template-columns: 17rem minmax(0, 1fr);
+      gap: var(--space-6);
+    }
+
+    .stage__highlights {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: var(--space-6);
+    }
+  }
+
+  /* Desktop with motion and enough height: the panel stays pinned while the page scrolls and the climb
+     plays out. It is exactly one screen tall, so nothing can spill out of it. */
+  @media (min-width: 60rem) and (min-height: 48rem) and (prefers-reduced-motion: no-preference) {
+    .climb-track {
+      height: 300vh;
+      margin-top: var(--space-8);
+    }
+
+    .climb {
+      position: sticky;
+      top: 5.5rem;
+      display: grid;
+      height: calc(100svh - 6.5rem);
+      grid-template-columns: minmax(0, 1fr) 25rem;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      gap: var(--space-4) var(--space-6);
+      margin-top: 0;
+      padding: var(--space-5) var(--space-6);
+    }
+
+    .climb__head {
+      grid-column: 1;
+      grid-row: 1;
+    }
+
+    .profile-scroll {
+      grid-column: 1;
+      grid-row: 2;
+      min-height: 0;
+    }
+
+    .profile {
+      width: 100%;
+      height: 100%;
+      margin-top: 0;
+    }
+
+    .climb__steps {
+      display: grid;
+      grid-column: 1;
+      grid-row: 3;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: var(--space-2);
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .climb__steps button {
+      display: grid;
+      width: 100%;
+      height: 100%;
+      align-content: start;
+      gap: var(--space-1);
+      padding: var(--space-3);
+      border: 0;
+      border-top: 2px solid var(--line);
+      background: var(--panel-2);
+      color: var(--soft);
+      font: inherit;
+      text-align: left;
+      cursor: pointer;
+      transition: border-color var(--transition-fast), color var(--transition-fast);
+    }
+
+    .climb__steps button:hover,
+    .climb__steps button[aria-current] {
+      border-top-color: var(--lime-ink);
+      color: var(--ink);
+    }
+
+    .climb__step-role {
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 700;
+      line-height: 1.1;
+      text-transform: uppercase;
+    }
+
+    .stages {
+      display: grid;
+      grid-column: 2;
+      grid-row: 1 / -1;
+      align-content: safe center;
+      min-height: 0;
+      margin-top: 0;
+      overflow-y: auto;
+      scrollbar-width: thin;
+    }
+
+    .stage {
+      grid-area: 1 / 1;
+      align-self: center;
+      gap: var(--space-3);
+      padding: var(--space-4) var(--space-5);
+      opacity: 0;
+      visibility: hidden;
+      /* Fade only: a sliding card puts its text between pixels and it reads blurry until it stops. */
+      transition: opacity 180ms ease, visibility 180ms;
+    }
+
+    .stage.is-active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .stage,
+    .stage__highlights {
+      grid-template-columns: 1fr;
+    }
+
+    .stage h4 {
+      font-size: 1.6rem;
+    }
+
+    .stage__highlights {
+      gap: var(--space-1);
+    }
+
+    .stage__highlights li {
+      font-size: 0.9rem;
+    }
+  }
+
+  .climb__swipe {
+    display: none;
+  }
+
+  @media (max-width: 48rem) {
+    .climb {
+      padding-inline: var(--space-4);
+    }
+
+    .climb__swipe {
+      display: block;
+      margin-top: var(--space-3);
+      text-align: right;
+    }
+
+    .profile-scroll {
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scrollbar-width: thin;
+    }
+
+    .profile {
+      min-width: 46rem;
+      padding-right: var(--space-4);
+    }
+  }
+</style>
