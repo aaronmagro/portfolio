@@ -1,0 +1,582 @@
+---
+import TechList from '../ui/TechList.astro';
+import { Image } from 'astro:assets';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Container from '../ui/Container.astro';
+import ButtonLink from '../ui/ButtonLink.astro';
+import { siteConfig, type SupportedLocale } from '../../config/site';
+import { projects } from '../../data/projects';
+import { formatPeriod } from '../../utils/dates';
+import { routes } from '../../utils/i18n';
+import panelMockup from '../../assets/projects/francis/panel-mockup.png';
+
+interface Props {
+  lang: SupportedLocale;
+}
+
+const { lang } = Astro.props;
+
+const project = projects.find((item) => item.id === 'calzado-francis');
+if (!project) throw new Error('Calzado Francis is missing from src/data/projects.ts');
+
+const siteLink = project.links[0];
+const years = new Date().getFullYear() - 1988;
+const projectsHref = `${routes.home[lang]}#projects`;
+
+const copy = {
+  es: {
+    title: `Calzado Francis: caso de estudio | ${siteConfig.name}`,
+    description:
+      'Cómo hice la web y el CMS a medida de un taller de reparación de calzado: arquitectura en Cloudflare, decisiones técnicas y un panel pensado para alguien sin conocimientos técnicos.',
+    back: 'Proyectos',
+    eyebrow: 'Caso de estudio',
+    lead: `Web y CMS a medida para un taller de reparación de calzado con +${years} años de oficio. El objetivo: que el dueño pudiera cambiar casi todo él solo, sin saber programar y sin llamarme.`,
+    visit: 'Ver la web ↗',
+    backToProjects: 'Volver a proyectos',
+    facts: [
+      { label: 'Cliente', value: 'Taller de reparación de calzado · Leganés' },
+      { label: 'Mi papel', value: 'Todo: diseño, desarrollo, despliegue, seguridad y SEO' },
+      { label: 'Fechas', value: formatPeriod(project.startDate, project.endDate, 'es') },
+      { label: 'Estado', value: 'En producción' },
+    ],
+    challenge: {
+      title: 'El reto: que lo use alguien que no es técnico',
+      intro:
+        'Lo difícil no era el código, era que el panel lo entendiera alguien sin conocimientos técnicos. Por eso no está organizado por cómo funciona por dentro, sino por lo que el dueño quiere hacer.',
+      points: [
+        'La primera pantalla pregunta <em>¿Qué quieres cambiar en la web?</em> y cada tarjeta es una parte que el cliente ve.',
+        'Cada tarjeta dice dónde aparece ese contenido, para que no haya que adivinarlo.',
+        'Siempre el mismo camino: editar, revisar la vista previa en móvil u ordenador y guardar.',
+        'Horarios por meses, vacaciones, cierres y avisos con fechas, porque es lo que más cambia en un taller.',
+      ],
+      mockupAlt:
+        'Maqueta del panel privado: la pregunta ¿Qué quieres cambiar en la web?, los pasos editar, revisar y guardar, y tarjetas para portada, servicios, trabajos, nosotros, preguntas y horarios.',
+      mockupCaption: 'Maqueta del panel privado, redibujada sin datos del negocio.',
+    },
+    architecture: {
+      title: 'Arquitectura',
+      intro: 'La web es estática; lo único dinámico es el contenido, que se lee de un documento en Workers KV.',
+      flows: [
+        {
+          title: 'Quien visita la web',
+          steps: [
+            { name: 'Cloudflare Pages', detail: 'Web estática hecha con Astro' },
+            { name: 'Cloudflare Pages Functions', detail: 'Leen el contenido publicado' },
+            { name: 'Workers KV', detail: 'Un único documento JSON' },
+          ],
+        },
+        {
+          title: 'El dueño',
+          steps: [
+            { name: 'Cloudflare Zero Trust', detail: 'Acceso solo para el dueño' },
+            { name: 'Panel privado', detail: 'Editar, previsualizar y publicar' },
+            { name: 'Workers KV + Cloudinary', detail: 'Contenido e imágenes' },
+          ],
+        },
+        {
+          title: 'GitHub Actions',
+          steps: [
+            { name: 'Cada push', detail: 'astro check y build' },
+            { name: 'Cada día', detail: 'Copia del contenido y de las imágenes en uso' },
+          ],
+        },
+      ],
+    },
+    decisions: {
+      title: 'Decisiones',
+      items: [
+        {
+          title: 'Workers KV en vez de una base de datos',
+          points: [
+            'Todo el contenido de una web así cabe en un documento. No hacían falta tablas ni consultas.',
+            'Entra en el plan gratuito: el cliente no paga servidor ni base de datos.',
+            'Se lee desde el nodo de Cloudflare más cercano a quien visita la web.',
+            'Hosting, funciones, datos y seguridad en el mismo proveedor: menos piezas que mantener.',
+          ],
+        },
+        {
+          title: 'Cloudflare Zero Trust en vez de un login propio',
+          points: [
+            'No hay contraseñas guardadas en mi código que se puedan filtrar.',
+            'Un login seguro bien hecho (hash, sesiones, recuperación, límite de intentos) lleva días y es otra cosa que mantener.',
+            'Para el dueño es más cómodo: no tiene que recordar ninguna contraseña.',
+          ],
+        },
+        {
+          title: 'Validar todo en el servidor',
+          points: [
+            'Todo lo que llega del panel se valida en el servidor antes de guardarse.',
+            'Si un campo llega mal, se usa el valor por defecto. Un error en el panel nunca rompe la web.',
+          ],
+        },
+      ],
+    },
+    safety: {
+      title: 'Que no se pierda nada',
+      items: [
+        { title: 'Copia diaria', text: 'GitHub Actions hace cada día una copia del contenido y de las imágenes que usa la web.' },
+        { title: 'Pruebas sin tocar producción', text: 'En local trabajo con una copia del contenido. Lo que pruebo ahí no llega a la web.' },
+        { title: 'Comprobación en cada cambio', text: 'Cada push pasa por astro check y una compilación completa en GitHub Actions.' },
+      ],
+    },
+    result: {
+      title: 'Resultado',
+      text: 'La web está en producción y el contenido se cambia desde el panel, sin tocar código. Además tiene SEO local con Schema.org y sitemap, páginas legales, y el mapa de Google no se carga hasta que quien visita la web lo pide.',
+      technologies: 'Tecnologías',
+    },
+  },
+  en: {
+    title: `Calzado Francis: case study | ${siteConfig.name}`,
+    description:
+      'How I built the website and custom CMS for a shoe repair workshop: Cloudflare architecture, technical decisions and an admin panel designed for someone with no technical background.',
+    back: 'Projects',
+    eyebrow: 'Case study',
+    lead: `Website and custom CMS for a shoe repair workshop with +${years} years in the trade. The goal: the owner should be able to change almost everything on his own, without coding and without calling me.`,
+    visit: 'Visit site ↗',
+    backToProjects: 'Back to projects',
+    facts: [
+      { label: 'Client', value: 'Shoe repair workshop · Leganés, Madrid' },
+      { label: 'My role', value: 'Everything: design, development, deployment, security and SEO' },
+      { label: 'Dates', value: formatPeriod(project.startDate, project.endDate, 'en') },
+      { label: 'Status', value: 'Live' },
+    ],
+    challenge: {
+      title: 'The challenge: built for someone non-technical',
+      intro:
+        'The hard part was not the code, it was making the panel clear to someone with no technical background. So it is not organised around how it works inside, but around what the owner wants to do.',
+      points: [
+        'The first screen asks <em>What do you want to change on the site?</em> and each card is a part the customer sees.',
+        'Each card says where that content appears, so there is nothing to guess.',
+        'Always the same path: edit, check the mobile or desktop preview, and save.',
+        'Monthly opening hours, holidays, closures and dated notices, because that is what changes most in a workshop.',
+      ],
+      mockupAlt:
+        'Mockup of the private panel: the question What do you want to change on the site?, the edit, review and save steps, and cards for the home page, services, work, about, questions and opening hours.',
+      mockupCaption: 'Mockup of the private panel, redrawn without the business data. The panel itself is in Spanish.',
+    },
+    architecture: {
+      title: 'Architecture',
+      intro: 'The site is static; the only dynamic part is the content, read from a single document in Workers KV.',
+      flows: [
+        {
+          title: 'Visitors',
+          steps: [
+            { name: 'Cloudflare Pages', detail: 'Static site built with Astro' },
+            { name: 'Cloudflare Pages Functions', detail: 'Read the published content' },
+            { name: 'Workers KV', detail: 'A single JSON document' },
+          ],
+        },
+        {
+          title: 'The owner',
+          steps: [
+            { name: 'Cloudflare Zero Trust', detail: 'Access for the owner only' },
+            { name: 'Private panel', detail: 'Edit, preview and publish' },
+            { name: 'Workers KV + Cloudinary', detail: 'Content and images' },
+          ],
+        },
+        {
+          title: 'GitHub Actions',
+          steps: [
+            { name: 'Every push', detail: 'astro check and build' },
+            { name: 'Every day', detail: 'Backup of the content and the images in use' },
+          ],
+        },
+      ],
+    },
+    decisions: {
+      title: 'Decisions',
+      items: [
+        {
+          title: 'Workers KV instead of a database',
+          points: [
+            'All the content of a site like this fits in one document. No tables or queries were needed.',
+            'It fits in the free plan: the client pays for no server and no database.',
+            'It is read from the Cloudflare node closest to each visitor.',
+            'Hosting, functions, data and security with one provider: fewer moving parts to maintain.',
+          ],
+        },
+        {
+          title: 'Cloudflare Zero Trust instead of my own login',
+          points: [
+            'No passwords stored in my code that could leak.',
+            'A properly secure login (hashing, sessions, recovery, rate limiting) takes days and is one more thing to maintain.',
+            'It is easier for the owner: there is no password to remember.',
+          ],
+        },
+        {
+          title: 'Validate everything on the server',
+          points: [
+            'Everything the panel sends is validated on the server before it is saved.',
+            'If a field arrives wrong, the default value is used. A mistake in the panel never breaks the site.',
+          ],
+        },
+      ],
+    },
+    safety: {
+      title: 'Nothing gets lost',
+      items: [
+        { title: 'Daily backup', text: 'Every day GitHub Actions backs up the content and the images the site uses.' },
+        { title: 'Testing away from production', text: 'Locally I work on a copy of the content. Nothing I try there reaches the live site.' },
+        { title: 'Checked on every change', text: 'Every push runs astro check and a full build in GitHub Actions.' },
+      ],
+    },
+    result: {
+      title: 'Result',
+      text: 'The site is live and the content is changed from the panel, without touching code. It also has local SEO with Schema.org and a sitemap, legal pages, and the Google map only loads when a visitor asks for it.',
+      technologies: 'Technologies',
+    },
+  },
+} as const;
+
+const text = copy[lang];
+---
+
+<BaseLayout lang={lang} title={text.title} description={text.description} alternates={routes.francis}>
+  <main id="main-content" class="case">
+    <Container>
+      <a class="case__back" href={projectsHref}><span aria-hidden="true">←</span> {text.back}</a>
+
+      <header class="case__header">
+        <p class="case__eyebrow">{text.eyebrow} · {project.kind[lang]}</p>
+        <h1>Calzado Francis</h1>
+        <p class="case__lead">{text.lead}</p>
+        {siteLink && (
+          <div class="case__actions">
+            <ButtonLink href={siteLink.href} target="_blank" rel="noopener">{text.visit}</ButtonLink>
+          </div>
+        )}
+      </header>
+
+      <dl class="case__facts">
+        {text.facts.map((fact) => (
+          <div>
+            <dt>{fact.label}</dt>
+            <dd>{fact.value}</dd>
+          </div>
+        ))}
+      </dl>
+
+      <section class="case__section" aria-labelledby="challenge">
+        <h2 id="challenge">{text.challenge.title}</h2>
+        <div class="case__text">
+          <p>{text.challenge.intro}</p>
+          <ul class="case__list">
+            {text.challenge.points.map((point) => <li set:html={point} />)}
+          </ul>
+        </div>
+
+        <figure class="case__figure brackets">
+          <Image
+            src={panelMockup}
+            alt={text.challenge.mockupAlt}
+            widths={[720, 1080, 1440, 2160]}
+            sizes="(min-width: 80rem) 76rem, 100vw"
+          />
+          <figcaption>{text.challenge.mockupCaption}</figcaption>
+        </figure>
+      </section>
+
+      <section class="case__section" aria-labelledby="architecture">
+        <h2 id="architecture">{text.architecture.title}</h2>
+        <p class="case__intro">{text.architecture.intro}</p>
+        <div class="flows">
+          {text.architecture.flows.map((flow) => (
+            <div class="flow">
+              <h3>{flow.title}</h3>
+              <ol>
+                {flow.steps.map((step) => (
+                  <li>
+                    <strong>{step.name}</strong>
+                    <span>{step.detail}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section class="case__section" aria-labelledby="decisions">
+        <h2 id="decisions">{text.decisions.title}</h2>
+        <div class="decisions">
+          {text.decisions.items.map((decision) => (
+            <article class="decision">
+              <h3>{decision.title}</h3>
+              <ul>
+                {decision.points.map((point) => <li>{point}</li>)}
+              </ul>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section class="case__section" aria-labelledby="safety">
+        <h2 id="safety">{text.safety.title}</h2>
+        <div class="safety">
+          {text.safety.items.map((item) => (
+            <div>
+              <h3>{item.title}</h3>
+              <p>{item.text}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section class="case__section" aria-labelledby="result">
+        <h2 id="result">{text.result.title}</h2>
+        <div class="case__text">
+          <p>{text.result.text}</p>
+        </div>
+        <div class="case__tech">
+          <TechList items={project.technologies} label={text.result.technologies} />
+        </div>
+        <div class="case__actions">
+          {siteLink && <ButtonLink href={siteLink.href} target="_blank" rel="noopener">{text.visit}</ButtonLink>}
+          <ButtonLink href={projectsHref} variant="secondary">{text.backToProjects}</ButtonLink>
+        </div>
+      </section>
+    </Container>
+  </main>
+</BaseLayout>
+
+<style>
+  .case {
+    padding-block: var(--space-8) var(--space-10);
+  }
+
+  .case__back {
+    display: inline-flex;
+    gap: var(--space-2);
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .case__back:hover {
+    color: var(--color-heading);
+  }
+
+  .case__header {
+    max-width: 48rem;
+    margin-top: var(--space-7);
+  }
+
+  .case__eyebrow {
+    color: var(--color-accent);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .case h1 {
+    margin-top: var(--space-4);
+    font-size: var(--text-display);
+    line-height: 0.85;
+    text-transform: uppercase;
+  }
+
+  .case__lead {
+    margin-top: var(--space-5);
+    color: var(--color-text-muted);
+    font-size: var(--text-lg);
+  }
+
+  .case__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
+  }
+
+  .case__facts {
+    display: grid;
+    margin: var(--space-8) 0 0;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .case__facts div {
+    padding-block: var(--space-4);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .case__facts dt {
+    color: var(--color-text-muted);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .case__facts dd {
+    margin: var(--space-1) 0 0;
+    color: var(--color-heading);
+    font-weight: 650;
+  }
+
+  .case__section {
+    margin-top: var(--space-10);
+  }
+
+  .case__section h2 {
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--line);
+    font-size: var(--text-2xl);
+    text-transform: uppercase;
+  }
+
+  .case__text,
+  .case__intro {
+    max-width: 46rem;
+    margin-top: var(--space-5);
+  }
+
+  .case__text p,
+  .case__intro {
+    color: var(--color-text-muted);
+    font-size: var(--text-lg);
+  }
+
+  .case__list,
+  .decision ul {
+    display: grid;
+    gap: var(--space-3);
+    margin: var(--space-5) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .case__list li,
+  .decision li {
+    position: relative;
+    padding-left: var(--space-5);
+  }
+
+  .case__list li::before,
+  .decision li::before {
+    position: absolute;
+    top: 0.7em;
+    left: 0;
+    width: 0.35rem;
+    height: 0.35rem;
+    border-radius: 50%;
+    background: var(--color-accent);
+    content: '';
+  }
+
+  .case__figure {
+    margin: var(--space-8) 0 0;
+    padding: var(--space-3);
+    border: 1px solid var(--line);
+    background: var(--panel);
+  }
+
+  .case__figure img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .case__figure figcaption {
+    margin-top: var(--space-3);
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+  }
+
+  .flows,
+  .decisions,
+  .safety {
+    display: grid;
+    gap: var(--space-5);
+    margin-top: var(--space-7);
+  }
+
+  .flow,
+  .decision,
+  .safety > div {
+    padding: var(--space-6);
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    clip-path: polygon(0.9rem 0, 100% 0, 100% calc(100% - 0.9rem), calc(100% - 0.9rem) 100%, 0 100%, 0 0.9rem);
+  }
+
+  .flow h3,
+  .decision h3,
+  .safety h3 {
+    font-size: var(--text-xl);
+    text-transform: uppercase;
+  }
+
+  .flow ol {
+    display: grid;
+    gap: var(--space-5);
+    margin: var(--space-5) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .flow li {
+    position: relative;
+    display: grid;
+    gap: var(--space-1);
+    padding-left: var(--space-6);
+  }
+
+  .flow li::before {
+    position: absolute;
+    top: 0.45rem;
+    left: 0;
+    width: 0.65rem;
+    height: 0.65rem;
+    border: 2px solid var(--color-accent);
+    border-radius: 50%;
+    content: '';
+  }
+
+  .flow li + li::after {
+    position: absolute;
+    top: calc(-1 * var(--space-5));
+    left: calc(0.325rem - 0.5px);
+    width: 1px;
+    height: calc(var(--space-5) + 0.45rem);
+    background: var(--color-border);
+    content: '';
+  }
+
+  .flow strong {
+    color: var(--color-heading);
+  }
+
+  .flow span,
+  .safety p {
+    color: var(--color-text-muted);
+  }
+
+  .safety p {
+    margin-top: var(--space-3);
+  }
+
+  .case__tech {
+    margin-top: var(--space-6);
+  }
+
+  @media (min-width: 48rem) {
+    .case__facts {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      column-gap: var(--space-7);
+    }
+  }
+
+  @media (min-width: 68rem) {
+    .case__facts {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .flows,
+    .decisions,
+    .safety {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+</style>
