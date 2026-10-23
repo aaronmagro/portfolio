@@ -1,36 +1,57 @@
 ---
-// Fixed background behind every page: HUD grid plus two mountain ridges that drift with the scroll.
+// Fixed background behind every page: HUD grid, a glow and three mountain ridges drawn as simple lines,
+// the middle one marked in lime. They slide sideways at different speeds while scrolling
+// (src/scripts/backdrop.ts moves them; nothing is redrawn, so it stays smooth without hardware acceleration).
 const width = 1600;
 const height = 400;
 
-const ridge = (seed: number, base: number, amplitude: number) => {
-  let d = `M0 ${height}`;
-  for (let x = 0; x <= width; x += 20) {
+// Smooth, rounded ridges: low-frequency waves only (each one repeats exactly once per `width`, so two copies
+// side by side loop without a seam), joined with Catmull-Rom curves instead of straight segments.
+const ridge = (seed: number, base: number, amplitude: number, closed = true) => {
+  const step = 50;
+  const points: [number, number][] = [];
+  for (let x = -step; x <= width * 2 + step; x += step) {
     const t = x / width;
     const y =
       base -
       amplitude *
-        (0.55 * Math.sin(t * Math.PI * 2 + seed) +
-          0.3 * Math.abs(Math.sin(t * Math.PI * 7 + seed * 2)) +
-          0.15 * Math.sin(t * Math.PI * 17 + seed * 3));
-    d += ` L${x} ${y.toFixed(1)}`;
+        (0.6 * Math.sin(t * Math.PI * 2 + seed) +
+          0.28 * Math.sin(t * Math.PI * 6 + seed * 2) +
+          0.12 * Math.sin(t * Math.PI * 10 + seed * 3));
+    points.push([x, y]);
   }
-  return `${d} L${width} ${height} Z`;
+
+  let d = `M${points[1][0]} ${points[1][1].toFixed(1)}`;
+  for (let i = 1; i < points.length - 2; i++) {
+    const [p0, p1, p2, p3] = [points[i - 1], points[i], points[i + 1], points[i + 2]];
+    const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6];
+    const c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6];
+    d += ` C${c1[0].toFixed(1)} ${c1[1].toFixed(1)} ${c2[0].toFixed(1)} ${c2[1].toFixed(1)} ${p2[0]} ${p2[1].toFixed(1)}`;
+  }
+  return closed ? `${d} L${width * 2} ${height} L0 ${height} Z` : d;
 };
 
-const far = ridge(1.3, 230, 90);
-const near = ridge(4.1, 300, 70);
+const layers = [
+  { name: 'far', fill: ridge(1.3, 210, 95), line: ridge(1.3, 210, 95, false) },
+  { name: 'mid', fill: ridge(2.7, 260, 80), line: ridge(2.7, 260, 80, false) },
+  { name: 'near', fill: ridge(4.1, 320, 60), line: ridge(4.1, 320, 60, false) },
+];
 ---
 
 <div class="backdrop" aria-hidden="true">
   <div class="backdrop__grid"></div>
   <div class="backdrop__glow"></div>
-  <svg class="backdrop__ridge backdrop__ridge--far" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
-    <path d={far}></path>
-  </svg>
-  <svg class="backdrop__ridge backdrop__ridge--near" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
-    <path d={near}></path>
-  </svg>
+  {layers.map((layer) => (
+    <svg
+      class:list={['backdrop__ridge', `backdrop__ridge--${layer.name}`]}
+      viewBox={`0 0 ${width * 2} ${height}`}
+      preserveAspectRatio="none"
+      data-ridge={layer.name}
+    >
+      <path d={layer.fill}></path>
+      {layer.line && <path class="backdrop__contour" d={layer.line}></path>}
+    </svg>
+  ))}
 </div>
 <div class="scroll-progress" aria-hidden="true"></div>
 
@@ -43,43 +64,60 @@ const near = ridge(4.1, 300, 70);
     pointer-events: none;
   }
 
+  /* Static layers: only the ridges move, by transform, which never repaints them. */
   .backdrop__grid {
     position: absolute;
     inset: 0;
     background-image:
       linear-gradient(var(--grid) 1px, transparent 1px),
       linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-    background-position: 0 calc(var(--scroll, 0) * -0.25px);
     background-size: 3rem 3rem;
   }
 
   .backdrop__glow {
     position: absolute;
-    top: -20vh;
-    right: -10vw;
-    width: 70vw;
-    height: 70vh;
+    top: -25vh;
+    right: -15vw;
+    width: 75vw;
+    height: 75vh;
     background: radial-gradient(closest-side, var(--glow), transparent);
-    transform: translate3d(0, calc(var(--progress, 0) * 30vh), 0);
   }
 
   .backdrop__ridge {
     position: absolute;
-    right: 0;
     bottom: 0;
     left: 0;
-    width: 100%;
-    height: 42vh;
+    width: 200vw;
+    max-width: none;
+    will-change: transform;
   }
 
   .backdrop__ridge--far {
+    height: 50vh;
     fill: var(--ridge-1);
-    transform: translate3d(calc(var(--progress, 0) * -4vw), calc(var(--progress, 0) * 6vh), 0) scaleX(1.1);
+  }
+
+  .backdrop__ridge--mid {
+    height: 44vh;
+    fill: var(--ridge-1);
   }
 
   .backdrop__ridge--near {
+    height: 34vh;
     fill: var(--ridge-2);
-    transform: translate3d(calc(var(--progress, 0) * 6vw), calc(var(--progress, 0) * 12vh), 0) scaleX(1.15);
+  }
+
+  .backdrop__contour {
+    fill: none;
+    stroke: var(--ridge-edge);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+
+  /* The marked one. */
+  .backdrop__ridge--mid .backdrop__contour {
+    stroke: var(--ridge-line);
+    stroke-width: 1.5;
   }
 
   .scroll-progress {
@@ -90,9 +128,8 @@ const near = ridge(4.1, 300, 70);
     width: 100%;
     height: 3px;
     background: var(--lime);
-    transform: scaleX(var(--progress, 0));
+    transform: scaleX(0);
     transform-origin: left;
     pointer-events: none;
   }
-
 </style>
