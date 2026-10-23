@@ -1,9 +1,18 @@
 import type { Project } from '../types';
 import { siteConfig } from '../config/site';
 import { routes } from '../utils/i18n';
-import francisThumbnail from '../assets/projects/francis/thumbnail.png';
-import erensitoThumbnail from '../assets/projects/erensito/thumbnail.png';
-import portfolioThumbnail from '../assets/projects/portfolio/thumbnail.png';
+import francisDarkEs from '../assets/projects/francis/dark-es.png';
+import francisDarkEn from '../assets/projects/francis/dark-en.png';
+import francisLightEs from '../assets/projects/francis/light-es.png';
+import francisLightEn from '../assets/projects/francis/light-en.png';
+import erensitoDarkEs from '../assets/projects/erensito/dark-es.png';
+import erensitoDarkEn from '../assets/projects/erensito/dark-en.png';
+import erensitoLightEs from '../assets/projects/erensito/light-es.png';
+import erensitoLightEn from '../assets/projects/erensito/light-en.png';
+import portfolioDarkEs from '../assets/projects/portfolio/dark-es.png';
+import portfolioDarkEn from '../assets/projects/portfolio/dark-en.png';
+import portfolioLightEs from '../assets/projects/portfolio/light-es.png';
+import portfolioLightEn from '../assets/projects/portfolio/light-en.png';
 
 // The workshop's own site says "Artesanos desde 1988".
 const francisYears = new Date().getFullYear() - 1988;
@@ -56,7 +65,10 @@ export const projects: readonly Project[] = [
       },
     ],
     image: {
-      src: francisThumbnail,
+      sources: {
+        dark: { es: francisDarkEs, en: francisDarkEn },
+        light: { es: francisLightEs, en: francisLightEn },
+      },
       alt: {
         es: 'Cartel de Calzado Francis con su lema «Reparamos. Restauramos. Cuidamos tu calzado.», su logo y sus huellas',
         en: 'Calzado Francis poster with its motto “We repair. We restore. We care for your shoes.”, its logo and its footprints',
@@ -101,7 +113,10 @@ export const projects: readonly Project[] = [
       },
     ],
     image: {
-      src: erensitoThumbnail,
+      sources: {
+        dark: { es: erensitoDarkEs, en: erensitoDarkEn },
+        light: { es: erensitoLightEs, en: erensitoLightEn },
+      },
       alt: {
         es: 'Miniatura de erensito.com con la tarjeta de jugador de eReN',
         en: 'erensito.com thumbnail with the eReN player card',
@@ -146,7 +161,10 @@ export const projects: readonly Project[] = [
       },
     ],
     image: {
-      src: portfolioThumbnail,
+      sources: {
+        dark: { es: portfolioDarkEs, en: portfolioDarkEn },
+        light: { es: portfolioLightEs, en: portfolioLightEn },
+      },
       alt: {
         es: 'Miniatura de este portfolio con la tarjeta de presentación de Aarón Magro',
         en: 'Thumbnail of this portfolio with Aarón Magro’s profile card',

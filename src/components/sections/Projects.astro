@@ -1,6 +1,6 @@
 ---
+import ThemedImage from '../ui/ThemedImage.astro';
 import TechList from '../ui/TechList.astro';
-import { Image } from 'astro:assets';
 import Container from '../ui/Container.astro';
 import ButtonLink from '../ui/ButtonLink.astro';
 import SectionHeader from '../ui/SectionHeader.astro';
@@ -49,12 +49,7 @@ const number = (index: number) => String(index + 1).padStart(2, '0');
       <div class="featured__visual">
         {featured.image && (
           <figure class="featured__media brackets" data-tilt>
-            <Image
-              src={featured.image.src}
-              alt={featured.image.alt[lang]}
-              widths={[640, 960, 1440]}
-              sizes="(min-width: 68rem) 55vw, 100vw"
-            />
+            <ThemedImage image={featured.image} lang={lang} widths={[640, 960, 1440]} sizes="(min-width: 68rem) 55vw, 100vw" />
           </figure>
         )}
         <TechList items={featured.technologies} label={text.technologies} />
@@ -86,7 +81,7 @@ const number = (index: number) => String(index + 1).padStart(2, '0');
         <article id={`project-${project.id}`} class="mission panel-cut" aria-labelledby={`project-${project.id}-title`}>
           {project.image && (
             <figure class="mission__media">
-              <Image src={project.image.src} alt={project.image.alt[lang]} widths={[480, 720, 960]} sizes="(min-width: 48rem) 40vw, 100vw" />
+              <ThemedImage image={project.image} lang={lang} widths={[480, 720, 960]} sizes="(min-width: 48rem) 40vw, 100vw" />
             </figure>
           )}
           <div class="mission__body">
@@ -139,7 +134,7 @@ const number = (index: number) => String(index + 1).padStart(2, '0');
     box-shadow: inset 0 0 0 1px var(--lime-ink);
   }
 
-  .featured__media img {
+  .featured__media :global(img) {
     display: block;
     width: 100%;
     height: auto;
@@ -248,7 +243,7 @@ const number = (index: number) => String(index + 1).padStart(2, '0');
     --panel-line: var(--lime-ink);
   }
 
-  .mission:hover .mission__media img {
+  .mission:hover .mission__media :global(img) {
     transform: scale(1.03);
   }
 
@@ -259,7 +254,7 @@ const number = (index: number) => String(index + 1).padStart(2, '0');
     clip-path: polygon(calc(var(--cut) - 2px) 0, 100% 0, 100% 100%, 0 100%, 0 calc(var(--cut) - 2px));
   }
 
-  .mission__media img {
+  .mission__media :global(img) {
     display: block;
     width: 100%;
     height: auto;
@@ -326,7 +321,7 @@ const number = (index: number) => String(index + 1).padStart(2, '0');
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .mission__media img {
+    .mission__media :global(img) {
       transform: none !important;
     }
   }

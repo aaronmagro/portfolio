@@ -34,8 +34,9 @@ export interface ProjectLink {
   label: LocalizedText;
 }
 
+// One thumbnail per theme and language: the text in it is translated and the colours follow the theme.
 export interface ProjectImage {
-  src: ImageMetadata;
+  sources: Record<'dark' | 'light', Record<Locale, ImageMetadata>>;
   alt: LocalizedText;
   caption?: LocalizedText;
 }

@@ -1,0 +1,40 @@
+---
+import { Image } from 'astro:assets';
+import type { SupportedLocale } from '../../config/site';
+import type { ProjectImage } from '../../types';
+
+// Renders the dark and light versions of a project thumbnail; CSS shows the one for the active theme.
+// Both are lazy, so the hidden one is never downloaded.
+interface Props {
+  image: ProjectImage;
+  lang: SupportedLocale;
+  widths: number[];
+  sizes: string;
+}
+
+const { image, lang, widths, sizes } = Astro.props;
+---
+
+{(['dark', 'light'] as const).map((theme) => (
+  <Image
+    class:list={['themed-image', `themed-image--${theme}`]}
+    src={image.sources[theme][lang]}
+    alt={image.alt[lang]}
+    widths={widths}
+    sizes={sizes}
+    loading="lazy"
+  />
+))}
+
+<style>
+  .themed-image {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  :global(html:not([data-theme='light'])) .themed-image--light,
+  :global(html[data-theme='light']) .themed-image--dark {
+    display: none;
+  }
+</style>
