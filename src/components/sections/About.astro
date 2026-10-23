@@ -1,9 +1,8 @@
 ---
 import Container from '../ui/Container.astro';
-import SectionHeading from '../ui/SectionHeading.astro';
-import { siteConfig } from '../../config/site';
-
-type SupportedLocale = (typeof siteConfig.locales)[number];
+import SectionHeader from '../ui/SectionHeader.astro';
+import { siteConfig, type SupportedLocale } from '../../config/site';
+import { availability, education, languages, lookingFor } from '../../data/profile';
 
 interface Props {
   lang?: SupportedLocale;
@@ -15,264 +14,136 @@ const copy = {
   es: {
     eyebrow: 'Perfil',
     title: 'Sobre mí',
-    description:
-      'Desarrollo software con una base técnica sólida y una idea sencilla: entender bien el problema antes de complicar la solución.',
-    statement:
-      'Me interesa construir software que funcione bien hoy y siga teniendo sentido cuando tenga que evolucionar.',
     body: [
-      'Soy desarrollador full-stack con formación en Desarrollo de Aplicaciones Web. Mi trayectoria profesional incluye desarrollo y mantenimiento de aplicaciones, servicios Web API en .NET y soporte técnico en entornos bancarios e inmobiliarios.',
-      'He trabajado sobre sistemas existentes, nuevas funcionalidades, automatización de pruebas y resolución de incidencias, prestando atención a estabilidad, accesibilidad, rendimiento y seguridad. Valoro el código claro, la comunicación entre equipos y las soluciones que puedan evolucionar sin añadir complejidad innecesaria.',
+      'Soy Aarón, desarrollador full-stack de Badajoz. Empecé a programar porque me daba curiosidad cómo funcionaban las webs por dentro, y me encantó. Hoy lo que más me gusta es llevar los proyectos hasta el final: que no se queden en una demo, sino funcionando y con gente usándolos.',
+      'En NTT DATA estuve casi dos años en remoto con clientes de banca e inmobiliario. Mantuve APIs .NET de las que dependían la app móvil y otros sistemas del banco, automaticé sus pruebas y resolví incidencias en distintos entornos. Ahí aprendí a trabajar con cuidado sobre código de otros y a coordinarme con varios equipos.',
+      'Por mi cuenta hice la web de Calzado Francis, un taller de Leganés, de principio a fin: diseño, CMS propio, despliegue en Cloudflare, SEO y copias de seguridad. Está pensada para que el dueño la actualice sin depender de mí.',
+      'Fuera del trabajo sigo programando: hice erensito.com, mi web personal, y estoy desarrollando Vhaerynd, un RPG 2D para navegador con Phaser y TypeScript. Llevo años compitiendo en videojuegos a nivel nacional, y es de donde más he aprendido a trabajar en equipo: comunicarme bajo presión, revisar en qué fallo y entender que los resultados son de todos. Para desconectar, hago deporte, viajo siempre que puedo y me escapo a la naturaleza.',
+      'Ahora busco un equipo en el que aportar en backend, en frontend o en ambos. Me adapto bien a proyectos que ya están en marcha y también me ocupo de la parte menos vistosa: incidencias, datos y pruebas.',
     ],
-    facts: [
-      { label: 'Perfil', value: 'Desarrollo full-stack' },
-      { label: 'Ubicación', value: 'Badajoz, España' },
-      { label: 'Enfoque', value: 'Backend, frontend y producto' },
-    ],
-    principlesLabel: 'Forma de trabajar',
-    principles: [
-      {
-        index: '01',
-        title: 'Entender',
-        description:
-          'Antes de escribir código, intento entender el problema, el contexto y qué necesita realmente quien va a usar o mantener la solución.',
-      },
-      {
-        index: '02',
-        title: 'Construir',
-        description:
-          'Busco soluciones claras y proporcionadas, con una estructura que permita avanzar sin añadir dependencias o complejidad porque sí.',
-      },
-      {
-        index: '03',
-        title: 'Mantener',
-        description:
-          'Pienso en el siguiente cambio desde el primero: nombres consistentes, responsabilidades claras y código que otro desarrollador pueda continuar.',
-      },
-    ],
+    labels: { base: 'Base', lookingFor: 'Busco', mode: 'Modalidad', education: 'Formación', languages: 'Idiomas' },
+    base: 'Badajoz',
   },
   en: {
     eyebrow: 'Profile',
     title: 'About me',
-    description:
-      'I build software on solid technical foundations with a simple principle: understand the problem before making the solution complicated.',
-    statement:
-      'I want to build software that works well today and still makes sense when it needs to evolve.',
     body: [
-      'I am a full-stack developer with a background in Web Application Development. My professional path includes application development and maintenance, .NET Web API services and technical support across banking and real-estate environments.',
-      'I have worked on existing systems, new features, test automation and incident resolution, with attention to stability, accessibility, performance and security. I value clear code, effective team communication and solutions that can evolve without unnecessary complexity.',
+      'I am Aarón, a full-stack developer from Badajoz, Spain. I started coding because I was curious about how websites work on the inside, and I loved it. What I enjoy most now is taking projects all the way: not leaving them as a demo, but running and being used.',
+      'At NTT DATA I spent almost two years working remotely for banking and real-estate clients. I maintained .NET APIs the bank’s mobile app and other systems depended on, automated their tests and solved incidents across environments. That taught me to work carefully on other people’s code and to coordinate with several teams.',
+      'On my own I built the Calzado Francis website, for a workshop in Leganés, end to end: design, custom CMS, Cloudflare deployment, SEO and backups. It is designed so the owner can update it without depending on me.',
+      'Outside work I keep coding: I built erensito.com, my personal site, and I am developing Vhaerynd, a 2D browser RPG with Phaser and TypeScript. I have competed in video games at national level for years, and it is where I have learned most about teamwork: communicating under pressure, reviewing what I get wrong and understanding that results belong to everyone. To switch off, I do sport, travel whenever I can and get out into nature.',
+      'Now I am looking for a team where I can contribute on the backend, the frontend or both. I adapt well to projects already under way and I also take care of the less glamorous part: incidents, data and tests.',
     ],
-    facts: [
-      { label: 'Profile', value: 'Full-stack development' },
-      { label: 'Location', value: 'Badajoz, Spain' },
-      { label: 'Focus', value: 'Backend, frontend and product' },
-    ],
-    principlesLabel: 'How I work',
-    principles: [
-      {
-        index: '01',
-        title: 'Understand',
-        description:
-          'Before writing code, I try to understand the problem, its context and what the people using or maintaining the solution actually need.',
-      },
-      {
-        index: '02',
-        title: 'Build',
-        description:
-          'I look for clear, proportionate solutions with a structure that supports progress without adding dependencies or complexity for their own sake.',
-      },
-      {
-        index: '03',
-        title: 'Maintain',
-        description:
-          'I think about the next change from the first one: consistent naming, clear responsibilities and code another developer can continue.',
-      },
-    ],
+    labels: { base: 'Based in', lookingFor: 'Looking for', mode: 'Work mode', education: 'Education', languages: 'Languages' },
+    base: 'Badajoz, Spain',
   },
 } as const;
+
+const text = copy[lang];
+const [mainEducation] = education;
+
+const facts = [
+  { label: text.labels.base, value: text.base },
+  { label: text.labels.lookingFor, value: lookingFor[lang] },
+  { label: text.labels.mode, value: availability[lang] },
+  { label: text.labels.education, value: `${mainEducation.title[lang]} · ${mainEducation.school} (${mainEducation.period})` },
+  {
+    label: text.labels.languages,
+    value: languages.map((language) => `${language.name[lang]} ${language.level[lang]}`).join(' · '),
+  },
+];
 ---
 
 <section class="about" id="about" aria-labelledby="about-title">
   <Container>
-    <SectionHeading
-      index="03"
-      eyebrow={copy[lang].eyebrow}
-      title={copy[lang].title}
-      description={copy[lang].description}
-      headingId="about-title"
-    />
+    <SectionHeader title={text.title} label={text.eyebrow} headingId="about-title" />
 
     <div class="about__layout">
-      <p class="about__statement">{copy[lang].statement}</p>
-
-      <div class="about__narrative">
-        <div class="about__copy">
-          {copy[lang].body.map((paragraph) => <p>{paragraph}</p>)}
-        </div>
-
-        <dl class="about__facts">
-          {copy[lang].facts.map((fact) => (
+      <aside class="about__card">
+        <dl class="about__facts panel-cut">
+          {facts.map((fact) => (
             <div class="about__fact">
-              <dt>{fact.label}</dt>
+              <dt class="label">{fact.label}</dt>
               <dd>{fact.value}</dd>
             </div>
           ))}
         </dl>
-      </div>
-    </div>
+      </aside>
 
-    <div class="about__principles" aria-label={copy[lang].principlesLabel}>
-      {copy[lang].principles.map((principle) => (
-        <div class="about__principle">
-          <span class="about__principle-index" aria-hidden="true">{principle.index}</span>
-          <h3>{principle.title}</h3>
-          <p>{principle.description}</p>
-        </div>
-      ))}
+      <div class="about__copy">
+        {text.body.map((paragraph) => <p>{paragraph}</p>)}
+      </div>
     </div>
   </Container>
 </section>
 
 <style>
   .about {
-    padding-block: clamp(var(--space-9), 12vw, var(--space-10));
-    border-top: 1px solid var(--color-border);
+    padding-block: clamp(var(--space-9), 10vw, var(--space-10));
     scroll-margin-top: 4.5rem;
   }
 
   .about__layout {
     display: grid;
-    gap: clamp(var(--space-7), 7vw, var(--space-10));
-    margin-top: clamp(var(--space-8), 8vw, var(--space-10));
-  }
-
-  .about__statement {
-    max-width: 15ch;
-    color: var(--color-heading);
-    font-size: clamp(2rem, 5.5vw, 4.75rem);
-    font-weight: 700;
-    line-height: 1.02;
-    letter-spacing: -0.055em;
-  }
-
-  .about__narrative {
-    display: grid;
     gap: var(--space-7);
-    max-width: 48rem;
+    margin-top: var(--space-8);
+  }
+
+  .about__card {
+    display: grid;
+    gap: var(--space-4);
+    align-content: start;
+  }
+
+
+  .about__facts {
+    --cut: 0.9rem;
+    margin: 0;
+    padding: var(--space-2) var(--space-5);
+  }
+
+  .about__fact {
+    display: grid;
+    gap: var(--space-1);
+    padding-block: var(--space-3);
+  }
+
+  .about__fact + .about__fact {
+    border-top: 1px solid var(--line);
+  }
+
+  .about__fact dd {
+    margin: 0;
+    font-weight: 600;
   }
 
   .about__copy {
     display: grid;
     gap: var(--space-5);
+    max-width: 46rem;
+    align-content: start;
   }
 
   .about__copy p {
-    color: var(--color-text-muted);
+    color: var(--soft);
     font-size: var(--text-lg);
   }
 
   .about__copy p:first-child {
-    color: var(--color-text);
-  }
-
-  .about__facts {
-    margin: 0;
-    border-top: 1px solid var(--color-border);
-  }
-
-  .about__fact {
-    display: grid;
-    grid-template-columns: minmax(6.5rem, 0.35fr) minmax(0, 1fr);
-    gap: var(--space-5);
-    padding-block: var(--space-4);
-    border-bottom: 1px solid var(--color-border);
-  }
-
-  .about__fact dt {
-    color: var(--color-text-muted);
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-  }
-
-  .about__fact dd {
-    margin: 0;
-    color: var(--color-heading);
-    font-weight: 650;
-  }
-
-  .about__principles {
-    display: grid;
-    margin-top: clamp(var(--space-8), 9vw, var(--space-10));
-    border-top: 1px solid var(--color-border);
-  }
-
-  .about__principle {
-    padding-block: var(--space-6);
-  }
-
-  .about__principle + .about__principle {
-    border-top: 1px solid var(--color-border);
-  }
-
-  .about__principle-index {
-    display: block;
-    margin-bottom: var(--space-4);
-    color: var(--color-accent);
-    font-size: 0.72rem;
-    font-weight: 800;
-    letter-spacing: 0.1em;
-  }
-
-  .about__principle h3 {
-    font-size: var(--text-xl);
-    letter-spacing: -0.025em;
-  }
-
-  .about__principle p {
-    max-width: 32rem;
-    margin-top: var(--space-3);
-    color: var(--color-text-muted);
-  }
-
-  @media (min-width: 48rem) {
-    .about__principles {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-
-    .about__principle {
-      padding: var(--space-6) clamp(var(--space-5), 3vw, var(--space-7));
-    }
-
-    .about__principle:first-child {
-      padding-left: 0;
-    }
-
-    .about__principle:last-child {
-      padding-right: 0;
-    }
-
-    .about__principle + .about__principle {
-      border-top: 0;
-      border-left: 1px solid var(--color-border);
-    }
+    color: var(--ink);
+    font-size: clamp(1.2rem, 1.6vw, 1.4rem);
+    line-height: 1.5;
   }
 
   @media (min-width: 68rem) {
     .about__layout {
-      grid-template-columns: minmax(0, 0.9fr) minmax(25rem, 1fr);
-      align-items: start;
+      grid-template-columns: minmax(18rem, 0.42fr) minmax(0, 1fr);
+      gap: var(--space-9);
     }
 
-    .about__narrative {
-      justify-self: end;
-    }
-  }
-
-  @media (max-width: 32rem) {
-    .about__fact {
-      grid-template-columns: 1fr;
-      gap: var(--space-2);
+    .about__card {
+      position: sticky;
+      top: 6rem;
     }
   }
 </style>
