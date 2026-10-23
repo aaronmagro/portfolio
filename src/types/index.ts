@@ -78,6 +78,8 @@ export interface Technology {
   name: string;
   // Only for names that change with the language, like the practices.
   localizedName?: LocalizedText;
+  // Its logo, see src/utils/tech-icons.ts: 'si:siAstro' or 'devicon:csharp/csharp-plain'.
+  icon?: string;
   usage: readonly TechnologyUsage[];
 }
 

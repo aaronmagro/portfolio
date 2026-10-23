@@ -1,4 +1,5 @@
 ---
+import TechList from '../ui/TechList.astro';
 import { Image } from 'astro:assets';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Container from '../ui/Container.astro';
@@ -326,9 +327,9 @@ const text = copy[lang];
         <div class="case__text">
           <p>{text.result.text}</p>
         </div>
-        <ul class="case__tech" aria-label={text.result.technologies}>
-          {project.technologies.map((technology) => <li>{technology}</li>)}
-        </ul>
+        <div class="case__tech">
+          <TechList items={project.technologies} label={text.result.technologies} />
+        </div>
         <div class="case__actions">
           {siteLink && <ButtonLink href={siteLink.href} target="_blank" rel="noopener">{text.visit}</ButtonLink>}
           <ButtonLink href={projectsHref} variant="secondary">{text.backToProjects}</ButtonLink>
@@ -557,21 +558,7 @@ const text = copy[lang];
   }
 
   .case__tech {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-    margin: var(--space-6) 0 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .case__tech li {
-    padding: 0.35rem 0.7rem;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-pill);
-    color: var(--color-text-muted);
-    font-size: 0.78rem;
-    font-weight: 600;
+    margin-top: var(--space-6);
   }
 
   @media (min-width: 48rem) {

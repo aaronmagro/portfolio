@@ -4,6 +4,7 @@ import SectionHeader from '../ui/SectionHeader.astro';
 import { technologyGroups, technologyName, usageLabels } from '../../data/technologies';
 import { siteConfig, type SupportedLocale } from '../../config/site';
 import type { TechnologyUsage } from '../../types';
+import { techIcon } from '../../utils/tech-icons';
 
 interface Props {
   lang?: SupportedLocale;
@@ -44,6 +45,15 @@ const layers = order.flatMap((id) => technologyGroups.filter((group) => group.id
 const usages = Object.keys(usageLabels) as TechnologyUsage[];
 // Most to least relevant: professional, then project, then training. The sort keeps the data order within each.
 const rank = (usage: TechnologyUsage) => usages.indexOf(usage);
+
+// One line glyph per layer, drawn on a 24px grid with the same stroke.
+const glyphs: Record<string, string[]> = {
+  frontend: ['M3 5h18v14H3z', 'M3 9h18', 'M6 7h.01M8.5 7h.01'],
+  backend: ['M4 4h16v6H4z', 'M4 14h16v6H4z', 'M7.5 7h.01M7.5 17h.01', 'M11 7h5M11 17h5'],
+  data: ['M4 6c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3z', 'M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6', 'M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3'],
+  tooling: ['M14.5 5.5a4 4 0 0 0-5 5L4 16v4h4l5.5-5.5a4 4 0 0 0 5-5l-2.5 2.5-2.5-.5-.5-2.5z'],
+  practices: ['M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6z', 'M8.5 12l2.5 2.5 4.5-5'],
+};
 ---
 
 <section class="stack" id="stack" aria-labelledby="stack-title">
@@ -54,13 +64,22 @@ const rank = (usage: TechnologyUsage) => usages.indexOf(usage);
       <div class="layers">
         {layers.map((group) => (
           <div class="layer panel-cut">
-            <h3>
-              {group.label[lang]}
-              <small>{text.subtitles[group.id as keyof typeof text.subtitles]}</small>
-            </h3>
+            <div class="layer__title">
+              <svg class="layer__glyph" viewBox="0 0 24 24" aria-hidden="true">
+                {(glyphs[group.id] ?? []).map((d) => <path d={d}></path>)}
+              </svg>
+              <h3>
+                {group.label[lang]}
+                <small>{text.subtitles[group.id as keyof typeof text.subtitles]}</small>
+              </h3>
+            </div>
             <ul class="layer__chips">
               {[...group.items].sort((a, b) => rank(a.usage[0]) - rank(b.usage[0])).map((item) => (
                 <li class:list={['chip', `chip--${item.usage[0]}`]}>
+                  {(() => {
+                    const icon = techIcon(item.icon);
+                    return icon && <svg class="chip__logo" viewBox={icon.viewBox} aria-hidden="true" set:html={icon.body} />;
+                  })()}
                   {technologyName(item, lang)}
                   <span class="visually-hidden"> ({item.usage.map((usage) => usageLabels[usage][lang]).join(', ')})</span>
                 </li>
@@ -115,8 +134,33 @@ const rank = (usage: TechnologyUsage) => usages.indexOf(usage);
     --panel-line: var(--lime-ink);
   }
 
+  .layer__title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+  }
+
+  .layer__glyph {
+    flex: none;
+    width: 2.6rem;
+    height: 2.6rem;
+    padding: 0.55rem;
+    border: 1px solid var(--line);
+    background: var(--panel-2);
+    fill: none;
+    stroke: var(--lime-ink);
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 1.75;
+    transition: border-color var(--transition-fast);
+  }
+
+  .layer:hover .layer__glyph {
+    border-color: var(--lime-ink);
+  }
+
   .layer h3 {
-    font-size: 1.7rem;
+    font-size: 1.55rem;
     text-transform: uppercase;
   }
 
@@ -142,10 +186,25 @@ const rank = (usage: TechnologyUsage) => usages.indexOf(usage);
   }
 
   .chip {
-    padding: 0.45rem 0.8rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.4rem 0.7rem;
     border: 1px solid var(--ink);
-    font-size: 0.95rem;
+    font-size: 0.88rem;
     font-weight: 600;
+  }
+
+  .chip__logo {
+    width: 1rem;
+    height: 1rem;
+    flex: none;
+  }
+
+  /* Every logo in the text colour, whatever its source file says. */
+  .chip__logo :global(*) {
+    fill: currentColor !important;
+    stroke: none !important;
   }
 
   .chip--professional {
@@ -203,7 +262,7 @@ const rank = (usage: TechnologyUsage) => usages.indexOf(usage);
     }
 
     .layer {
-      grid-template-columns: 15rem minmax(0, 1fr);
+      grid-template-columns: 18.5rem minmax(0, 1fr);
       align-items: center;
     }
 

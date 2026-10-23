@@ -1,4 +1,5 @@
 ---
+import TechList from '../ui/TechList.astro';
 import { Image } from 'astro:assets';
 import Container from '../ui/Container.astro';
 import ButtonLink from '../ui/ButtonLink.astro';
@@ -56,9 +57,7 @@ const number = (index: number) => String(index + 1).padStart(2, '0');
             />
           </figure>
         )}
-        <ul class="chips" aria-label={text.technologies}>
-          {featured.technologies.map((technology) => <li>{technology}</li>)}
-        </ul>
+        <TechList items={featured.technologies} label={text.technologies} />
         <div class="featured__links">
           {featured.caseStudy && <ButtonLink href={featured.caseStudy[lang]}>{text.caseStudy}</ButtonLink>}
           {featured.links.map((link) => (
@@ -97,9 +96,9 @@ const number = (index: number) => String(index + 1).padStart(2, '0');
             </p>
             <h3 id={`project-${project.id}-title`}>{project.title[lang]}</h3>
             <p class="mission__summary">{project.summary[lang]}</p>
-            <ul class="chips" aria-label={text.technologies}>
-              {project.technologies.map((technology) => <li>{technology}</li>)}
-            </ul>
+            <div class="mission__tech">
+              <TechList items={project.technologies} label={text.technologies} size="sm" />
+            </div>
             {project.links.length > 0 && (
               <p class="mission__links">
                 {project.links.map((link) => (
@@ -152,7 +151,6 @@ const number = (index: number) => String(index + 1).padStart(2, '0');
     align-content: start;
   }
 
-  .featured__visual .chips,
   .featured__visual .featured__links {
     margin-top: 0;
   }
@@ -222,24 +220,7 @@ const number = (index: number) => String(index + 1).padStart(2, '0');
     content: '';
   }
 
-  .chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-    margin: var(--space-5) 0 0;
-    padding: 0;
-    list-style: none;
-  }
 
-  .chips li {
-    padding: 0.3rem 0.6rem;
-    border: 1px solid var(--line);
-    color: var(--soft);
-    font-family: var(--font-mono);
-    font-size: 0.72rem;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
 
   .featured__links {
     display: flex;
@@ -314,6 +295,10 @@ const number = (index: number) => String(index + 1).padStart(2, '0');
     margin-top: var(--space-3);
     color: var(--soft);
     font-size: 0.95rem;
+  }
+
+  .mission__tech {
+    margin-top: var(--space-4);
   }
 
   .mission__links {
