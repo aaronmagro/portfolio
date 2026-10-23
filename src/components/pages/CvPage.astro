@@ -1,0 +1,422 @@
+---
+import { Image } from 'astro:assets';
+import { siteConfig, type SupportedLocale } from '../../config/site';
+import { experienceCompanies } from '../../data/experience';
+import { projects } from '../../data/projects';
+import { technologyGroups, technologyName, usageLabels } from '../../data/technologies';
+import { availability, education, extras, languages } from '../../data/profile';
+import { formatPeriod } from '../../utils/dates';
+import { profilePhoto } from '../../utils/profile-photo';
+import type { TechnologyUsage } from '../../types';
+
+// Print-first page: `npm run cv` turns /cv/ and /en/cv/ into the PDFs in public/.
+interface Props {
+  lang: SupportedLocale;
+}
+
+const { lang } = Astro.props;
+
+const copy = {
+  es: {
+    role: 'Desarrollador full-stack',
+    summary:
+      'Dos años en NTT DATA desarrollando y manteniendo APIs .NET para banca y dando soporte a aplicaciones del sector inmobiliario. Por mi cuenta he diseñado, desarrollado y puesto en producción la web y el CMS de un negocio real con Astro y Cloudflare.',
+    location: 'Residencia en Badajoz',
+    experience: 'Experiencia',
+    projects: 'Proyectos',
+    education: 'Formación',
+    languages: 'Idiomas',
+    more: 'Más',
+  },
+  en: {
+    role: 'Full-stack developer',
+    summary:
+      'Two years at NTT DATA building and maintaining .NET APIs for banking and supporting real-estate applications. On my own I designed, built and launched the website and CMS of a real business with Astro and Cloudflare.',
+    location: 'Based in Badajoz, Spain',
+    experience: 'Experience',
+    projects: 'Projects',
+    education: 'Education',
+    languages: 'Languages',
+    more: 'More',
+  },
+} as const;
+
+const text = copy[lang];
+
+const stripProtocol = (url: string) => url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
+
+const contacts = [
+  { label: siteConfig.email, href: `mailto:${siteConfig.email}` },
+  { label: stripProtocol(siteConfig.url), href: siteConfig.url },
+  { label: stripProtocol(siteConfig.linkedinUrl), href: siteConfig.linkedinUrl },
+  { label: stripProtocol(siteConfig.githubUrl), href: siteConfig.githubUrl },
+];
+
+// Each technology goes under the strongest place I have used it.
+const technologyGroupsToList = technologyGroups.filter((group) => group.id !== 'practices');
+const practices = technologyGroups.find((group) => group.id === 'practices');
+const usageOrder: TechnologyUsage[] = ['professional', 'project', 'training'];
+const technologiesByUsage = usageOrder.map((usage) => ({
+  label: usageLabels[usage][lang],
+  items: technologyGroupsToList
+    .flatMap((group) => group.items)
+    .filter((item) => item.usage[0] === usage)
+    .map((item) => technologyName(item, lang)),
+}));
+
+const [featuredProject, ...otherProjects] = projects;
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <title>CV | {siteConfig.fullName}</title>
+  </head>
+  <body>
+    <main class="cv">
+      <header class="cv__header">
+        <div>
+          <h1>{siteConfig.fullName}</h1>
+          <p class="cv__role">{text.role}</p>
+          <ul class="cv__contacts">
+            {contacts.map((contact) => (
+              <li><a href={contact.href}>{contact.label}</a></li>
+            ))}
+          </ul>
+          <p class="cv__location">{text.location} · {availability[lang]}</p>
+        </div>
+        {profilePhoto && <Image class="cv__photo" src={profilePhoto} alt="" width={240} />}
+      </header>
+
+      <p class="cv__summary">{text.summary}</p>
+
+      <div class="cv__columns">
+        <div class="cv__main">
+          <section>
+            <h2>{text.experience}</h2>
+            {experienceCompanies.map((company) =>
+              company.roles.map((role) => (
+                <article class="cv-entry">
+                  <header>
+                    <h3>{role.role[lang]}</h3>
+                    <p class="cv-entry__period">{formatPeriod(role.startDate, role.endDate, lang)}</p>
+                  </header>
+                  <p class="cv-entry__place">{company.company[lang]} · {role.description[lang]}</p>
+                  <ul>
+                    {role.highlights.map((highlight) => <li>{highlight[lang]}</li>)}
+                  </ul>
+                </article>
+              )),
+            )}
+          </section>
+
+          <section>
+            <h2>{text.projects}</h2>
+            <article class="cv-entry">
+              <header>
+                <h3>{featuredProject.title[lang]}</h3>
+                <p class="cv-entry__period">{formatPeriod(featuredProject.startDate, featuredProject.endDate, lang)}</p>
+              </header>
+              <p class="cv-entry__place">
+                {featuredProject.kind[lang]} ·{' '}
+                <a href={featuredProject.links[0].href}>{stripProtocol(featuredProject.links[0].href)}</a>
+              </p>
+              <p>{featuredProject.summary[lang]}</p>
+              <ul>
+                {featuredProject.highlights.slice(0, 3).map((highlight) => <li>{highlight[lang]}</li>)}
+              </ul>
+              <p class="cv-entry__tech">{featuredProject.technologies.join(' · ')}</p>
+            </article>
+
+            <ul class="cv-more">
+              {otherProjects.map((project) => (
+                <li>
+                  <strong>{project.title[lang]}</strong> · {project.kind[lang]}
+                  {project.links[0] && (
+                    <>
+                      {' · '}
+                      <a href={project.links[0].href}>{stripProtocol(project.links[0].href)}</a>
+                    </>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </section>
+        </div>
+
+        <aside class="cv__aside">
+          <section>
+            <h2>Stack</h2>
+            {technologiesByUsage.map((group) => (
+              <div class="cv-stack">
+                <h3>{group.label}</h3>
+                <p>{group.items.join(' · ')}</p>
+              </div>
+            ))}
+            {practices && (
+              <div class="cv-stack">
+                <h3>{practices.label[lang]}</h3>
+                <p>{practices.items.map((item) => technologyName(item, lang)).join(' · ')}</p>
+              </div>
+            )}
+          </section>
+
+          <section>
+            <h2>{text.education}</h2>
+            {education.map((item) => (
+              <div class="cv-stack">
+                <h3>{item.title[lang]}</h3>
+                <p>{item.school} · {item.period}</p>
+              </div>
+            ))}
+          </section>
+
+          <section>
+            <h2>{text.languages}</h2>
+            <ul class="cv-plain">
+              {languages.map((language) => <li>{language.name[lang]} · {language.level[lang]}</li>)}
+            </ul>
+          </section>
+
+          <section>
+            <h2>{text.more}</h2>
+            <ul class="cv-plain">
+              {extras.map((extra) => <li>{extra[lang]}</li>)}
+            </ul>
+          </section>
+        </aside>
+      </div>
+    </main>
+  </body>
+</html>
+
+<style is:global>
+  @page {
+    size: A4;
+    margin: 11mm 12mm 10mm;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    background: #e9eef1;
+    color: #13252f;
+    font-family: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-size: 8.9pt;
+    line-height: 1.38;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body {
+    margin: 0;
+  }
+
+  h1,
+  h2,
+  h3,
+  p,
+  ul {
+    margin: 0;
+  }
+
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .cv {
+    width: 210mm;
+    min-height: 297mm;
+    margin: 2rem auto;
+    padding: 11mm 12mm;
+    background: #ffffff;
+    box-shadow: 0 0.5rem 2rem rgb(0 0 0 / 0.12);
+  }
+
+  .cv__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8mm;
+    padding-bottom: 4mm;
+    border-bottom: 2px solid #081720;
+  }
+
+  .cv__header h1 {
+    color: #081720;
+    font-size: 22pt;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+
+  .cv__role {
+    margin-top: 1mm;
+    color: #006a9c;
+    font-size: 12pt;
+    font-weight: 700;
+  }
+
+  .cv__contacts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1mm 5mm;
+    margin-top: 2.5mm;
+    padding: 0;
+    color: #526773;
+    list-style: none;
+  }
+
+  .cv__location {
+    margin-top: 1mm;
+    color: #526773;
+  }
+
+  .cv__photo {
+    flex: none;
+    width: 26mm;
+    height: 26mm;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .cv__summary {
+    margin-top: 4mm;
+    font-size: 9.5pt;
+  }
+
+  .cv__columns {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 56mm;
+    gap: 8mm;
+    margin-top: 5mm;
+  }
+
+  .cv section + section {
+    margin-top: 5mm;
+  }
+
+  .cv h2 {
+    margin-bottom: 2.5mm;
+    padding-bottom: 1mm;
+    break-after: avoid;
+    border-bottom: 1px solid #d8e4ea;
+    color: #006a9c;
+    font-size: 8.5pt;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .cv-entry {
+    break-inside: avoid;
+  }
+
+  .cv-entry + .cv-entry {
+    margin-top: 3.5mm;
+  }
+
+  .cv-entry header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4mm;
+  }
+
+  .cv-entry h3 {
+    color: #081720;
+    font-size: 10.5pt;
+  }
+
+  .cv-entry__period {
+    flex: none;
+    color: #526773;
+    font-size: 8.5pt;
+    font-weight: 600;
+  }
+
+  .cv-entry__place {
+    margin-bottom: 1.5mm;
+    color: #526773;
+  }
+
+  .cv-entry__place a,
+  .cv-entry p a {
+    color: #006a9c;
+  }
+
+  .cv-entry ul {
+    padding-left: 4mm;
+  }
+
+  .cv-entry li + li {
+    margin-top: 0.4mm;
+  }
+
+  .cv-entry__tech {
+    margin-top: 1.5mm;
+    color: #526773;
+    font-size: 8.5pt;
+  }
+
+  .cv-more {
+    display: grid;
+    gap: 0.8mm;
+    margin-top: 3mm;
+    padding: 0;
+    color: #526773;
+    list-style: none;
+  }
+
+  .cv-more strong {
+    color: #081720;
+  }
+
+  .cv-more a {
+    color: #006a9c;
+  }
+
+  .cv-stack {
+    break-inside: avoid;
+  }
+
+  .cv-stack + .cv-stack {
+    margin-top: 3mm;
+  }
+
+  .cv-stack h3 {
+    color: #081720;
+    font-size: 9pt;
+  }
+
+  .cv-stack p {
+    color: #13252f;
+  }
+
+  .cv-plain {
+    padding: 0;
+    list-style: none;
+  }
+
+  @media print {
+    html {
+      background: none;
+    }
+
+    .cv {
+      width: auto;
+      min-height: 0;
+      margin: 0;
+      padding: 0;
+      box-shadow: none;
+    }
+  }
+</style>
