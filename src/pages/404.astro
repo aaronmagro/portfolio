@@ -1,0 +1,107 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Container from '../components/ui/Container.astro';
+import ButtonLink from '../components/ui/ButtonLink.astro';
+import { siteConfig } from '../config/site';
+import { routes } from '../utils/i18n';
+
+// One 404 for the whole site, so it carries both languages and shows the visitor's.
+const copy = {
+  es: {
+    title: `Página no encontrada | ${siteConfig.name}`,
+    heading: 'Esta página no existe',
+    text: 'Puede que el enlace esté mal o que la página se haya movido.',
+    home: 'Volver al inicio',
+    projects: 'Ver proyectos',
+  },
+  en: {
+    title: `Page not found | ${siteConfig.name}`,
+    heading: 'This page does not exist',
+    text: 'The link may be wrong or the page may have moved.',
+    home: 'Back to home',
+    projects: 'See projects',
+  },
+} as const;
+const englishTitle = copy.en.title;
+---
+
+<BaseLayout title={copy.es.title}>
+  <script slot="head" is:inline define:vars={{ englishTitle }}>
+    (() => {
+      let chosen = null;
+      try {
+        chosen = localStorage.getItem('lang');
+      } catch {}
+      const browser = (navigator.languages || [navigator.language])
+        .map((value) => String(value).slice(0, 2).toLowerCase())
+        .find((value) => value === 'es' || value === 'en');
+      const lang = location.pathname.startsWith('/en/') ? 'en' : chosen || browser || 'en';
+      if (lang !== 'en') return;
+      document.documentElement.lang = 'en';
+      document.documentElement.dataset.page404 = 'en';
+      document.title = englishTitle;
+    })();
+  </script>
+  <main id="main-content" class="not-found">
+    <Container>
+      <p class="not-found__code">404</p>
+      {(['es', 'en'] as const).map((lang) => (
+        <div class="not-found__copy" lang={lang} data-copy={lang}>
+          <h1>{copy[lang].heading}</h1>
+          <p class="not-found__text">{copy[lang].text}</p>
+          <div class="not-found__actions">
+            <ButtonLink href={routes.home[lang]}>{copy[lang].home}</ButtonLink>
+            <ButtonLink href={`${routes.home[lang]}#projects`} variant="secondary">{copy[lang].projects}</ButtonLink>
+          </div>
+        </div>
+      ))}
+    </Container>
+  </main>
+</BaseLayout>
+
+<style>
+  .not-found__copy[data-copy='en'],
+  :global([data-page404='en']) .not-found__copy[data-copy='es'] {
+    display: none;
+  }
+
+  :global([data-page404='en']) .not-found__copy[data-copy='en'] {
+    display: block;
+  }
+
+  .not-found {
+    display: grid;
+    min-height: calc(100svh - 4.5rem);
+    align-items: center;
+    padding-block: var(--space-9);
+  }
+
+  .not-found__code {
+    color: var(--color-accent);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+  }
+
+  .not-found h1 {
+    margin-top: var(--space-4);
+    font-size: var(--text-display);
+    line-height: 0.85;
+    text-transform: uppercase;
+  }
+
+  .not-found__text {
+    max-width: 34rem;
+    margin-top: var(--space-5);
+    color: var(--color-text-muted);
+    font-size: var(--text-lg);
+  }
+
+  .not-found__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-7);
+  }
+</style>
