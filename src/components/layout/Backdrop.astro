@@ -1,6 +1,6 @@
 ---
 // Fixed background behind every page: HUD grid, a glow and three mountain ridges drawn as simple lines,
-// the middle one marked in lime. They slide sideways at different speeds while scrolling
+// the middle one marked in the accent colour. They slide sideways at different speeds while scrolling
 // (src/scripts/backdrop.ts moves them; nothing is redrawn, so it stays smooth without hardware acceleration).
 const width = 1600;
 const height = 400;
@@ -127,7 +127,7 @@ const layers = [
     left: 0;
     width: 100%;
     height: 3px;
-    background: var(--lime);
+    background: var(--accent);
     transform: scaleX(0);
     transform-origin: left;
     pointer-events: none;

@@ -37,7 +37,7 @@ p {
 }
 
 a {
-  color: var(--lime-ink);
+  color: var(--accent-ink);
   text-decoration-thickness: 0.08em;
   text-underline-offset: 0.2em;
 }
@@ -47,13 +47,13 @@ a:hover {
 }
 
 :focus-visible {
-  outline: 0.1875rem solid var(--lime-ink);
+  outline: 0.1875rem solid var(--accent-ink);
   outline-offset: 0.1875rem;
 }
 
 html {
-  accent-color: var(--lime-ink);
-  caret-color: var(--lime-ink);
+  accent-color: var(--accent-ink);
+  caret-color: var(--accent-ink);
   scrollbar-color: var(--line) var(--bg);
   font-variant-numeric: tabular-nums;
 }
@@ -77,8 +77,8 @@ html {
 }
 
 ::selection {
-  background: var(--lime);
-  color: var(--on-lime);
+  background: var(--accent);
+  color: var(--on-accent);
 }
 
 /* HUD utilities */
@@ -154,10 +154,10 @@ html {
   will-change: transform;
 }
 
-/* Every leaning card lights its border. At 2px the lime stays even while it leans; a 1px line fades in patches. */
+/* Every leaning card lights its border. At 2px the accent line stays even while it leans; a 1px line fades in patches. */
 .panel-cut[data-tilt]:is(:hover, .is-tilted) {
   --panel-border: 2px;
-  --panel-line: var(--lime-ink);
+  --panel-line: var(--accent-ink);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -177,7 +177,7 @@ html {
   z-index: 1;
   width: 1.5rem;
   height: 1.5rem;
-  border: 2px solid var(--lime-ink);
+  border: 2px solid var(--accent-ink);
   content: '';
   pointer-events: none;
 }
@@ -211,8 +211,8 @@ html {
   top: var(--space-3);
   left: var(--space-3);
   padding: var(--space-3) var(--space-4);
-  background: var(--lime);
-  color: var(--on-lime);
+  background: var(--accent);
+  color: var(--on-accent);
   font-weight: 700;
   text-decoration: none;
   transform: translateY(calc(-100% - var(--space-6)));

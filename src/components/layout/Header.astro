@@ -225,8 +225,8 @@ const otherLangHref = alternates?.[otherLang] ?? routes.home[otherLang];
   .site-header__tag {
     --cut: 0.4rem;
     padding: 0.3rem 0.55rem;
-    background: var(--lime);
-    color: var(--on-lime);
+    background: var(--accent);
+    color: var(--on-accent);
     font-family: var(--font-display);
     font-size: 1.15rem;
     font-weight: 700;
@@ -279,7 +279,7 @@ const otherLangHref = alternates?.[otherLang] ?? routes.home[otherLang];
     bottom: 0;
     left: 0;
     height: 2px;
-    background: var(--lime-ink);
+    background: var(--accent-ink);
     content: '';
     transform: scaleX(0);
     transform-origin: left;
@@ -312,8 +312,8 @@ const otherLangHref = alternates?.[otherLang] ?? routes.home[otherLang];
     width: 0.5rem;
     height: 0.5rem;
     border-radius: 50%;
-    background: var(--lime-ink);
-    box-shadow: 0 0 0.6rem var(--lime);
+    background: var(--accent-ink);
+    box-shadow: 0 0 0.6rem var(--accent);
     animation: pulse 2.4s ease-in-out infinite;
   }
 
@@ -348,7 +348,7 @@ const otherLangHref = alternates?.[otherLang] ?? routes.home[otherLang];
   .site-header__lang:hover,
   .site-header__theme-toggle:hover,
   .site-header__menu-toggle:hover {
-    border-color: var(--lime-ink);
+    border-color: var(--accent-ink);
   }
 
   .site-header__icon {
@@ -419,7 +419,7 @@ const otherLangHref = alternates?.[otherLang] ?? routes.home[otherLang];
   }
 
   .site-header__mobile a[aria-current] {
-    color: var(--lime-ink);
+    color: var(--accent-ink);
   }
 
   @media (min-width: 52rem) {

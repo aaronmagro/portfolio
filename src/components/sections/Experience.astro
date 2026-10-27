@@ -211,8 +211,8 @@ const cardAt = (role: ExperienceEntry, index: number) =>
                   <rect x="0" y="0" width={chart.width} height={chart.height} data-profile-reveal={live ? '' : undefined}></rect>
                 </clipPath>
                 <linearGradient id={`${id}-fill`} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0" stop-color="var(--lime)" stop-opacity="0.4"></stop>
-                  <stop offset="1" stop-color="var(--lime)" stop-opacity="0.03"></stop>
+                  <stop offset="0" stop-color="var(--accent)" stop-opacity="0.4"></stop>
+                  <stop offset="1" stop-color="var(--accent)" stop-opacity="0.03"></stop>
                 </linearGradient>
               </defs>
               <line class="profile__axis" x1={chart.x(0)} y1={chart.base} x2={chart.x(span)} y2={chart.base}></line>
@@ -357,7 +357,7 @@ const cardAt = (role: ExperienceEntry, index: number) =>
   }
 
   .climb__stat b {
-    color: var(--lime-ink);
+    color: var(--accent-ink);
     font-family: var(--font-display);
     font-size: clamp(2.8rem, 5vw, 4rem);
     line-height: 0.9;
@@ -399,7 +399,7 @@ const cardAt = (role: ExperienceEntry, index: number) =>
 
   .profile__line {
     fill: none;
-    stroke: var(--lime-ink);
+    stroke: var(--accent-ink);
     stroke-linejoin: round;
     stroke-width: 3;
   }
@@ -435,8 +435,8 @@ const cardAt = (role: ExperienceEntry, index: number) =>
   }
 
   .profile__stop.is-reached .profile__point {
-    fill: var(--lime);
-    stroke: var(--lime-ink);
+    fill: var(--accent);
+    stroke: var(--accent-ink);
   }
 
   .profile__summit line {
@@ -445,14 +445,14 @@ const cardAt = (role: ExperienceEntry, index: number) =>
   }
 
   .profile__summit path {
-    fill: var(--lime);
+    fill: var(--accent);
     stroke: var(--mark-edge);
     stroke-width: 1.5;
     stroke-linejoin: round;
   }
 
   .profile__summit text {
-    fill: var(--lime-ink);
+    fill: var(--accent-ink);
     font-family: var(--font-display);
     font-size: 24px;
     font-weight: 700;
@@ -461,14 +461,14 @@ const cardAt = (role: ExperienceEntry, index: number) =>
   }
 
   .profile__runner circle {
-    fill: var(--lime);
+    fill: var(--accent);
     stroke: var(--mark-edge);
     stroke-width: 1.5;
   }
 
   .profile__runner-ring {
     fill: none !important;
-    stroke: var(--lime-ink);
+    stroke: var(--accent-ink);
     stroke-width: 1.5;
     animation: ring 1.8s ease-out infinite;
     transform-box: fill-box;
@@ -489,14 +489,14 @@ const cardAt = (role: ExperienceEntry, index: number) =>
 
 
   .profile__today-tag {
-    fill: var(--lime);
+    fill: var(--accent);
     stroke: var(--mark-edge);
     stroke-width: 1.5;
   }
 
   .profile__stop--today .profile__title,
   .profile__stop--today .profile__label {
-    fill: var(--on-lime);
+    fill: var(--on-accent);
     stroke: none;
   }
 
@@ -529,8 +529,8 @@ const cardAt = (role: ExperienceEntry, index: number) =>
     left: 0;
     width: 1.25rem;
     height: 1.25rem;
-    border-top: 2px solid var(--lime-ink);
-    border-left: 2px solid var(--lime-ink);
+    border-top: 2px solid var(--accent-ink);
+    border-left: 2px solid var(--accent-ink);
     content: '';
   }
 
@@ -546,7 +546,7 @@ const cardAt = (role: ExperienceEntry, index: number) =>
   }
 
   .stage__duration {
-    color: var(--lime-ink);
+    color: var(--accent-ink);
     font-family: var(--font-display);
     font-size: 1.4rem;
     font-weight: 700;
@@ -577,7 +577,7 @@ const cardAt = (role: ExperienceEntry, index: number) =>
     left: 0;
     width: 0.6rem;
     height: 2px;
-    background: var(--lime-ink);
+    background: var(--accent-ink);
     content: '';
   }
 
@@ -593,7 +593,7 @@ const cardAt = (role: ExperienceEntry, index: number) =>
   }
 
   .stage--summit h4 {
-    color: var(--lime-ink);
+    color: var(--accent-ink);
   }
 
   @media (min-width: 60rem) {
@@ -678,7 +678,7 @@ const cardAt = (role: ExperienceEntry, index: number) =>
 
     .climb__steps button:hover,
     .climb__steps button[aria-current] {
-      border-top-color: var(--lime-ink);
+      border-top-color: var(--accent-ink);
       color: var(--ink);
     }
 

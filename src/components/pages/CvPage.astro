@@ -208,7 +208,7 @@ const [featuredProject, ...otherProjects] = projects;
 </html>
 
 <style is:global>
-  /* Same world as the site: graphite band, lime accents, Rajdhani, Chakra Petch and JetBrains Mono.
+  /* Same world as the site: graphite band, steel blue accents, Rajdhani, Chakra Petch and JetBrains Mono.
      The body stays white so it prints well and any ATS reads it. */
   @page {
     size: A4;
@@ -225,8 +225,8 @@ const [featuredProject, ...otherProjects] = projects;
     --ink: #121417;
     --soft: #545a62;
     --line: #dde0e3;
-    --lime: #c6ff3d;
-    --lime-ink: #4a7a0c;
+    --accent: #8ab4e8;
+    --accent-ink: #2f5d8f;
     --graphite: #0d0e10;
 
     background: #2b2f36;
@@ -275,7 +275,7 @@ const [featuredProject, ...otherProjects] = projects;
       linear-gradient(rgb(238 241 244 / 0.05) 1px, transparent 1px),
       linear-gradient(90deg, rgb(238 241 244 / 0.05) 1px, transparent 1px);
     background-size: 6mm 6mm;
-    border-bottom: 1.2mm solid var(--lime);
+    border-bottom: 1.2mm solid var(--accent);
     color: #eef1f4;
   }
 
@@ -292,7 +292,7 @@ const [featuredProject, ...otherProjects] = projects;
     display: inline-block;
     margin-top: 2.5mm;
     padding: 0.8mm 3mm;
-    background: linear-gradient(315deg, transparent 1.1mm, var(--lime) 1.1mm);
+    background: linear-gradient(315deg, transparent 1.1mm, var(--accent) 1.1mm);
     color: var(--graphite);
     font-family: 'Rajdhani', sans-serif;
     font-size: 11pt;
@@ -331,7 +331,7 @@ const [featuredProject, ...otherProjects] = projects;
     position: absolute;
     width: 5mm;
     height: 5mm;
-    border: 0.6mm solid var(--lime);
+    border: 0.6mm solid var(--accent);
     content: '';
   }
 
@@ -360,7 +360,7 @@ const [featuredProject, ...otherProjects] = projects;
   .cv__summary {
     margin: 5mm 12mm 0;
     padding-left: 3mm;
-    border-left: 0.8mm solid var(--lime);
+    border-left: 0.8mm solid var(--accent);
     font-size: 9pt;
   }
 
@@ -395,8 +395,8 @@ const [featuredProject, ...otherProjects] = projects;
   .cv h2::before {
     width: 2mm;
     height: 2mm;
-    background: var(--lime);
-    box-shadow: 0 0 0 0.35mm var(--lime-ink);
+    background: var(--accent);
+    box-shadow: 0 0 0 0.35mm var(--accent-ink);
     content: '';
   }
 
@@ -424,7 +424,7 @@ const [featuredProject, ...otherProjects] = projects;
 
   .cv-entry__period {
     flex: none;
-    color: var(--lime-ink);
+    color: var(--accent-ink);
     font-family: 'JetBrains Mono', monospace;
     font-size: 7.4pt;
     font-weight: 700;
@@ -438,7 +438,7 @@ const [featuredProject, ...otherProjects] = projects;
   .cv-entry__place a,
   .cv-entry p a,
   .cv-more a {
-    color: var(--lime-ink);
+    color: var(--accent-ink);
     font-weight: 600;
   }
 
@@ -449,7 +449,7 @@ const [featuredProject, ...otherProjects] = projects;
 
   .cv-entry li {
     padding-left: 3.5mm;
-    background: linear-gradient(var(--lime-ink), var(--lime-ink)) 0 0.62em / 1.8mm 0.45mm no-repeat;
+    background: linear-gradient(var(--accent-ink), var(--accent-ink)) 0 0.62em / 1.8mm 0.45mm no-repeat;
   }
 
   .cv-entry li + li {
@@ -486,7 +486,7 @@ const [featuredProject, ...otherProjects] = projects;
 
   .cv-stack h3 {
     margin-bottom: 0.4mm;
-    color: var(--lime-ink);
+    color: var(--accent-ink);
     font-family: 'JetBrains Mono', monospace;
     font-size: 7.4pt;
     font-weight: 700;

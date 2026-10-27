@@ -38,17 +38,18 @@
   --line: #2b2f36;
   --ink: #eef1f4;
   --soft: #8b939e;
-  --lime: #c6ff3d;
-  --lime-ink: #c6ff3d;
-  --on-lime: #0d0e10;
+  /* Steel blue: 7.8:1 as text on the panels, and the page colour on it reads at 9:1. */
+  --accent: #8ab4e8;
+  --accent-ink: #8ab4e8;
+  --on-accent: #0d0e10;
   /* Outline for accent marks (dots, flags), for any theme whose fill lacks contrast with the page. */
-  --mark-edge: var(--lime);
+  --mark-edge: var(--accent);
   --grid: rgb(238 241 244 / 0.035);
   --ridge-1: rgb(238 241 244 / 0.025);
   --ridge-2: rgb(238 241 244 / 0.04);
   --ridge-edge: rgb(238 241 244 / 0.06);
-  --ridge-line: rgb(198 255 61 / 0.18);
-  --glow: rgb(198 255 61 / 0.08);
+  --ridge-line: rgb(138 180 232 / 0.18);
+  --glow: rgb(138 180 232 / 0.08);
   --shadow-elevated: 0 1.5rem 4rem rgb(0 0 0 / 0.45);
 
   /* Older names, kept as aliases while sections migrate. */
@@ -60,14 +61,14 @@
   --color-text: var(--ink);
   --color-text-muted: var(--soft);
   --color-border: var(--line);
-  --color-brand: var(--lime);
-  --color-brand-strong: var(--lime);
-  --color-accent: var(--lime-ink);
-  --color-link: var(--lime-ink);
-  --color-focus: var(--lime-ink);
-  --color-positive: var(--lime-ink);
-  --color-selection-background: var(--lime);
-  --color-selection-text: var(--on-lime);
+  --color-brand: var(--accent);
+  --color-brand-strong: var(--accent);
+  --color-accent: var(--accent-ink);
+  --color-link: var(--accent-ink);
+  --color-focus: var(--accent-ink);
+  --color-positive: var(--accent-ink);
+  --color-selection-background: var(--accent);
+  --color-selection-text: var(--on-accent);
 }
 
 [data-theme='light'] {
@@ -78,18 +79,17 @@
   --line: #d9dcd3;
   --ink: #121417;
   --soft: #5b6169;
-  /* Same lime as the dark theme. On paper lime cannot carry text or thin lines (about 1:1), so here it is
-     only a fill, like a highlighter, and the accent text, lines and outlines are graphite ink. */
-  --lime: #c6ff3d;
-  --lime-ink: #121417;
-  --on-lime: #121417;
-  --mark-edge: #121417;
+  /* A deeper steel blue on paper: 6.1:1 as text, and white on it reads at 6.8:1. */
+  --accent: #2f5d8f;
+  --accent-ink: #2f5d8f;
+  --on-accent: #ffffff;
+  --mark-edge: #2f5d8f;
   --grid: rgb(18 20 23 / 0.045);
   --ridge-1: rgb(18 20 23 / 0.035);
   --ridge-2: rgb(18 20 23 / 0.05);
   --ridge-edge: rgb(18 20 23 / 0.07);
-  --ridge-line: rgb(110 160 0 / 0.35);
-  --glow: rgb(198 255 61 / 0.22);
+  --ridge-line: rgb(47 93 143 / 0.35);
+  --glow: rgb(47 93 143 / 0.12);
   --shadow-elevated: 0 1.5rem 4rem rgb(18 20 23 / 0.1);
 }
 
@@ -102,18 +102,17 @@
     --line: #d9dcd3;
     --ink: #121417;
     --soft: #5b6169;
-    /* Same lime as the dark theme. On paper lime cannot carry text or thin lines (about 1:1), so here it is
-       only a fill, like a highlighter, and the accent text, lines and outlines are graphite ink. */
-    --lime: #c6ff3d;
-    --lime-ink: #121417;
-    --on-lime: #121417;
-    --mark-edge: #121417;
+    /* A deeper steel blue on paper: 6.1:1 as text, and white on it reads at 6.8:1. */
+    --accent: #2f5d8f;
+    --accent-ink: #2f5d8f;
+    --on-accent: #ffffff;
+    --mark-edge: #2f5d8f;
     --grid: rgb(18 20 23 / 0.045);
     --ridge-1: rgb(18 20 23 / 0.035);
     --ridge-2: rgb(18 20 23 / 0.05);
     --ridge-edge: rgb(18 20 23 / 0.07);
-    --ridge-line: rgb(110 160 0 / 0.35);
-    --glow: rgb(198 255 61 / 0.22);
+    --ridge-line: rgb(47 93 143 / 0.35);
+    --glow: rgb(47 93 143 / 0.12);
     --shadow-elevated: 0 1.5rem 4rem rgb(18 20 23 / 0.1);
   }
 }

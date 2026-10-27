@@ -45,8 +45,8 @@ const [emailUser, emailDomain] = email.split('@');
       <svg class="contact__summit" viewBox="0 0 520 340" aria-hidden="true">
         <defs>
           <linearGradient id="summit-fill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="var(--lime)" stop-opacity="0.35"></stop>
-            <stop offset="1" stop-color="var(--lime)" stop-opacity="0"></stop>
+            <stop offset="0" stop-color="var(--accent)" stop-opacity="0.35"></stop>
+            <stop offset="1" stop-color="var(--accent)" stop-opacity="0"></stop>
           </linearGradient>
         </defs>
         <path class="contact__summit-area" d="M0 300 C 60 292 92 252 140 262 S 228 232 280 204 S 352 176 398 124 S 452 70 478 44 L 478 340 L 0 340 Z"></path>
@@ -144,7 +144,7 @@ const [emailUser, emailDomain] = email.split('@');
     align-items: center;
     gap: var(--space-2);
     margin-top: var(--space-5);
-    color: var(--lime-ink);
+    color: var(--accent-ink);
     font-weight: 700;
   }
 
@@ -157,7 +157,7 @@ const [emailUser, emailDomain] = email.split('@');
   }
 
   .contact__next .contact__flag {
-    fill: var(--lime);
+    fill: var(--accent);
     stroke: var(--mark-edge);
     stroke-width: 1;
     stroke-linejoin: round;
@@ -198,13 +198,13 @@ const [emailUser, emailDomain] = email.split('@');
      the halves. A background line runs unbroken, and `clone` repeats it under each line when the email wraps. */
   .contact__email span {
     padding-bottom: 0.2em;
-    background: linear-gradient(var(--lime-ink), var(--lime-ink)) no-repeat 0 100% / 100% 3px;
+    background: linear-gradient(var(--accent-ink), var(--accent-ink)) no-repeat 0 100% / 100% 3px;
     -webkit-box-decoration-break: clone;
     box-decoration-break: clone;
   }
 
   .contact__email:hover {
-    color: var(--lime-ink);
+    color: var(--accent-ink);
   }
 
   /* Forced colours drop background images, so the link falls back to a system underline there. */
@@ -239,7 +239,7 @@ const [emailUser, emailDomain] = email.split('@');
   }
 
   .contact__copy:hover {
-    border-color: var(--lime-ink);
+    border-color: var(--accent-ink);
   }
 
   .contact__copy svg {
@@ -259,8 +259,8 @@ const [emailUser, emailDomain] = email.split('@');
 
   .contact__copy[data-copied] {
     border-color: var(--mark-edge);
-    background: var(--lime);
-    color: var(--on-lime);
+    background: var(--accent);
+    color: var(--on-accent);
   }
 
   .contact__copy[data-copied] .contact__copy-check {
@@ -298,13 +298,13 @@ const [emailUser, emailDomain] = email.split('@');
 
     .contact__summit-route {
       fill: none;
-      stroke: var(--lime-ink);
+      stroke: var(--accent-ink);
       stroke-linejoin: round;
       stroke-width: 3;
     }
 
     .contact__summit circle {
-      fill: var(--lime);
+      fill: var(--accent);
       stroke: var(--mark-edge);
       stroke-width: 2;
     }
@@ -315,7 +315,7 @@ const [emailUser, emailDomain] = email.split('@');
     }
 
     .contact__summit-flag {
-      fill: var(--lime);
+      fill: var(--accent);
       stroke: var(--mark-edge);
       stroke-width: 2;
       stroke-linejoin: round;
