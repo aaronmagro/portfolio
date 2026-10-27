@@ -34,8 +34,8 @@ const alternateUrl = (locale: SupportedLocale) => alternates && new URL(alternat
 
 const skipLinkText = lang === 'en' ? 'Skip to content' : 'Saltar al contenido';
 const canonicalUrl = new URL(Astro.url.pathname, siteConfig.url).href;
-// Link previews cache the image by URL, so bump the version whenever og.png changes.
-const ogImageUrl = new URL('/og.png?v=3', siteConfig.url).href;
+// One preview image per language. Link previews cache the image by URL, so bump the version whenever it changes.
+const ogImageUrl = new URL(lang === 'en' ? '/og-en.png?v=1' : '/og.png?v=3', siteConfig.url).href;
 const ogImageAlt =
   lang === 'en'
     ? `${siteConfig.name}, full-stack developer. Projects, experience and CV.`
