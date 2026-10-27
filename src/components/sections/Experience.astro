@@ -218,7 +218,8 @@ const cardAt = (role: ExperienceEntry, index: number) =>
                   <stop offset="1" stop-color="var(--accent)" stop-opacity="0.03"></stop>
                 </linearGradient>
               </defs>
-              <line class="profile__axis" x1={chart.x(0)} y1={chart.base} x2={chart.x(span)} y2={chart.base}></line>
+              {/* The baseline runs under the summit flag too, so it ends as far from the right edge as it starts from the left. */}
+              <line class="profile__axis" x1={chart.x(0)} y1={chart.base} x2={chart.width - chart.left} y2={chart.base}></line>
               {chart.years.map((tick) => (
                 <g class="profile__year">
                   <line x1={tick.x} y1={chart.base} x2={tick.x} y2={chart.base + 8}></line>
