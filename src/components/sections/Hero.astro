@@ -211,6 +211,9 @@ const stats = [
   }
 
   .player__dot {
+    position: relative;
+    /* Centred on the capital letters, not on the line box: uppercase text sits above the line's middle. */
+    top: -0.09em;
     width: 0.5rem;
     height: 0.5rem;
     border-radius: 50%;
