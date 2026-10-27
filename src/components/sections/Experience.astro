@@ -100,7 +100,7 @@ chronological.forEach((role, index) => {
   }
   keys.push([end, peak]);
 });
-keys.push([span - 1.6, keys[keys.length - 1][1] - 0.08]);
+// From today the route rises in one smooth sweep to the next stage, no dip and no wall.
 keys.push([span, 1]);
 
 const heightAt = (month: number) => {
