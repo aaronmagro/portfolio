@@ -59,7 +59,9 @@ const totalMonths = chronological.reduce(
   0,
 );
 
-// Mountain profile. X follows the real calendar (the first point's dot touches the left edge of the text column); the height only grows with each role, it measures nothing.
+// Mountain profile. X follows the real calendar; the height only grows with each role, it measures nothing.
+// The first point's dot (r 8) and the summit flag (30 wide) sit the same 12 units in from each edge of the text
+// column, so the chart is square in the panel.
 // It is drawn twice: wide for tablets and desktops, and narrow for phones, where the wide one would need
 // sideways scrolling and its labels would shrink below reading size.
 interface ProfileLayout {
@@ -148,7 +150,8 @@ const buildProfile = (layout: ProfileLayout) => {
     // A name that would run into the next stop sits on the left of its own point instead.
     const next = all[index + 1];
     const reaches = index > 0 && next && item.x + 4 + item.title.length * layout.titleGlyph > next.x - 12;
-    return { ...item, end: item.today || Boolean(reaches) };
+    // The "today" tag hangs left of its point; its text is centred in it.
+    return { ...item, end: item.today || Boolean(reaches), tagCentre: item.x + 22 - item.tagWidth / 2 };
   });
 
   const years = Array.from({ length: Math.floor((origin + span) / 12) - Math.floor(origin / 12) + 1 }, (_, i) => {
@@ -161,13 +164,13 @@ const buildProfile = (layout: ProfileLayout) => {
 };
 
 const wide = buildProfile({
-  width: 1200, height: 620, base: 560, top: 90, left: 8, right: 56,
+  width: 1200, height: 620, base: 560, top: 90, left: 20, right: 42,
   high: 120, above: 70, below: 74, titleGlyph: 16, labelGlyph: 10, dates: true,
 });
 // Phones: about half as wide, so the same type reads twice as big. Only the stage names; the dates are in
 // the cards right below.
 const narrow = buildProfile({
-  width: 600, height: 520, base: 470, top: 120, left: 8, right: 40,
+  width: 600, height: 520, base: 470, top: 120, left: 20, right: 42,
   high: 150, above: 66, below: 130, titleGlyph: 19, labelGlyph: 0, dates: false,
 });
 
@@ -219,7 +222,7 @@ const cardAt = (role: ExperienceEntry, index: number) =>
               {chart.years.map((tick) => (
                 <g class="profile__year">
                   <line x1={tick.x} y1={chart.base} x2={tick.x} y2={chart.base + 8}></line>
-                  <text x={tick.x} y={chart.base + 30} text-anchor={tick.anchor}>{tick.year}</text>
+                  <text x={tick.anchor === 'start' ? chart.left - 8 : tick.x} y={chart.base + 30} text-anchor={tick.anchor}>{tick.year}</text>
                 </g>
               ))}
               {live && <path class="profile__ghost-area" d={chart.area}></path>}
@@ -249,9 +252,9 @@ const cardAt = (role: ExperienceEntry, index: number) =>
                       height={chart.dates ? 62 : 44}
                     ></rect>
                   )}
-                  <text class="profile__title" x={item.today ? item.x + 8 : item.end ? item.x - 4 : item.x + 4} y={item.labelY - 6} text-anchor={item.end ? 'end' : 'start'}>{item.title}</text>
+                  <text class="profile__title" x={item.today ? item.tagCentre : item.end ? item.x - 4 : item.x + 4} y={item.labelY - 6} text-anchor={item.today ? 'middle' : item.end ? 'end' : 'start'}>{item.title}</text>
                   {chart.dates && (
-                    <text class="profile__label" x={item.today ? item.x + 8 : item.x + 4} y={item.labelY + 16} text-anchor={item.today ? 'end' : 'start'}>{item.label.toUpperCase()}</text>
+                    <text class="profile__label" x={item.today ? item.tagCentre : item.x + 4} y={item.labelY + 16} text-anchor={item.today ? 'middle' : 'start'}>{item.label.toUpperCase()}</text>
                   )}
                   <circle class="profile__point" cx={item.x} cy={item.y} r="8"></circle>
                 </g>
