@@ -149,8 +149,8 @@ export const projects: readonly Project[] = [
         en: 'Keyboard navigable, with a skip link and reduced motion when the system asks for it.',
       },
       {
-        es: 'Estructura preparada para español e inglés.',
-        en: 'Structure ready for Spanish and English.',
+        es: 'En español e inglés, con el idioma del navegador en la primera visita.',
+        en: 'In Spanish and English, following the browser language on the first visit.',
       },
     ],
     technologies: ['Astro', 'TypeScript', 'CSS'],
