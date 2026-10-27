@@ -124,7 +124,12 @@ const buildProfile = (layout: ProfileLayout) => {
     points.push(`${x(month).toFixed(1)} ${y(heightAt(month)).toFixed(1)}`);
   }
   const line = `M${points.join(' L')}`;
-  const area = `${line} L${x(span).toFixed(1)} ${base} L${x(0).toFixed(1)} ${base} Z`;
+  // Past the summit the route keeps climbing to the end of the baseline: the flag marks the next stage, not an
+  // end, and the mountain has no cut-off edge.
+  const summitY = y(heightAt(span));
+  const end = width - left;
+  const tail = `M${x(span).toFixed(1)} ${summitY.toFixed(1)} Q${((x(span) + end) / 2).toFixed(1)} ${(summitY - 6).toFixed(1)} ${end.toFixed(1)} ${(summitY - 16).toFixed(1)}`;
+  const area = `${line} ${tail.replace('M', 'L')} L${end.toFixed(1)} ${base} L${x(0).toFixed(1)} ${base} Z`;
 
   const stop = (month: number, title: string, label: string, place: 'above' | 'below' | 'high' = 'above') => {
     const pointY = y(heightAt(month));
@@ -160,7 +165,7 @@ const buildProfile = (layout: ProfileLayout) => {
     return { year, x: x(month), anchor: month === 0 ? 'start' : 'middle' };
   }).filter((tick) => tick.x <= x(span));
 
-  return { ...layout, x, line, area, stops, years, summit: { x: x(span), y: y(heightAt(span)) } };
+  return { ...layout, x, line, tail, area, stops, years, summit: { x: x(span), y: summitY } };
 };
 
 const wide = buildProfile({
@@ -227,9 +232,11 @@ const cardAt = (role: ExperienceEntry, index: number) =>
                 </g>
               ))}
               {live && <path class="profile__ghost-area" d={chart.area}></path>}
-              {live && <path class="profile__ghost" d={chart.line}></path>}
+              {live && <path class="profile__ghost" d={`${chart.line} ${chart.tail.replace('M', 'L')}`}></path>}
               <path class="profile__area" d={chart.area} clip-path={`url(#${id}-reveal)`} fill={`url(#${id}-fill)`}></path>
               <path class="profile__line" d={chart.line} data-profile-line={live ? '' : undefined}></path>
+              {/* Revealed with the area, so on the pinned climb it only appears once the summit is reached. */}
+              <path class="profile__line" d={chart.tail} clip-path={`url(#${id}-reveal)`}></path>
 
               {chart.stops.map((item) => (
                 <g
