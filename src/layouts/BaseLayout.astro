@@ -81,7 +81,9 @@ const ogImageAlt =
     <slot name="head" />
     {alternates && (
       <script is:inline define:vars={{ lang, alternates }}>
-        // First visit with no choice made: follow the browser's language. Crawlers stay on the URL they asked for.
+        // First visit with no choice made: follow the browser's language. Crawlers stay on the URL they asked for,
+        // including Google's tools without "bot" in their name (Google-InspectionTool, GoogleOther): with an English
+        // browser they used to land on /en/, so Google took the Spanish home page for a redirect.
         // Only the Spanish pages redirect: they are the default, while an /en/ link was asked for on purpose.
         (() => {
           if (lang !== 'es') return;
@@ -89,7 +91,7 @@ const ogImageAlt =
           try {
             chosen = localStorage.getItem('lang');
           } catch {}
-          if (chosen || /bot|crawl|spider|slurp|headless|lighthouse|preview/i.test(navigator.userAgent)) return;
+          if (chosen || /bot|crawl|spider|slurp|google|bing|yandex|baidu|duckduck|inspect|headless|lighthouse|preview|facebook|whatsapp|telegram|embed/i.test(navigator.userAgent)) return;
           const preferred = (navigator.languages || [navigator.language])
             .map((value) => String(value).slice(0, 2).toLowerCase())
             .find((value) => value === 'es' || value === 'en') || 'en';
