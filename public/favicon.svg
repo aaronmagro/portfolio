@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="14" fill="#06131c"/>
-  <text x="32" y="40" text-anchor="middle" font-family="Segoe UI, Inter, Helvetica, Arial, sans-serif" font-size="27" font-weight="800" letter-spacing="-1.5" fill="#f7fafc">AM</text>
-  <rect x="20" y="47" width="24" height="4" rx="2" fill="#4bb4e6"/>
+  <path d="M10 0H64V54L54 64H0V10Z" fill="#8ab4e8"/>
+  <!-- "AM" in Rajdhani Bold, as outlines: favicons cannot load web fonts. -->
+  <path d="M10.1 46.1L5.9 46.1Q5.1 46.1 5.3 45.2L12.3 18.8Q12.6 17.9 13.6 17.9L19.4 17.9Q20.5 17.9 20.8 18.8L27.7 45.2Q28 46.1 27.2 46.1L23 46.1Q22.5 46.1 22.3 45.9Q22.1 45.8 22 45.2L20.8 40.4L12.2 40.4L11 45.2Q10.9 45.8 10.7 45.9Q10.5 46.1 10.1 46.1M16.6 23.2L16.5 23.2L13.3 35.9L19.8 35.9L16.6 23.2M51.3 17.9L57.8 17.9Q58.7 17.9 58.7 18.8L58.7 45.2Q58.7 46.1 57.8 46.1L54.2 46.1Q53.3 46.1 53.3 45.2L53.3 24.4L53.1 24.4L48.6 39.1Q48.4 40 47.5 40L43.8 40Q43 40 42.7 39.1L38.1 24.3L38 24.3L38 45.2Q38 45.8 37.8 45.9Q37.6 46.1 37 46.1L33.4 46.1Q32.5 46.1 32.5 45.2L32.5 18.8Q32.5 17.9 33.4 17.9L40 17.9Q40.6 17.9 40.8 18.5L45.5 34L45.8 34L50.5 18.5Q50.6 17.9 51.3 17.9" fill="#0d0e10"/>
 </svg>
