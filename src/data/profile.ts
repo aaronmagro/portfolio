@@ -1,8 +1,8 @@
 import type { LocalizedText } from '../types';
 
 export const availability: LocalizedText = {
-  es: 'Presencial, híbrido o remoto en Badajoz o Madrid',
-  en: 'On-site, hybrid or remote in Badajoz or Madrid',
+  es: 'Incorporación inmediata · Badajoz, Madrid o remoto',
+  en: 'Available now · Badajoz, Madrid or remote',
 };
 
 // Roles I am looking for, short enough to read as tags.
