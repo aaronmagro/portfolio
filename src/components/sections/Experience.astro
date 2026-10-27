@@ -110,7 +110,9 @@ const heightAt = (month: number) => {
   const [m1, h1] = keys[index + 1];
   const t = (month - m0) / (m1 - m0 || 1);
   const smooth = t * t * (3 - 2 * t);
-  const ridge = month > 0.3 && month < span - 0.2 ? Math.abs(Math.sin(month * 3.1)) * 0.022 + Math.sin(month * 7.7) * 0.01 : 0;
+  // The jagged texture fades out over the last months, so the route reaches the summit in one smooth curve.
+  const fade = Math.min(1, Math.max(0, (span - month) / 1.4));
+  const ridge = month > 0.3 ? (Math.abs(Math.sin(month * 3.1)) * 0.022 + Math.sin(month * 7.7) * 0.01) * fade : 0;
   return h0 + (h1 - h0) * smooth + ridge;
 };
 
@@ -120,7 +122,8 @@ const buildProfile = (layout: ProfileLayout) => {
   const y = (h: number) => base - h * (base - top);
 
   const points: string[] = [];
-  for (let month = 0; month <= span + 0.001; month += 0.2) {
+  // Finer steps on the last stretch, where the route turns over the summit.
+  for (let month = 0; month <= span + 0.001; month += month < span - 2 ? 0.2 : 0.05) {
     points.push(`${x(month).toFixed(1)} ${y(heightAt(month)).toFixed(1)}`);
   }
   const line = `M${points.join(' L')}`;
@@ -128,7 +131,9 @@ const buildProfile = (layout: ProfileLayout) => {
   // end, and the mountain has no cut-off edge.
   const summitY = y(heightAt(span));
   const end = width - left;
-  const tail = `M${x(span).toFixed(1)} ${summitY.toFixed(1)} Q${((x(span) + end) / 2).toFixed(1)} ${(summitY - 6).toFixed(1)} ${end.toFixed(1)} ${(summitY - 16).toFixed(1)}`;
+  // It leaves the summit level, as the climb arrives, and bends gently upwards: no corner at the flag.
+  const run = end - x(span);
+  const tail = `M${x(span).toFixed(1)} ${summitY.toFixed(1)} C${(x(span) + run * 0.5).toFixed(1)} ${summitY.toFixed(1)} ${(x(span) + run * 0.8).toFixed(1)} ${(summitY - 4).toFixed(1)} ${end.toFixed(1)} ${(summitY - 10).toFixed(1)}`;
   const area = `${line} ${tail.replace('M', 'L')} L${end.toFixed(1)} ${base} L${x(0).toFixed(1)} ${base} Z`;
 
   const stop = (month: number, title: string, label: string, place: 'above' | 'below' | 'high' = 'above') => {
