@@ -59,7 +59,7 @@ const totalMonths = chronological.reduce(
   0,
 );
 
-// Mountain profile. X follows the real calendar; the height only grows with each role, it measures nothing.
+// Mountain profile. X follows the real calendar (the first point's dot touches the left edge of the text column); the height only grows with each role, it measures nothing.
 // It is drawn twice: wide for tablets and desktops, and narrow for phones, where the wide one would need
 // sideways scrolling and its labels would shrink below reading size.
 interface ProfileLayout {
@@ -161,13 +161,13 @@ const buildProfile = (layout: ProfileLayout) => {
 };
 
 const wide = buildProfile({
-  width: 1200, height: 620, base: 560, top: 90, left: 24, right: 56,
+  width: 1200, height: 620, base: 560, top: 90, left: 8, right: 56,
   high: 120, above: 70, below: 74, titleGlyph: 16, labelGlyph: 10, dates: true,
 });
 // Phones: about half as wide, so the same type reads twice as big. Only the stage names; the dates are in
 // the cards right below.
 const narrow = buildProfile({
-  width: 600, height: 520, base: 470, top: 120, left: 18, right: 40,
+  width: 600, height: 520, base: 470, top: 120, left: 8, right: 40,
   high: 150, above: 66, below: 130, titleGlyph: 19, labelGlyph: 0, dates: false,
 });
 
@@ -743,6 +743,11 @@ const cardAt = (role: ExperienceEntry, index: number) =>
   @media (max-width: 48rem) {
     .climb {
       padding-inline: var(--space-4);
+    }
+
+    /* Wrapped under the title, the figure lines up on the left like everything else. */
+    .climb__stat {
+      justify-items: start;
     }
 
     .profile--wide {
