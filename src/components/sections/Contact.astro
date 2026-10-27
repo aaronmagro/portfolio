@@ -65,7 +65,7 @@ const [emailUser, emailDomain] = email.split('@');
       <p class="contact__description">{text.description}</p>
 
       <div class="contact__address">
-        <a class="contact__email" href={`mailto:${email}`} data-email>{emailUser}<wbr />@{emailDomain}</a>
+        <a class="contact__email" href={`mailto:${email}`} data-email><span>{emailUser}<wbr />@{emailDomain}</span></a>
         <button
           class="contact__copy"
           type="button"
@@ -191,14 +191,27 @@ const [emailUser, emailDomain] = email.split('@');
     font-size: clamp(1.15rem, 4.6vw, 2.6rem);
     font-weight: 700;
     letter-spacing: 0.02em;
-    text-decoration: underline;
-    text-decoration-color: var(--lime-ink);
-    text-decoration-thickness: 3px;
-    text-underline-offset: 0.25em;
+    text-decoration: none;
+  }
+
+  /* The line break hint before the @ splits the text in two, and a text underline then shows a seam between
+     the halves. A background line runs unbroken, and `clone` repeats it under each line when the email wraps. */
+  .contact__email span {
+    padding-bottom: 0.2em;
+    background: linear-gradient(var(--lime-ink), var(--lime-ink)) no-repeat 0 100% / 100% 3px;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
   }
 
   .contact__email:hover {
     color: var(--lime-ink);
+  }
+
+  /* Forced colours drop background images, so the link falls back to a system underline there. */
+  @media (forced-colors: active) {
+    .contact__email {
+      text-decoration: underline;
+    }
   }
 
   .contact__copy {
