@@ -82,9 +82,9 @@ if (!reducedMotion) {
   document.querySelectorAll<HTMLElement>('[data-count]').forEach((element) => counterObserver.observe(element));
 }
 
-// Mountain profile. The whole route is always visible; scrolling "conquers" it. Each stage gets the same
-// share of the scroll with a short hold at every stop, so a three-month role is not a blur and "today"
-// arrives well before the end. On wide screens the panel is pinned inside a tall track.
+// Mountain profile. On wide screens the panel is pinned inside a tall track and scrolling "conquers" the
+// route. Each stage gets the same share of the scroll with a short hold at every stop, so a three-month
+// role is not a blur and "today" arrives well before the end.
 const pinnedLayout = window.matchMedia('(min-width: 60rem) and (min-height: 48rem)');
 
 document.querySelectorAll<SVGSVGElement>('[data-profile]').forEach((svg) => {
@@ -95,7 +95,6 @@ document.querySelectorAll<SVGSVGElement>('[data-profile]').forEach((svg) => {
   const track = svg.closest<HTMLElement>('[data-profile-track]');
   const cards = track ? [...track.querySelectorAll<HTMLElement>('[data-stage-card]')] : [];
   const steps = track ? [...track.querySelectorAll<HTMLButtonElement>('[data-stage-jump]')] : [];
-  const section = svg.closest('section') ?? svg;
   if (!line) return;
 
   const length = line.getTotalLength();
@@ -119,15 +118,13 @@ document.querySelectorAll<SVGSVGElement>('[data-profile]').forEach((svg) => {
   const segments = anchors.length - 1;
   line.style.strokeDasharray = String(length);
 
+  // Only the pinned panel plays the climb. Elsewhere every stage is listed in full below the chart, so the
+  // chart is shown complete too.
   const scrollProgress = () => {
-    if (reducedMotion) return 1;
-    if (track && pinnedLayout.matches) {
-      const rect = track.getBoundingClientRect();
-      const travel = rect.height - window.innerHeight;
-      return travel > 0 ? clamp(-rect.top / travel) : 1;
-    }
-    const rect = section.getBoundingClientRect();
-    return clamp((window.innerHeight * 0.8 - rect.top) / (rect.height * 0.75));
+    if (reducedMotion || !track || !pinnedLayout.matches) return 1;
+    const rect = track.getBoundingClientRect();
+    const travel = rect.height - window.innerHeight;
+    return travel > 0 ? clamp(-rect.top / travel) : 1;
   };
 
   const routeLength = (progress: number) => {

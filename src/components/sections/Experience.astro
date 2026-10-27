@@ -19,8 +19,6 @@ const copy = {
     title: 'Experiencia',
     climb: 'La subida hasta aquí',
     months: 'meses de subida',
-    swipe: 'Desliza →',
-    scrollLabel: 'Gráfico de la subida, desplazable',
     start: 'Salida',
     today: 'Hoy',
     summit: 'Siguiente etapa: tu equipo',
@@ -37,8 +35,6 @@ const copy = {
     title: 'Experience',
     climb: 'The climb so far',
     months: 'months climbing',
-    swipe: 'Swipe →',
-    scrollLabel: 'Climb chart, scrollable',
     start: 'Start',
     today: 'Today',
     summit: 'Next stage: your team',
@@ -64,16 +60,27 @@ const totalMonths = chronological.reduce(
 );
 
 // Mountain profile. X follows the real calendar; the height only grows with each role, it measures nothing.
-const width = 1200;
-const height = 620;
-const base = 560;
-const top = 90;
-const left = 24;
-const right = 56;
+// It is drawn twice: wide for tablets and desktops, and narrow for phones, where the wide one would need
+// sideways scrolling and its labels would shrink below reading size.
+interface ProfileLayout {
+  width: number;
+  height: number;
+  base: number;
+  top: number;
+  left: number;
+  right: number;
+  // Label offsets above the route, and below it for "today".
+  high: number;
+  above: number;
+  below: number;
+  // Rough glyph widths in user units, to size the "today" tag around its text.
+  titleGlyph: number;
+  labelGlyph: number;
+  dates: boolean;
+}
+
 const origin = toMonthIndex(chronological[0].startDate);
 const span = toMonthIndex(lastEnd) - origin + 3;
-const x = (month: number) => left + (month / span) * (width - left - right);
-const y = (h: number) => base - h * (base - top);
 const monthOf = (value: YearMonth) => toMonthIndex(value) - origin;
 
 const keys: [number, number][] = [];
@@ -105,40 +112,70 @@ const heightAt = (month: number) => {
   return h0 + (h1 - h0) * smooth + ridge;
 };
 
-const points: string[] = [];
-for (let month = 0; month <= span + 0.001; month += 0.2) {
-  points.push(`${x(month).toFixed(1)} ${y(heightAt(month)).toFixed(1)}`);
-}
-const line = `M${points.join(' L')}`;
-const area = `${line} L${x(span).toFixed(1)} ${base} L${x(0).toFixed(1)} ${base} Z`;
+const buildProfile = (layout: ProfileLayout) => {
+  const { width, base, top, left, right } = layout;
+  const x = (month: number) => left + (month / span) * (width - left - right);
+  const y = (h: number) => base - h * (base - top);
 
-const stop = (month: number, title: string, label: string, place: 'above' | 'below' | 'high' = 'above') => ({
-  x: x(month),
-  y: y(heightAt(month)),
-  fraction: (x(month) - x(0)) / (x(span) - x(0)),
-  title,
-  label,
-  place,
+  const points: string[] = [];
+  for (let month = 0; month <= span + 0.001; month += 0.2) {
+    points.push(`${x(month).toFixed(1)} ${y(heightAt(month)).toFixed(1)}`);
+  }
+  const line = `M${points.join(' L')}`;
+  const area = `${line} L${x(span).toFixed(1)} ${base} L${x(0).toFixed(1)} ${base} Z`;
+
+  const stop = (month: number, title: string, label: string, place: 'above' | 'below' | 'high' = 'above') => {
+    const pointY = y(heightAt(month));
+    const today = place === 'below';
+    const labelY = today ? pointY + layout.below : pointY - (place === 'high' ? layout.high : layout.above);
+    return {
+      x: x(month),
+      y: pointY,
+      labelY,
+      fraction: (x(month) - x(0)) / (x(span) - x(0)),
+      title,
+      label,
+      today,
+      tagWidth: Math.max(title.length * layout.titleGlyph, layout.dates ? label.length * layout.labelGlyph : 0) + 30,
+    };
+  };
+
+  const stops = [
+    stop(0, text.start, formatYearMonth(chronological[0].startDate, lang), 'high'),
+    ...chronological.slice(1).map((role) => stop(monthOf(role.startDate), role.sector[lang], formatYearMonth(role.startDate, lang))),
+    stop(monthOf(lastEnd), text.today, formatYearMonth(lastEnd, lang), 'below'),
+  ].map((item, index, all) => {
+    // A name that would run into the next stop sits on the left of its own point instead.
+    const next = all[index + 1];
+    const reaches = index > 0 && next && item.x + 4 + item.title.length * layout.titleGlyph > next.x - 12;
+    return { ...item, end: item.today || Boolean(reaches) };
+  });
+
+  const years = Array.from({ length: Math.floor((origin + span) / 12) - Math.floor(origin / 12) + 1 }, (_, i) => {
+    const year = Math.floor(origin / 12) + i;
+    const month = Math.max(year * 12 - origin, 0);
+    return { year, x: x(month), anchor: month === 0 ? 'start' : 'middle' };
+  }).filter((tick) => tick.x <= x(span));
+
+  return { ...layout, x, line, area, stops, years, summit: { x: x(span), y: y(heightAt(span)) } };
+};
+
+const wide = buildProfile({
+  width: 1200, height: 620, base: 560, top: 90, left: 24, right: 56,
+  high: 120, above: 70, below: 74, titleGlyph: 16, labelGlyph: 10, dates: true,
+});
+// Phones: about half as wide, so the same type reads twice as big. Only the stage names; the dates are in
+// the cards right below.
+const narrow = buildProfile({
+  width: 600, height: 520, base: 470, top: 120, left: 18, right: 40,
+  high: 150, above: 66, below: 130, titleGlyph: 19, labelGlyph: 0, dates: false,
 });
 
-const stops = [
-  stop(0, text.start, formatYearMonth(chronological[0].startDate, lang), 'high'),
-  ...chronological.slice(1).map((role) => stop(monthOf(role.startDate), role.sector[lang], formatYearMonth(role.startDate, lang))),
-  stop(monthOf(lastEnd), text.today, formatYearMonth(lastEnd, lang), 'below'),
-];
-
-const years = Array.from({ length: Math.floor((origin + span) / 12) - Math.floor(origin / 12) + 1 }, (_, i) => {
-  const year = Math.floor(origin / 12) + i;
-  const month = Math.max(year * 12 - origin, 0);
-  return { year, x: x(month), anchor: month === 0 ? 'start' : 'middle' };
-}).filter((tick) => tick.x <= x(span));
-
-const summit = { x: x(span), y: y(heightAt(span)) };
-const todayStop = stops[stops.length - 1];
+const todayStop = wide.stops[wide.stops.length - 1];
 
 // Each card shows up when the runner reaches the start of its role; the last one at "today".
 const cardAt = (role: ExperienceEntry, index: number) =>
-  index === 0 ? 0 : (x(monthOf(role.startDate)) - x(0)) / (x(span) - x(0));
+  index === 0 ? 0 : (wide.x(monthOf(role.startDate)) - wide.x(0)) / (wide.x(span) - wide.x(0));
 ---
 
 <section class="experience" id="experience" aria-labelledby="experience-title">
@@ -156,62 +193,83 @@ const cardAt = (role: ExperienceEntry, index: number) =>
         <p class="climb__stat"><b data-count={totalMonths}>{totalMonths}</b><span class="label">{text.months}</span></p>
       </div>
 
-      <p class="climb__swipe label" aria-hidden="true">{text.swipe}</p>
-      <div class="profile-scroll" data-profile-scroll data-label={text.scrollLabel}>
-      <svg class="profile" viewBox={`0 0 ${width} ${height}`} role="img" aria-label={text.profileLabel} data-profile>
-        <defs>
-          <clipPath id="profile-reveal">
-            <rect x="0" y="0" width={width} height={height} data-profile-reveal></rect>
-          </clipPath>
-          <linearGradient id="profile-fill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="var(--lime)" stop-opacity="0.4"></stop>
-            <stop offset="1" stop-color="var(--lime)" stop-opacity="0.03"></stop>
-          </linearGradient>
-        </defs>
-        <line class="profile__axis" x1={x(0)} y1={base} x2={x(span)} y2={base}></line>
-        {years.map((tick) => (
-          <g class="profile__year">
-            <line x1={tick.x} y1={base} x2={tick.x} y2={base + 8}></line>
-            <text x={tick.x} y={base + 30} text-anchor={tick.anchor}>{tick.year}</text>
-          </g>
-        ))}
-        <path class="profile__ghost-area" d={area}></path>
-        <path class="profile__ghost" d={line}></path>
-        <path class="profile__area" d={area} clip-path="url(#profile-reveal)"></path>
-        <path class="profile__line" d={line} data-profile-line></path>
-
-        {stops.map((item) => {
-          const today = item.place === 'below';
-          const labelY = today ? item.y + 74 : item.y - (item.place === 'high' ? 120 : 70);
-          const tagWidth = Math.max(item.title.length * 16, item.label.length * 10) + 30;
+      <div class="profile-frame">
+        {[wide, narrow].map((chart) => {
+          // Only the wide chart follows the scroll; the phone one is drawn complete, its stages already reached.
+          const live = chart === wide;
+          const id = live ? 'profile' : 'profile-narrow';
           return (
-            <g class:list={['profile__stop', { 'profile__stop--today': today }]} data-profile-stop={item.fraction.toFixed(3)} aria-hidden="true">
-              <line
-                class="profile__leader"
-                x1={item.x}
-                y1={today ? item.y + 10 : item.y - 10}
-                x2={item.x}
-                y2={today ? labelY - 34 : labelY + 10}
-              ></line>
-              {today && <rect class="profile__today-tag" x={item.x - tagWidth + 22} y={labelY - 34} width={tagWidth} height="62"></rect>}
-              <text class="profile__title" x={today ? item.x + 8 : item.x + 4} y={labelY - 6} text-anchor={today ? 'end' : 'start'}>{item.title}</text>
-              <text class="profile__label" x={today ? item.x + 8 : item.x + 4} y={labelY + 16} text-anchor={today ? 'end' : 'start'}>{item.label.toUpperCase()}</text>
-              <circle class="profile__point" cx={item.x} cy={item.y} r="8"></circle>
-            </g>
+            <svg
+              class:list={['profile', live ? 'profile--wide' : 'profile--narrow']}
+              viewBox={`0 0 ${chart.width} ${chart.height}`}
+              role="img"
+              aria-label={text.profileLabel}
+              data-profile={live ? '' : undefined}
+            >
+              <defs>
+                <clipPath id={`${id}-reveal`}>
+                  <rect x="0" y="0" width={chart.width} height={chart.height} data-profile-reveal={live ? '' : undefined}></rect>
+                </clipPath>
+                <linearGradient id={`${id}-fill`} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0" stop-color="var(--lime)" stop-opacity="0.4"></stop>
+                  <stop offset="1" stop-color="var(--lime)" stop-opacity="0.03"></stop>
+                </linearGradient>
+              </defs>
+              <line class="profile__axis" x1={chart.x(0)} y1={chart.base} x2={chart.x(span)} y2={chart.base}></line>
+              {chart.years.map((tick) => (
+                <g class="profile__year">
+                  <line x1={tick.x} y1={chart.base} x2={tick.x} y2={chart.base + 8}></line>
+                  <text x={tick.x} y={chart.base + 30} text-anchor={tick.anchor}>{tick.year}</text>
+                </g>
+              ))}
+              {live && <path class="profile__ghost-area" d={chart.area}></path>}
+              {live && <path class="profile__ghost" d={chart.line}></path>}
+              <path class="profile__area" d={chart.area} clip-path={`url(#${id}-reveal)`} fill={`url(#${id}-fill)`}></path>
+              <path class="profile__line" d={chart.line} data-profile-line={live ? '' : undefined}></path>
+
+              {chart.stops.map((item) => (
+                <g
+                  class:list={['profile__stop', { 'profile__stop--today': item.today, 'is-reached': !live }]}
+                  data-profile-stop={live ? item.fraction.toFixed(3) : undefined}
+                  aria-hidden="true"
+                >
+                  <line
+                    class="profile__leader"
+                    x1={item.x}
+                    y1={item.today ? item.y + 10 : item.y - 10}
+                    x2={item.x}
+                    y2={item.today ? item.labelY - 34 : item.labelY + (chart.dates ? 10 : 2)}
+                  ></line>
+                  {item.today && (
+                    <rect
+                      class="profile__today-tag"
+                      x={item.x - item.tagWidth + 22}
+                      y={item.labelY - 34}
+                      width={item.tagWidth}
+                      height={chart.dates ? 62 : 44}
+                    ></rect>
+                  )}
+                  <text class="profile__title" x={item.today ? item.x + 8 : item.end ? item.x - 4 : item.x + 4} y={item.labelY - 6} text-anchor={item.end ? 'end' : 'start'}>{item.title}</text>
+                  {chart.dates && (
+                    <text class="profile__label" x={item.today ? item.x + 8 : item.x + 4} y={item.labelY + 16} text-anchor={item.today ? 'end' : 'start'}>{item.label.toUpperCase()}</text>
+                  )}
+                  <circle class="profile__point" cx={item.x} cy={item.y} r="8"></circle>
+                </g>
+              ))}
+
+              <g class="profile__summit" transform={`translate(${chart.summit.x} ${chart.summit.y})`} aria-hidden="true">
+                <line x1="0" y1="0" x2="0" y2="-42"></line>
+                <path d="M0 -42 L30 -32 L0 -22 Z"></path>
+                <text x="-14" y="-16" text-anchor="end">{text.summit}</text>
+              </g>
+
+              <g class="profile__runner" data-profile-runner={live ? '' : undefined} transform={`translate(${chart.summit.x} ${chart.summit.y})`} aria-hidden="true">
+                <circle r="14" class="profile__runner-ring"></circle>
+                <circle r="6"></circle>
+              </g>
+            </svg>
           );
         })}
-
-        <g class="profile__summit" transform={`translate(${summit.x} ${summit.y})`} aria-hidden="true">
-          <line x1="0" y1="0" x2="0" y2="-42"></line>
-          <path d="M0 -42 L30 -32 L0 -22 Z"></path>
-          <text x="-14" y="-16" text-anchor="end">{text.summit}</text>
-        </g>
-
-        <g class="profile__runner" data-profile-runner transform={`translate(${summit.x} ${summit.y})`} aria-hidden="true">
-          <circle r="14" class="profile__runner-ring"></circle>
-          <circle r="6"></circle>
-        </g>
-      </svg>
       </div>
 
       <ol class="climb__steps" aria-label={text.steps}>
@@ -267,26 +325,6 @@ const cardAt = (role: ExperienceEntry, index: number) =>
     </div>
   </Container>
 </section>
-
-<script>
-  // On narrow screens the chart scrolls sideways. Keyboard users need to reach it then, but on wide screens it
-  // fits, and a focus stop there would only get in the way.
-  for (const box of document.querySelectorAll<HTMLElement>('[data-profile-scroll]')) {
-    const sync = () => {
-      if (box.scrollWidth > box.clientWidth + 1) {
-        box.tabIndex = 0;
-        box.setAttribute('role', 'region');
-        box.setAttribute('aria-label', box.dataset.label ?? '');
-      } else {
-        box.removeAttribute('tabindex');
-        box.removeAttribute('role');
-        box.removeAttribute('aria-label');
-      }
-    };
-    sync();
-    new ResizeObserver(sync).observe(box);
-  }
-</script>
 
 <style>
   .experience {
@@ -357,10 +395,6 @@ const cardAt = (role: ExperienceEntry, index: number) =>
     stroke-dasharray: 6 7;
     stroke-width: 2;
     opacity: 0.55;
-  }
-
-  .profile__area {
-    fill: url(#profile-fill);
   }
 
   .profile__line {
@@ -602,7 +636,7 @@ const cardAt = (role: ExperienceEntry, index: number) =>
       grid-row: 1;
     }
 
-    .profile-scroll {
+    .profile-frame {
       grid-column: 1;
       grid-row: 2;
       min-height: 0;
@@ -701,30 +735,38 @@ const cardAt = (role: ExperienceEntry, index: number) =>
     }
   }
 
-  .climb__swipe {
+  .profile--narrow {
     display: none;
   }
 
+  /* Phones get the narrow chart, drawn complete: the stages are listed in full right below it. */
   @media (max-width: 48rem) {
     .climb {
       padding-inline: var(--space-4);
     }
 
-    .climb__swipe {
+    .profile--wide {
+      display: none;
+    }
+
+    .profile--narrow {
       display: block;
-      margin-top: var(--space-3);
-      text-align: right;
     }
 
-    .profile-scroll {
-      overflow-x: auto;
-      overscroll-behavior-x: contain;
-      scrollbar-width: thin;
+    .profile--narrow .profile__title {
+      font-size: 28px;
     }
 
-    .profile {
-      min-width: 46rem;
-      padding-right: var(--space-4);
+    .profile--narrow .profile__year text {
+      font-size: 22px;
+    }
+
+    .profile--narrow .profile__summit text {
+      font-size: 26px;
+    }
+
+    .profile--narrow .profile__line {
+      stroke-width: 4;
     }
   }
 </style>
