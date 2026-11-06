@@ -56,12 +56,22 @@ const layers = [
 <div class="scroll-progress" aria-hidden="true"></div>
 
 <style>
+  /* Fixed size on purpose. With `inset: 0` the box follows the dynamic viewport, so on phones it stretched
+     and shrank every time the URL bar collapsed or came back during a fast vertical scroll, and the ridges
+     (anchored to its bottom) jumped down and the background looked cut. 100lvh is the largest viewport and
+     never changes while scrolling; the bar simply covers the part that is out of view. */
   .backdrop {
     position: fixed;
     z-index: 0;
-    inset: 0;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh; /* fallback for browsers without lvh */
+    height: 100lvh;
     overflow: hidden;
     pointer-events: none;
+    contain: layout paint style;
+    transform: translateZ(0); /* own compositor layer, so it is not repainted while the page bounces */
   }
 
   /* Static layers: only the ridges move, by transform, which never repaints them. */

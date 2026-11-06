@@ -2,6 +2,8 @@ html {
   min-width: 20rem;
   background: var(--bg);
   scroll-behavior: smooth;
+  /* No rubber-band at the top and bottom: on iOS it dragged the fixed background away from the page. */
+  overscroll-behavior-y: none;
 }
 
 body {
