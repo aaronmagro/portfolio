@@ -13,8 +13,10 @@ if (ridges.length > 0 && !reducedMotion) {
   const climb = climbTrack?.firstElementChild as HTMLElement | null;
 
   // Page scroll minus the stretch spent inside the pinned climb.
+  // iOS reports a negative scrollY while the page bounces at the very top. Without the clamp the ridges got a
+  // positive offset and slid right, leaving a gap on their left edge until the bounce settled.
   const distance = () => {
-    let scroll = window.scrollY;
+    let scroll = Math.max(0, window.scrollY);
     if (climbTrack && climb && getComputedStyle(climb).position === 'sticky') {
       const start = climbTrack.getBoundingClientRect().top + window.scrollY;
       const pinned = Math.max(0, climbTrack.offsetHeight - window.innerHeight);
