@@ -56,18 +56,18 @@ const layers = [
 <div class="scroll-progress" aria-hidden="true"></div>
 
 <style>
-  /* Fixed size on purpose. With `inset: 0` the box follows the dynamic viewport, so on phones it stretched
-     and shrank every time the URL bar collapsed or came back during a fast vertical scroll, and the ridges
-     (anchored to its bottom) jumped down and the background looked cut. 100lvh is the largest viewport and
-     never changes while scrolling; the bar simply covers the part that is out of view. */
+  /* Fixed size, pinned to the BOTTOM of the screen. With `inset: 0` the box followed the dynamic viewport, so
+     on phones it stretched and shrank every time the URL bar collapsed or came back during a fast vertical
+     scroll, and the background looked cut or jumped. Here the box is always the largest viewport (100lvh)
+     plus a bleed, and its bottom edge is the bottom of the screen in every state. When the URL bar shows,
+     the surplus simply hides behind it at the top; when it hides, nothing resizes or moves. The grid, the
+     glow and the ridges therefore sit at the same place on screen whatever the bar is doing.
+     The bleed also keeps background behind the strip that opens at the top while the page bounces. */
   .backdrop {
-    /* Extra background above the top edge. When the page bounces at the very top, iOS drags the viewport
-       down and would show the bare page colour in that strip; this keeps grid and glow behind it.
-       Nothing moves: the glow is shifted by the same amount and the ridges stay anchored to the bottom. */
     --bleed: 8rem;
     position: fixed;
     z-index: 0;
-    top: calc(var(--bleed) * -1);
+    bottom: 0;
     left: 0;
     width: 100%;
     height: calc(100vh + var(--bleed)); /* fallback for browsers without lvh */
